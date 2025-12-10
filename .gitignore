@@ -19,10 +19,24 @@
 
 # production
 /build
+/dist
+
+# Database backups (keep locally, don't push to GitHub)
+/backups/
+*.tar.gz
+*.zip
+
+# Turbopack cache
+.turbo/
+.turbopack-cache/
 
 # misc
 .DS_Store
 *.pem
+Thumbs.db
+.AppleDouble
+.LSOverride
+._*
 
 # debug
 npm-debug.log*
@@ -32,6 +46,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -39,3 +54,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Sentry
+.sentry-release
+
+# Lock files (optional - remove if you want to track them)
+# npm-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
