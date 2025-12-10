@@ -73,12 +73,6 @@ export default function AdminLogin() {
             {loading ? <Loader2 className="animate-spin" /> : <>Sign In <ArrowRight size={18} /></>}
           </button>
         </form>
-
-        <div className="mt-6 p-4 bg-white/5 border border-white/10 rounded-lg">
-          <p className="text-xs text-gray-400 mb-2"><strong>Demo Credentials:</strong></p>
-          <p className="text-xs text-gray-300">Username: <code className="bg-black/50 px-2 py-1 rounded">admin</code></p>
-          <p className="text-xs text-gray-300">Password: <code className="bg-black/50 px-2 py-1 rounded">mastmo_admin_2025</code></p>
-        </div>
       </div>
     </div>
   );
