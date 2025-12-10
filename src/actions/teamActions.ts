@@ -49,8 +49,17 @@ export async function deleteTeamMember(id: string) {
 }
 
 // 3. UPDATE MEMBER
+// 3. UPDATE MEMBER
 export async function updateTeamMember(id: string, formData: FormData) {
   await dbConnect();
+
+  // Construct socials object, filtering out empty strings if needed
+  const socials = {
+    linkedin: formData.get("linkedin") || "",
+    github: formData.get("github") || "",
+    email: formData.get("email") || "",
+    instagram: formData.get("instagram") || "",
+  };
 
   const data = {
     name: formData.get("name"),
@@ -58,17 +67,13 @@ export async function updateTeamMember(id: string, formData: FormData) {
     details: formData.get("details"),
     category: formData.get("category"),
     image: formData.get("image"),
-    socials: {
-      linkedin: formData.get("linkedin"),
-      github: formData.get("github"),
-      email: formData.get("email"),
-      instagram: formData.get("instagram"),
-    }
+    socials: socials,
   };
 
   try {
-    await TeamMember.findByIdAndUpdate(id, data);
+    await TeamMember.findByIdAndUpdate(id, data, { new: true });
   } catch (error) {
+    console.error("Update failed:", error);
     return { success: false, message: "Failed to update member" };
   }
 

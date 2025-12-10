@@ -1,54 +1,36 @@
-import nodemailer from "nodemailer";
-import SMTPTransport from "nodemailer/lib/smtp-transport"; // ✅ Import types
+import { Resend } from 'resend';
 
-// Define the transporter options explicitly as SMTPTransport.Options
-const transportOptions: SMTPTransport.Options = {
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false, // true for 465, false for other ports
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-  // Custom settings for production stability
-  logger: true,
-  debug: true,
-  connectionTimeout: 10000, // 10 seconds
-  greetingTimeout: 5000,    // 5 seconds
-  socketTimeout: 10000,     // 10 seconds
-  // Force IPv4 to avoid IPv6 issues on Vercel/AWS
-  tls: {
-    rejectUnauthorized: true,
-  },
-};
-
-// Create the transporter using the typed options
-const transporter = nodemailer.createTransport(transportOptions);
+// Initialize Resend with your API Key
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function sendEmail(to: string, subject: string, html: string) {
-  // 1. Verify Credentials exist
-  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
-    console.warn("⚠️ Gmail credentials missing. Email skipped.");
-    return { success: false, message: "Credentials missing" };
+  // Check if API Key exists
+  if (!process.env.RESEND_API_KEY) {
+    console.error("❌ RESEND_API_KEY is missing.");
+    return { success: false, error: "Configuration missing" };
   }
 
   try {
-    // 2. Verify connection (Optional but good for debugging)
-    await transporter.verify();
-
-    // 3. Send Mail
-    const info = await transporter.sendMail({
-      from: `"MASTMO Club" <${process.env.GMAIL_USER}>`, 
-      to: to,
+    const data = await resend.emails.send({
+      // ✅ USE THIS EXACT EMAIL FOR TESTING
+      // Resend allows sending FROM 'onboarding@resend.dev' to YOUR email instantly.
+      // To send to *other* people, you must verify your domain on Resend.com first.
+      from: 'MASTMO Team <team@mastmovgnt.in>', 
+      to: to, // Ideally, send to your own email for the demo until you verify your domain
       subject: subject,
       html: html,
     });
 
-    console.log("✅ Email sent:", info.messageId);
-    return { success: true, messageId: info.messageId };
+    if (data.error) {
+      console.error("❌ Email Failed:", data.error);
+      return { success: false, error: data.error.message };
+    }
+
+    console.log("✅ Email sent successfully:", data.data?.id);
+    return { success: true, messageId: data.data?.id };
 
   } catch (error: any) {
-    console.error("❌ Email Failed:", error.message);
+    console.error("❌ Email Exception:", error.message);
     return { success: false, error: error.message };
   }
 }
