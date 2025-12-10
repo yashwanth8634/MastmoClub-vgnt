@@ -57,22 +57,22 @@ export default function TeamCard({ member }: { member: TeamMemberProps }) {
       {/* 4. Social Icons */}
       <div className="flex gap-3 opacity-60 group-hover:opacity-100 transition-opacity">
         {member.socials?.linkedin && (
-          <Link href={member.socials.linkedin} className="hover:text-[#0077b5] transition-colors">
+          <Link href={member.socials.linkedin} target="_blank" className="hover:text-[#0077b5] transition-colors">
             <Linkedin size={16} />
           </Link>
         )}
         {member.socials?.github && (
-          <Link href={member.socials.github} className="hover:text-white transition-colors">
+          <Link href={member.socials.github} target="_blank" className="hover:text-white transition-colors">
             <Github size={16} />
           </Link>
         )}
         {member.socials?.email && (
-          <Link href={`mailto:${member.socials.email}`} className="hover:text-[#00f0ff] transition-colors">
+          <Link href={`mailto:${member.socials.email}`} target="_blank" className="hover:text-[#00f0ff] transition-colors">
             <Mail size={16} />
           </Link>
         )}
         {member.socials?.instagram && (
-          <Link href={member.socials.instagram} className="hover:text-[#E1306C] transition-colors">
+          <Link href={member.socials.instagram} target="_blank" className="hover:text-[#E1306C] transition-colors">
             <Instagram size={16} />
           </Link>
         )}

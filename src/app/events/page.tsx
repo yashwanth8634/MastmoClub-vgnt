@@ -59,7 +59,7 @@ export default async function EventsPage() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 bg-white/5 rounded-2xl border border-white/10">
+          <div className="text-center py-20 bg-black rounded-2xl border border-white/10">
             <p className="text-xl text-gray-400">No upcoming events scheduled.</p>
             <p className="text-sm text-gray-600 mt-2">Stay tuned for updates!</p>
           </div>
