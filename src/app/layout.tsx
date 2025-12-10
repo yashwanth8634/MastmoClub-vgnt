@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { MedievalSharp } from "next/font/google"; 
 import "./globals.css";
 import StarField from "@/components/3d/StarField";
+import { GoogleAnalytics } from '@next/third-parties/google';
 
 const spaceGrotesk = MedievalSharp({
   subsets: ["latin"],
@@ -10,9 +11,28 @@ const spaceGrotesk = MedievalSharp({
 });
 
 export const metadata: Metadata = {
-  title: "Mastmo@Vgnt",
-  description: "Mathematical & Statistical Modeling Club",
+  title: "Mastmo@Vgnt | Official Math & Stats Club of VGNT",
+  description: "Join MASTMO Club at VGNT. Participate in hackathons, modeling events, and research workshops. The official student community for mathematics.",
+  keywords: [
+    // Club Identity
+    "MASTMO", "MASTMO Club", "VGNT Club", "Vignan Math Club",
+    
+    // College & Location
+    "Vignan's Institute of Information Technology", "VGNT Visakhapatnam", "VIIT Student Clubs", "Engineering Club Hyderabad",
+    
+    // Core Subjects
+    "Mathematical Modeling", "Statistical Analysis", "Mathematics", "Statistics",
+    
+    // Activities & Interests
+    "Hackathons", "Data Science Workshop", "Machine Learning", "Student Research", "Coding Competitions", "Tech Community",
+    
+    // Variations for Search
+    "MASTMO VGNT", "Join math club", "Vignan student chapters"
+  ],
+  // Good practice to add your base URL too
+  metadataBase: new URL('https://www.mastmovgnt.in'),
 };
+
 
 export default function RootLayout({
   children,
@@ -24,10 +44,14 @@ export default function RootLayout({
       {/* ✅ FIX: suppressHydrationWarning on html tag */}
       <body 
         className={`${spaceGrotesk.className} antialiased  text-white font-sans`}
+        suppressHydrationWarning={true}
       >
         <StarField />
         {children}
       </body>
+      <GoogleAnalytics gaId="G-JNQY7WG0HS" />
     </html>
   );
 }
+
+
