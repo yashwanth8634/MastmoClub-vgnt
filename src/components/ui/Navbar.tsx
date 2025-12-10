@@ -32,6 +32,9 @@ export default function Navbar() {
           <Link href="/about" className="text-sm font-bold tracking-widest text-gray-300 hover:text-[#00f0ff] uppercase transition-colors">
             About Us
           </Link>
+          <Link href="/team" className="text-sm font-bold tracking-widest text-gray-300 hover:text-[#00f0ff] uppercase transition-colors">
+            Team
+          </Link>
           <Link 
             href="/join" 
             className="text-sm font-bold tracking-widest text-[#00f0ff] hover:text-white uppercase transition-colors"

@@ -10,7 +10,7 @@ const spaceGrotesk = MedievalSharp({
 });
 
 export const metadata: Metadata = {
-  title: "MASTMO Club | VGNT",
+  title: "Mastmo@Vgnt",
   description: "Mathematical & Statistical Modeling Club",
 };
 

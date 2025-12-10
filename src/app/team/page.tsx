@@ -50,7 +50,7 @@ export default async function TeamPage() {
               <h2 className="text-2xl font-bold text-white uppercase tracking-widest">Faculty Board</h2>
               <div className="h-px flex-1 bg-white/10"></div>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 justify-center bg-black">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-center">
               {serialize(faculty).map((member) => (
                 <TeamCard key={member._id} member={member} />
               ))}
@@ -65,7 +65,7 @@ export default async function TeamPage() {
               <h2 className="text-2xl font-bold text-white uppercase tracking-widest">Core Council</h2>
               <div className="h-px flex-1 bg-white/10"></div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-black">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {serialize(core).map((member) => (
                 <TeamCard key={member._id} member={member} />
               ))}
@@ -80,7 +80,7 @@ export default async function TeamPage() {
               <h2 className="text-2xl font-bold text-white uppercase tracking-widest">Leads & Coordinators</h2>
               <div className="h-px flex-1 bg-white/10"></div>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 bg-black">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {serialize(coordinators).map((member) => (
                 <TeamCard key={member._id} member={member} />
               ))}
@@ -95,7 +95,7 @@ export default async function TeamPage() {
               <h2 className="text-2xl font-bold text-white uppercase tracking-widest">Supporting Team</h2>
               <div className="h-px flex-1 bg-white/10"></div>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 bg-black">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
               {serialize(support).map((member) => (
                 <TeamCard key={member._id} member={member} />
               ))}

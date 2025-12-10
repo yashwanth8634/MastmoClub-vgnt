@@ -107,7 +107,7 @@ export default function AboutPage() {
             <div className="h-px flex-1 bg-white/10"></div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 bg-black">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 bg-transparent">
             {VISIONARIES.map((person, i) => (
               <motion.div
                 key={i}
@@ -115,7 +115,7 @@ export default function AboutPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="relative p-8 rounded-2xl bg-gradient-to-br from-white/5 to-black border border-white/10 hover:border-[#00f0ff]/30 transition-all duration-300"
+                className="relative p-8 rounded-2xl bg-gradient-to-br from-white/5 to-black border border-white/10 hover:border-[#00f0ff]/30 transition-all duration-300 bg-black"
               >
                 <Quote className="text-[#00f0ff] mb-4 opacity-50" size={24} />
                 <h3 className="text-xl font-bold text-white mb-1">{person.name}</h3>
@@ -173,7 +173,7 @@ export default function AboutPage() {
             <div className="h-px flex-1 bg-white/10"></div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 bg-black">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 bg-transparent">
             {OBJECTIVES.map((obj, i) => (
               <motion.div
                 key={i}
@@ -181,8 +181,10 @@ export default function AboutPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="group p-8 rounded-2xl bg-white/5 border border-white/10 hover:bg-[#00f0ff]/5 hover:border-[#00f0ff]/30 transition-all duration-300"
+                className="relative p-8 rounded-2xl bg-gradient-to-br from-white/5 to-black border border-white/10 hover:border-[#00f0ff]/30  transition-all duration-300 bg-black"
+                
               >
+                
                 <obj.icon className="text-gray-500 group-hover:text-[#00f0ff] mb-6 transition-colors" size={32} />
                 <h3 className="text-xl font-bold text-white mb-3">{obj.title}</h3>
                 <p className="text-gray-400 text-sm leading-relaxed">{obj.desc}</p>
@@ -196,7 +198,7 @@ export default function AboutPage() {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="mt-32 text-center p-12 rounded-3xl bg-gradient-to-b from-white/5 to-transparent border border-white/10"
+          className="mt-32 text-center p-12 rounded-3xl bg-gradient-to-b from-white/5 to-transparent border border-white/10 bg-black"
         >
           <h2 className="text-4xl font-bold mb-6">Ready to solve the impossible?</h2>
           <p className="text-gray-400 mb-8 max-w-xl mx-auto">
