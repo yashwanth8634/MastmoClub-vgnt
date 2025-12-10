@@ -26,6 +26,10 @@
 *.tar.gz
 *.zip
 
+# User-uploaded files (keep these locally but don't commit to git)
+/public/uploads/*
+!/public/uploads/.gitkeep
+
 # Turbopack cache
 .turbo/
 .turbopack-cache/
