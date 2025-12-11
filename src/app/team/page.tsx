@@ -1,4 +1,4 @@
-import Navbar from "@/components/ui/Navbar";
+
 import TeamCard from "@/components/ui/TeamCard";
 import dbConnect from "@/lib/db";
 import TeamMember from "@/models/TeamMember";
@@ -29,7 +29,7 @@ export default async function TeamPage() {
 
   return (
     <main className="relative min-h-screen bg-transparent font-sans text-white selection:bg-[#00f0ff]/30">
-      <Navbar />
+      
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 pt-32 pb-20">
         

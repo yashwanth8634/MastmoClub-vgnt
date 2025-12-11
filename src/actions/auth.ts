@@ -3,42 +3,47 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-// Admin credentials from environment variables
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "mastmo_admin_2025";
-
+// 1. LOGIN ACTION
 export async function loginAdmin(formData: FormData) {
-  const username = formData.get("username") as string;
   const password = formData.get("password") as string;
+  const username = formData.get("username") as string; // You might have this field in your form
 
-  // Validate both username and password
-  if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+  // Debugging logs to see if server receives request
+  console.log("--- LOGIN ATTEMPT ---");
+  console.log("Password received:", password);
+
+  // Replace with your real password env variable
+  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123"; 
+
+  // Simple password check (ignoring username for now, or check it if you want)
+  if (password === ADMIN_PASSWORD) {
+    console.log("✅ Password Correct! Setting Cookie...");
+
     const cookieStore = await cookies();
     
-    // Set session token with additional security
-    cookieStore.set("admin_token", username, { 
+    // Set the cookie
+    cookieStore.set("admin_session", "true", {
       httpOnly: true,
+      sameSite: "lax", // Relaxed setting to help with browser blocking
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
       maxAge: 60 * 60 * 24, // 1 day
       path: "/",
     });
-    
-    return { success: true, message: "Login successful" };
-  }
 
-  return { success: false, message: "Invalid username or password" };
+    return { success: true };
+  } else {
+    console.log("❌ Password Incorrect.");
+    return { success: false, message: "Incorrect Password" };
+  }
 }
 
+// 2. LOGOUT ACTION (✅ This was missing!)
 export async function logoutAdmin() {
   const cookieStore = await cookies();
-  cookieStore.delete("admin_token");
-  redirect("/admin/login");
-}
+  
+  // Delete the session cookie
+  cookieStore.delete("admin_session");
 
-// Verify admin is authenticated
-export async function verifyAdminAuth() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("admin_token");
-  return token?.value === ADMIN_USERNAME;
+  // Redirect back to login page
+  redirect("/admin/login");
 }

@@ -3,6 +3,7 @@ import { MedievalSharp } from "next/font/google";
 import "./globals.css";
 import StarField from "@/components/3d/StarField";
 import { GoogleAnalytics } from '@next/third-parties/google';
+import Navbar from "@/components/ui/Navbar";
 
 const spaceGrotesk = MedievalSharp({
   subsets: ["latin"],
@@ -10,7 +11,7 @@ const spaceGrotesk = MedievalSharp({
   display: "swap",
 });
 
-export const metadata = {
+export const metadata : Metadata = {
   metadataBase: new URL("https://www.mastmovgnt.in"),
   title: {
     default: "Mastmo@Vgnt | Math & Stats Club",
@@ -118,6 +119,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
       <body className={`${spaceGrotesk.className} antialiased text-white font-sans`}>
         <StarField />
+        <Navbar />
         {children}
       </body>
 

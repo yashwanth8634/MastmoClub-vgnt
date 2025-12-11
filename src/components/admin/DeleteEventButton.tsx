@@ -1,31 +1,31 @@
 "use client";
 
-import { deleteEvent } from "@/actions/eventActions";
+import { useState } from "react";
+import { deleteEvent } from "@/actions/eventActions"; 
 import { Trash2, Loader2 } from "lucide-react";
-import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 
-export default function DeleteEventButton({ id }: { id: string }) {
-  const [isPending, startTransition] = useTransition();
+export default function DeleteButton({ id }: { id: string }) {
+  const [isDeleting, setIsDeleting] = useState(false);
+  const router = useRouter();
 
-  const handleDelete = () => {
-    // 1. Add Confirmation
-    const confirmed = window.confirm("Are you sure you want to delete this event?");
-    if (!confirmed) return;
-
-    // 2. Call Server Action
-    startTransition(async () => {
-      await deleteEvent(id);
-    });
-  };
+  async function handleDelete() {
+    if (!confirm("Are you sure you want to delete this event?")) return;
+    setIsDeleting(true);
+    await deleteEvent(id);
+    // Router refresh handles the UI update without full reload
+    router.refresh(); 
+    setIsDeleting(false);
+  }
 
   return (
     <button 
-      onClick={handleDelete}
-      disabled={isPending}
-      className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors" 
+      onClick={handleDelete} 
+      disabled={isDeleting}
+      className="p-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500 hover:text-white transition-all"
       title="Delete Event"
     >
-      {isPending ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
+      {isDeleting ? <Loader2 className="animate-spin" size={18} /> : <Trash2 size={18} />}
     </button>
   );
 }

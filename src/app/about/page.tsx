@@ -1,6 +1,5 @@
 "use client";
 
-import Navbar from "@/components/ui/Navbar";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Target, Lightbulb, Zap, Brain, Rocket, Globe, ArrowRight, Quote } from "lucide-react";
@@ -62,7 +61,7 @@ const THEMES = [
 export default function AboutPage() {
   return (
     <main className="relative min-h-screen bg-transparent font-sans text-white selection:bg-[#00f0ff]/30">
-      <Navbar />
+      
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 pt-32 pb-20">
         

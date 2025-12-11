@@ -4,12 +4,18 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Menu, X } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
+
+  if (pathname.includes("/admin")) {
+    return null;
+  }
 
   return (
-    <nav className="fixed top-0 left-0 w-full z-50 px-6 py-5 transition-all duration-300 bg-transparent">
+    <nav className="absolute top-0 left-0 w-full z-50 px-6 py-5 bg-transparent">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         
         {/* LOGO */}
@@ -25,7 +31,7 @@ export default function Navbar() {
         </Link>
 
         {/* DESKTOP MENU */}
-        <div className="hidden md:flex items-center gap-8 bg-black backdrop-blur-md px-8 py-3 rounded-full border border-white/10">
+        <div className="hidden md:flex items-center gap-8 bg-black/80 backdrop-blur-md px-8 py-3 rounded-full border border-white/10">
           <Link href="/events" className="text-sm font-bold tracking-widest text-gray-300 hover:text-[#00f0ff] uppercase transition-colors">
             Events
           </Link>
@@ -45,44 +51,46 @@ export default function Navbar() {
 
         {/* MOBILE MENU ICON */}
         <button 
-          className="md:hidden text-white z-50 p-2"
+          className="md:hidden text-white z-50 p-2 hover:text-[#00f0ff] transition-colors"
           onClick={() => setIsOpen(!isOpen)}
         >
           {isOpen ? <X size={32} /> : <Menu size={32} />}
         </button>
       </div>
 
-      {/* MOBILE MENU OVERLAY (Animated Glass) */}
+      {/* MOBILE MENU OVERLAY (Animated) */}
       <div 
-        className={`fixed h-screen w-screen inset-0 bg-black/95 backdrop-blur-xl z-40 flex flex-col items-center justify-center gap-5 transition-all duration-500 ease-in-out ${
-          isOpen ? "opacity-100 translate-y-0 visible" : "opacity-0 -translate-y-10 invisible"
+        className={`fixed inset-0 bg-black/95 backdrop-blur-xl z-40 flex flex-col items-center justify-center gap-8 transition-all duration-500 ease-in-out ${
+          isOpen 
+            ? "opacity-100 translate-y-0 visible" // Open State
+            : "opacity-0 -translate-y-10 invisible" // Closed State
         }`}
       >
         <Link 
           href="/events" 
-          className="text-2xl font-bold text-white tracking-widest uppercase hover:text-[#00f0ff]" 
-          onClick={() => setIsOpen(false)}
+          onClick={() => setIsOpen(false)} 
+          className="text-2xl font-bold text-white uppercase hover:text-[#00f0ff] transition-colors"
         >
           Events
         </Link>
         <Link 
           href="/about" 
-          className="text-2xl font-bold text-white tracking-widest uppercase hover:text-[#00f0ff]" 
-          onClick={() => setIsOpen(false)}
+          onClick={() => setIsOpen(false)} 
+          className="text-2xl font-bold text-white uppercase hover:text-[#00f0ff] transition-colors"
         >
-          About Us
+          About
         </Link>
         <Link 
           href="/team" 
-          className="text-2xl font-bold text-white tracking-widest uppercase hover:text-[#00f0ff]" 
-          onClick={() => setIsOpen(false)}
+          onClick={() => setIsOpen(false)} 
+          className="text-2xl font-bold text-white uppercase hover:text-[#00f0ff] transition-colors"
         >
           Team
         </Link>
         <Link 
           href="/join" 
-          className="px-10 py-4 border border-[#00f0ff] text-[#00f0ff] font-bold text-xl tracking-widest uppercase rounded-full hover:bg-[#00f0ff] hover:text-black transition-all"
-          onClick={() => setIsOpen(false)}
+          onClick={() => setIsOpen(false)} 
+          className="px-8 py-3 border border-[#00f0ff] text-[#00f0ff] font-bold text-xl rounded-full uppercase hover:bg-[#00f0ff] hover:text-black transition-all"
         >
           Join Us
         </Link>

@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, Suspense } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
+import { usePathname } from "next/navigation";
 import { Points, PointMaterial } from "@react-three/drei";
 
 function generateSpherePoints(count: number, radius: number) {
@@ -56,6 +57,14 @@ function Stars() {
 }
 
 export default function StarField() {
+  const pathname = usePathname();
+
+  if (pathname.includes("/admin")) {
+    return null;
+  }
+  if (pathname.includes("/join")) {
+    return null;
+  }
   return (
     <div className="fixed top-0 left-0 w-full h-full -z-10 bg-black">
       {/* ✅ OPTIMIZATION 3: 'dpr' limits pixel density.

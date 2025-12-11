@@ -14,7 +14,7 @@ export function middleware(request: NextRequest) {
 
   // 2. ✅ THE FIX: If user IS logged in, block access to Login Page
   if (path === "/admin/login" && isAuth) {
-    return NextResponse.redirect(new URL("/admin/dashboard", request.url));
+    return NextResponse.redirect(new URL("/admin/dashboard-group/dashboard", request.url));
   }
 
   return NextResponse.next();

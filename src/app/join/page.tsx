@@ -1,13 +1,16 @@
-import Navbar from "@/components/ui/Navbar";
 import MembershipForm from "@/components/features/MembershipForm";
+
 
 export default function JoinPage() {
   return (
-    <main className="min-h-screen bg-black text-white font-sans pt-32 px-4 pb-20 selection:bg-[#00f0ff]/30">
-      <Navbar />
-      <div className="flex items-center justify-center">
-        <MembershipForm />
+    <div className="min-h-screen pt-32 px-6 bg-black flex flex-col items-center">
+      <div className="max-w-4xl w-full text-center mb-12">
+        <h1 className="text-5xl font-bold mb-4">Join The Club</h1>
+        <p className="text-gray-400">Fill out the application below to become an official member.</p>
       </div>
-    </main>
+      
+      {/* ✅ Loads the interactive client form here */}
+      <MembershipForm />
+    </div>
   );
 }
