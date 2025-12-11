@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
+import { useState, useRef } from "react"; // ❌ Removed useTransition
 import { submitRegistration } from "@/actions/submitRegistration";
 import { Loader2, Plus, Trash2, AlertCircle, CheckCircle } from "lucide-react";
 
@@ -17,27 +17,34 @@ const SECTIONS = ["A", "B", "C", "D"];
 
 export default function EventRegisterForm({ event }: { event: EventType }) {
   const formRef = useRef<HTMLFormElement>(null);
-  // Initialize member count based on event type
   const [memberCount, setMemberCount] = useState(event.isTeamEvent ? event.minTeamSize : 1);
-  const [isPending, startTransition] = useTransition();
+  
+  // ✅ FIX: Manual State Lock
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState<any>(null);
 
-  const handleSubmit = (formData: FormData) => {
-    // Append necessary logic data for the Server Action
+  async function handleSubmit(formData: FormData) {
+    // ✅ 1. SAFETY LOCK: Stop if already running
+    if (isSubmitting) return;
+    setIsSubmitting(true); // Lock immediately
+
+    // Append logic data
     formData.append("type", "event");
     formData.append("eventId", event._id);
     formData.append("memberCount", memberCount.toString());
     
-    startTransition(async () => {
-      const result = await submitRegistration(null, formData);
-      setStatus(result);
-      
-      // Only reset form on successful submission
-      if (result.success && formRef.current) {
-        formRef.current.reset();
-      }
-    });
-  };
+    // Call Server Action
+    const result = await submitRegistration(null, formData);
+    setStatus(result);
+    
+    if (result.success) {
+      if (formRef.current) formRef.current.reset();
+      setMemberCount(event.isTeamEvent ? event.minTeamSize : 1);
+      // We keep isSubmitting = true here so they can't click again while success shows
+    } else {
+      setIsSubmitting(false); // Unlock only on error so they can try again
+    }
+  }
 
   if (status?.success) {
     return (
@@ -61,45 +68,10 @@ export default function EventRegisterForm({ event }: { event: EventType }) {
 
       <form ref={formRef} action={handleSubmit} className="space-y-8">
         
-        {/* Team Name (Only for Team Events) */}
-        {event.isTeamEvent && (
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-[#00f0ff] uppercase">Team Name</label>
-            <input name="teamName" required className="w-full bg-black border border-white/20 rounded-xl p-4 text-white focus:border-[#00f0ff] outline-none" placeholder="e.g. The Code Breakers" />
-          </div>
-        )}
-
-        {/* Member Details Loop */}
-        <div className="space-y-6">
-          {Array.from({ length: memberCount }).map((_, index) => (
-            <div key={index} className="p-6 bg-white/5 rounded-2xl border border-white/10 relative">
-              <span className="absolute top-4 right-4 text-xs font-bold text-gray-500 uppercase">Member {index + 1}</span>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <input name={event.isTeamEvent ? `member_${index}_fullName` : `fullName`} required placeholder="Full Name" className="bg-black border border-white/20 rounded-lg p-3 w-full text-sm focus:border-[#00f0ff] outline-none" />
-                <input name={event.isTeamEvent ? `member_${index}_email` : `email`} required type="email" placeholder="Email" className="bg-black border border-white/20 rounded-lg p-3 w-full text-sm focus:border-[#00f0ff] outline-none" />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <input name={event.isTeamEvent ? `member_${index}_rollNo` : `rollNo`} required placeholder="Roll No (24891A...)" className="bg-black border border-white/20 rounded-lg p-3 w-full text-sm font-mono uppercase focus:border-[#00f0ff] outline-none" />
-                <input name={event.isTeamEvent ? `member_${index}_phone` : `phone`} required placeholder="Phone" className="bg-black border border-white/20 rounded-lg p-3 w-full text-sm focus:border-[#00f0ff] outline-none" />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <select name={event.isTeamEvent ? `member_${index}_branch` : `branch`} required className="bg-black border border-white/20 rounded-lg p-3 w-full text-sm">
-                  <option value="">Branch</option>
-                  {BRANCHES.map(b => <option key={b} value={b}>{b}</option>)}
-                </select>
-                <select name={event.isTeamEvent ? `member_${index}_section` : `section`} required className="bg-black border border-white/20 rounded-lg p-3 w-full text-sm">
-                  <option value="">Sec</option>
-                  {SECTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Team Controls (Add/Remove) */}
+        {/* ... (Keep your existing Input Fields for Team Name & Members here) ... */}
+        {/* I am omitting the inputs to save space, paste them back here exactly as they were */}
+        
+        {/* Team Controls */}
         {event.isTeamEvent && (
           <div className="flex gap-4">
             {memberCount < event.maxTeamSize && (
@@ -118,9 +90,23 @@ export default function EventRegisterForm({ event }: { event: EventType }) {
           </div>
         )}
 
-        {/* Submit Button */}
-        <button disabled={isPending} className="w-full py-4 bg-[#00f0ff] text-black font-bold text-lg rounded-xl hover:bg-white transition-all flex justify-center items-center gap-2">
-          {isPending ? <Loader2 className="animate-spin" /> : "Complete Registration"}
+        {/* ✅ FIX: SUBMIT BUTTON */}
+        <button 
+          type="submit" // Ensure type is submit
+          disabled={isSubmitting} // Lock Button
+          className={`w-full py-4 font-bold text-lg rounded-xl transition-all flex justify-center items-center gap-2 ${
+            isSubmitting 
+              ? "bg-gray-600 text-gray-400 cursor-not-allowed" 
+              : "bg-[#00f0ff] text-black hover:bg-white"
+          }`}
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="animate-spin" /> Registering...
+            </>
+          ) : (
+            "Complete Registration"
+          )}
         </button>
       </form>
     </div>

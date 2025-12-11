@@ -1,15 +1,17 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react"; // ❌ Removed useTransition
 import { submitRegistration } from "@/actions/submitRegistration";
-import { Loader2, AlertCircle, CheckCircle, User, Mail, Hash, BookOpen, Phone } from "lucide-react";
+import { Loader2, AlertCircle, CheckCircle, User, Mail, Hash, Phone } from "lucide-react";
 
 const BRANCHES = ["CSE", "CSM", "CSD", "AIML", "IT", "ECE", "EEE", "CIVIL", "MECH"];
 const SECTIONS = ["A", "B", "C", "D"];
 
 export default function MembershipForm() {
-  const [isPending, startTransition] = useTransition();
+  // ✅ FIX: Manual State Lock
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState<any>(null);
+  
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -21,15 +23,16 @@ export default function MembershipForm() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
+    // ✅ 1. SAFETY LOCK
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
     const form = new FormData();
     form.append("type", "membership");
     form.append("fullName", formData.fullName);
@@ -39,22 +42,15 @@ export default function MembershipForm() {
     form.append("branch", formData.branch);
     form.append("section", formData.section);
     
-    startTransition(async () => {
-      const result = await submitRegistration(null, form);
-      setStatus(result);
-      
-      // Only reset form on successful submission
-      if (result.success) {
-        setFormData({
-          fullName: "",
-          email: "",
-          phone: "",
-          rollNo: "",
-          branch: "",
-          section: ""
-        });
-      }
-    });
+    const result = await submitRegistration(null, form);
+    setStatus(result);
+    
+    if (result.success) {
+      setFormData({ fullName: "", email: "", phone: "", rollNo: "", branch: "", section: "" });
+      // Keep locked so they don't resubmit
+    } else {
+      setIsSubmitting(false); // Unlock on error
+    }
   };
 
   if (status?.success) {
@@ -77,100 +73,8 @@ export default function MembershipForm() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         
-        {/* Full Name */}
-        <div className="space-y-1">
-          <label className="text-xs font-bold text-[#00f0ff] uppercase">Full Name</label>
-          <div className="relative">
-            <User className="absolute left-3 top-3 text-gray-500" size={18} />
-            <input 
-              name="fullName" 
-              value={formData.fullName}
-              onChange={handleChange}
-              required 
-              className="w-full bg-black border border-white/20 rounded-lg py-3 pl-10 text-white focus:border-[#00f0ff] outline-none" 
-              placeholder="John Doe" 
-            />
-          </div>
-        </div>
-
-        {/* Email & Phone */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-[#00f0ff] uppercase">Email</label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 text-gray-500" size={18} />
-              <input 
-                name="email" 
-                type="email" 
-                value={formData.email}
-                onChange={handleChange}
-                required 
-                className="w-full bg-black border border-white/20 rounded-lg py-3 pl-10 text-white focus:border-[#00f0ff] outline-none" 
-                placeholder="john@vgnt.ac.in" 
-              />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-[#00f0ff] uppercase">Phone</label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-3 text-gray-500" size={18} />
-              <input 
-                name="phone" 
-                value={formData.phone}
-                onChange={handleChange}
-                required 
-                className="w-full bg-black border border-white/20 rounded-lg py-3 pl-10 text-white focus:border-[#00f0ff] outline-none" 
-                placeholder="98765..." 
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Roll No */}
-        <div className="space-y-1">
-          <label className="text-xs font-bold text-[#00f0ff] uppercase">Roll Number</label>
-          <div className="relative">
-            <Hash className="absolute left-3 top-3 text-gray-500" size={18} />
-            <input 
-              name="rollNo" 
-              value={formData.rollNo}
-              onChange={handleChange}
-              required 
-              className="w-full bg-black border border-white/20 rounded-lg py-3 pl-10 text-white font-mono uppercase focus:border-[#00f0ff] outline-none" 
-              placeholder="24891A05..." 
-            />
-          </div>
-        </div>
-
-        {/* Branch & Section */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-[#00f0ff] uppercase">Branch</label>
-            <select 
-              name="branch" 
-              value={formData.branch}
-              onChange={handleChange}
-              required 
-              className="w-full bg-black border border-white/20 rounded-lg py-3 px-3 text-white focus:border-[#00f0ff] outline-none"
-            >
-              <option value="">Select</option>
-              {BRANCHES.map(b => <option key={b} value={b}>{b}</option>)}
-            </select>
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-[#00f0ff] uppercase">Sec</label>
-            <select 
-              name="section" 
-              value={formData.section}
-              onChange={handleChange}
-              required 
-              className="w-full bg-black border border-white/20 rounded-lg py-3 px-3 text-white focus:border-[#00f0ff] outline-none"
-            >
-              <option value="">Select</option>
-              {SECTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
-        </div>
+        {/* ... (Keep your existing Input Fields here: FullName, Email, Phone, etc.) ... */}
+        {/* I am omitting the inputs to save space, paste them back here exactly as they were */}
 
         {/* Error Message */}
         {status?.success === false && (
@@ -179,13 +83,23 @@ export default function MembershipForm() {
           </div>
         )}
 
-        {/* Submit */}
+        {/* ✅ FIX: SUBMIT BUTTON */}
         <button 
           type="submit"
-          disabled={isPending} 
-          className="w-full py-4 bg-[#00f0ff] text-black font-bold rounded-xl hover:bg-white transition-all flex justify-center items-center gap-2"
+          disabled={isSubmitting} // Lock Button
+          className={`w-full py-4 font-bold rounded-xl transition-all flex justify-center items-center gap-2 ${
+             isSubmitting 
+               ? "bg-gray-600 text-gray-400 cursor-not-allowed" 
+               : "bg-[#00f0ff] text-black hover:bg-white"
+          }`}
         >
-          {isPending ? <Loader2 className="animate-spin" /> : "Submit Application"}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="animate-spin" /> Processing...
+            </>
+          ) : (
+            "Submit Application"
+          )}
         </button>
 
       </form>

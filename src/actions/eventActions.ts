@@ -3,9 +3,18 @@
 import dbConnect from "@/lib/db";
 import Event from "@/models/Event";
 import { revalidatePath } from "next/cache";
+import { verifyAdmin } from "@/lib/auth";
 
 // 1. CREATE EVENT
 export async function createEvent(formData: FormData) {
+   try {
+    await verifyAdmin(); 
+  } catch (e) {
+    return { success: false, message: "Unauthorized" };
+  }
+
+
+
   await dbConnect();
 
   const title = formData.get("title");
@@ -43,6 +52,14 @@ export async function createEvent(formData: FormData) {
 
 // 2. DELETE EVENT (✅ This was missing)
 export async function deleteEvent(id: string) {
+  try {
+    await verifyAdmin(); 
+  } catch (e) {
+    return { success: false, message: "Unauthorized" };
+  }
+
+
+
   await dbConnect();
   try {
     await Event.findByIdAndDelete(id);
@@ -70,6 +87,16 @@ export async function toggleEventStatus(id: string, currentStatus: boolean) {
 // 4. UPDATE EVENT (For Edit Page)
 // 4. UPDATE EVENT
 export async function updateEvent(id: string, formData: FormData) {
+  
+  try {
+    await verifyAdmin(); 
+  } catch (e) {
+    return { success: false, message: "Unauthorized" };
+  }
+
+
+
+
   await dbConnect();
 
   try {

@@ -17,7 +17,7 @@ export default function AdminLogin() {
     const res = await loginAdmin(formData);
     
     if (res.success) {
-      router.push("/admin/dashboard-group/dashboard");
+      router.replace("/admin/dashboard-group/dashboard");
     } else {
       setError(res.message || "An unknown error occurred");
       setLoading(false);

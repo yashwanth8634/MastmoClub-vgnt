@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Calendar, Clock, MapPin, ArrowRight } from "lucide-react";
+// ✅ Make sure you created the utils.ts file I gave you earlier!
+import { formatDate } from "@/lib/utils";
 
 interface EventProps {
   id: string;
@@ -16,8 +18,8 @@ export default function EventCard({ event }: { event: EventProps }) {
   return (
     <div className={`group relative p-6 rounded-2xl border transition-all duration-300 bg-black
       ${event.isPast 
-        ? "border-white/10 opacity-80 hover:opacity-100 hover:border-white/30" // Past: Black bg, subtle border
-        : "border-white/20 hover:border-[#00f0ff] hover:shadow-[0_0_20px_rgba(0,240,255,0.1)] hover:-translate-y-1" // Upcoming: Black bg, glow effect
+        ? "border-white/10 opacity-80 hover:opacity-100 hover:border-white/30" 
+        : "border-white/20 hover:border-[#00f0ff] hover:shadow-[0_0_20px_rgba(0,240,255,0.1)] hover:-translate-y-1"
       }`}>
       
       {/* Category Badge */}
@@ -40,7 +42,8 @@ export default function EventCard({ event }: { event: EventProps }) {
       <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-sm text-gray-300 mb-6 font-mono">
         <div className="flex items-center gap-2">
           <Calendar size={14} className={event.isPast ? "text-gray-500" : "text-[#00f0ff]"} />
-          {event.date}
+          {/* ✅ FIXED: Use the helper function here */}
+          {formatDate(event.date)}
         </div>
         <div className="flex items-center gap-2">
           <Clock size={14} className={event.isPast ? "text-gray-500" : "text-[#00f0ff]"} />

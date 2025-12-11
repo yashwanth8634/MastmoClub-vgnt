@@ -36,10 +36,10 @@ export default async function EventsManager() {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-white/5 text-gray-400 text-sm uppercase tracking-widest">
-              <th className="p-6">Event Name</th>
-              <th className="p-6">Date</th>
-              <th className="p-6">Status</th>
-              <th className="p-6 text-right">Actions</th>
+              <th className="p-6 whitespace-nowrap">Event Name</th>
+              <th className="p-6 whitespace-nowrap">Date</th>
+              <th className="p-6 whitespace-nowrap">Status</th>
+              <th className="p-6 whitespace-nowrap text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/10">

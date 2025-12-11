@@ -5,8 +5,31 @@ import { Calendar, Clock, MapPin, ArrowLeft, ShieldCheck, Trophy, Users, Camera 
 import dbConnect from "@/lib/db";
 import Event from "@/models/Event";
 import { notFound } from "next/navigation";
+import { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const resolvedParams = await params;
+  await dbConnect();
+  
+  // Fetch event just for the title/desc (MongoDB caches this so it's fast)
+  const event = await Event.findById(resolvedParams.id).select('title description').lean();
+
+  if (!event) {
+    return { title: "Event Not Found" };
+  }
+
+  return {
+    title: `${event.title} | MASTMO Club`,
+    description: event.description?.substring(0, 150) + "...", // Trim description for preview
+    openGraph: {
+      title: event.title,
+      description: "Register now for this event at VGNT!",
+      type: "website",
+    },
+  };
+}
 
 export default async function EventDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   // Await the params

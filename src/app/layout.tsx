@@ -11,6 +11,10 @@ const spaceGrotesk = MedievalSharp({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://www.mastmovgnt.in'),
+  alternates: {
+    canonical: '/',
+  },
   title: "Mastmo@Vgnt | Official Math & Stats Club of VGNT",
   description: "Join MASTMO Club at VGNT. Participate in hackathons, modeling events, and research workshops. The official student community for mathematics.",
   keywords: [
@@ -18,7 +22,7 @@ export const metadata: Metadata = {
     "MASTMO", "MASTMO Club", "VGNT Club", "Vignan Math Club",
     
     // College & Location
-    "Vignan's Institute of Information Technology", "VGNT Visakhapatnam", "VIIT Student Clubs", "Engineering Club Hyderabad",
+    "Vignan's Institute of Information Technology", "VGNT Deshmukhi", "VIIT Student Clubs", "Engineering Club Hyderabad","vgnt",
     
     // Core Subjects
     "Mathematical Modeling", "Statistical Analysis", "Mathematics", "Statistics",
@@ -30,7 +34,14 @@ export const metadata: Metadata = {
     "MASTMO VGNT", "Join math club", "Vignan student chapters"
   ],
   // Good practice to add your base URL too
-  metadataBase: new URL('https://www.mastmovgnt.in'),
+  openGraph: {
+    title: "MASTMO Club | VGNT",
+    description: "Join the official Math & Stats Club of VGNT.",
+    url: 'https://www.mastmovgnt.in',
+    siteName: 'MASTMO Club',
+    locale: 'en_US',
+    type: 'website',
+  },
 };
 
 
