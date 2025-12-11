@@ -1,14 +1,13 @@
 "use client";
 
-import { useState } from "react"; // ❌ Removed useTransition
+import { useState } from "react";
 import { submitRegistration } from "@/actions/submitRegistration";
-import { Loader2, AlertCircle, CheckCircle, User, Mail, Hash, Phone } from "lucide-react";
+import { Loader2, AlertCircle, CheckCircle, User, Mail, Hash, Phone, BookOpen, Layers } from "lucide-react";
 
 const BRANCHES = ["CSE", "CSM", "CSD", "AIML", "IT", "ECE", "EEE", "CIVIL", "MECH"];
 const SECTIONS = ["A", "B", "C", "D"];
 
 export default function MembershipForm() {
-  // ✅ FIX: Manual State Lock
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState<any>(null);
   
@@ -29,7 +28,7 @@ export default function MembershipForm() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // ✅ 1. SAFETY LOCK
+    // 1. SAFETY LOCK
     if (isSubmitting) return;
     setIsSubmitting(true);
 
@@ -47,7 +46,7 @@ export default function MembershipForm() {
     
     if (result.success) {
       setFormData({ fullName: "", email: "", phone: "", rollNo: "", branch: "", section: "" });
-      // Keep locked so they don't resubmit
+      // Keep locked (isSubmitting=true) so they don't resubmit
     } else {
       setIsSubmitting(false); // Unlock on error
     }
@@ -67,14 +66,112 @@ export default function MembershipForm() {
   }
 
   return (
-    <div className="max-w-xl mx-auto bg-white/5 border border-white/10 rounded-3xl p-8 shadow-2xl">
+    <div className="max-w-xl mx-auto bg-white/5 border border-white/10 rounded-3xl p-8 shadow-2xl backdrop-blur-sm">
       <h1 className="text-3xl font-bold mb-2 text-center text-white">Join MASTMO</h1>
       <p className="text-gray-400 text-center mb-8 text-sm">Become a permanent member of the club.</p>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         
-        {/* ... (Keep your existing Input Fields here: FullName, Email, Phone, etc.) ... */}
-        {/* I am omitting the inputs to save space, paste them back here exactly as they were */}
+        {/* Full Name */}
+        <div className="space-y-1">
+          <label className="text-xs font-bold text-[#00f0ff] uppercase">Full Name</label>
+          <div className="relative">
+            <User className="absolute left-3 top-3 text-gray-500" size={18} />
+            <input 
+              name="fullName" 
+              value={formData.fullName}
+              onChange={handleChange}
+              required 
+              className="w-full bg-black border border-white/20 rounded-lg py-3 pl-10 text-white focus:border-[#00f0ff] outline-none" 
+              placeholder="John Doe" 
+            />
+          </div>
+        </div>
+
+        {/* Email & Phone */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-[#00f0ff] uppercase">Email</label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-3 text-gray-500" size={18} />
+              <input 
+                name="email" 
+                type="email" 
+                value={formData.email}
+                onChange={handleChange}
+                required 
+                className="w-full bg-black border border-white/20 rounded-lg py-3 pl-10 text-white focus:border-[#00f0ff] outline-none" 
+                placeholder="john@vgnt.ac.in" 
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-[#00f0ff] uppercase">Phone</label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-3 text-gray-500" size={18} />
+              <input 
+                name="phone" 
+                value={formData.phone}
+                onChange={handleChange}
+                required 
+                className="w-full bg-black border border-white/20 rounded-lg py-3 pl-10 text-white focus:border-[#00f0ff] outline-none" 
+                placeholder="98765..." 
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Roll No */}
+        <div className="space-y-1">
+          <label className="text-xs font-bold text-[#00f0ff] uppercase">Roll Number</label>
+          <div className="relative">
+            <Hash className="absolute left-3 top-3 text-gray-500" size={18} />
+            <input 
+              name="rollNo" 
+              value={formData.rollNo}
+              onChange={handleChange}
+              required 
+              className="w-full bg-black border border-white/20 rounded-lg py-3 pl-10 text-white font-mono uppercase focus:border-[#00f0ff] outline-none" 
+              placeholder="24891A05..." 
+            />
+          </div>
+        </div>
+
+        {/* Branch & Section */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-[#00f0ff] uppercase">Branch</label>
+            <div className="relative">
+              <BookOpen className="absolute left-3 top-3 text-gray-500" size={18} />
+              <select 
+                name="branch" 
+                value={formData.branch}
+                onChange={handleChange}
+                required 
+                className="w-full bg-black border border-white/20 rounded-lg py-3 pl-10 text-white focus:border-[#00f0ff] outline-none appearance-none"
+              >
+                <option value="">Select</option>
+                {BRANCHES.map(b => <option key={b} value={b}>{b}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-[#00f0ff] uppercase">Sec</label>
+            <div className="relative">
+              <Layers className="absolute left-3 top-3 text-gray-500" size={18} />
+              <select 
+                name="section" 
+                value={formData.section}
+                onChange={handleChange}
+                required 
+                className="w-full bg-black border border-white/20 rounded-lg py-3 pl-10 text-white focus:border-[#00f0ff] outline-none appearance-none"
+              >
+                <option value="">Select</option>
+                {SECTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+          </div>
+        </div>
 
         {/* Error Message */}
         {status?.success === false && (
@@ -83,10 +180,10 @@ export default function MembershipForm() {
           </div>
         )}
 
-        {/* ✅ FIX: SUBMIT BUTTON */}
+        {/* Submit Button */}
         <button 
           type="submit"
-          disabled={isSubmitting} // Lock Button
+          disabled={isSubmitting} 
           className={`w-full py-4 font-bold rounded-xl transition-all flex justify-center items-center gap-2 ${
              isSubmitting 
                ? "bg-gray-600 text-gray-400 cursor-not-allowed" 
