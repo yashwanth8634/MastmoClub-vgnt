@@ -13,10 +13,11 @@ export async function loginAdmin(formData: FormData) {
   console.log("Password received:", password);
 
   // Replace with your real password env variable
-  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123"; 
+  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD; 
+  const ADMIN_USERNAME = process.env.ADMIN_USERNAME; 
 
   // Simple password check (ignoring username for now, or check it if you want)
-  if (password === ADMIN_PASSWORD) {
+  if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
     console.log("✅ Password Correct! Setting Cookie...");
 
     const cookieStore = await cookies();
