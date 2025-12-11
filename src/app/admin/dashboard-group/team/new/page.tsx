@@ -20,7 +20,7 @@ export default function NewMemberPage() {
       alert(result.message);
       setIsSubmitting(false);
     } else {
-      router.push("/admin/team"); // Redirect back to list
+      router.push("/admin/dashboard-group/team"); // Redirect back to list
     }
   }
 

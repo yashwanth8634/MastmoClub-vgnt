@@ -27,21 +27,25 @@ export default function EditTeamForm({ member, id }: { member: TeamMemberData, i
   const router = useRouter();
 
   async function handleSubmit(formData: FormData) {
+    if (isSubmitting) return; // Prevent double submission
     setIsSubmitting(true);
+    
     const result = await updateTeamMember(id, formData);
     
     if (result && !result.success) {
       alert(result.message);
       setIsSubmitting(false);
     } else {
-      router.push("/admin/team");
+      // ✅ FIX 1: Correct Redirect Path
+      router.push("/admin/dashboard-group/team");
       router.refresh();
     }
   }
 
   return (
     <div className="max-w-2xl mx-auto pb-20">
-      <Link href="/admin/team" className="flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors">
+      {/* ✅ FIX 2: Correct Back Link */}
+      <Link href="/admin/dashboard-group/team" className="flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors">
         <ArrowLeft size={18} /> Back to Team
       </Link>
 
@@ -114,7 +118,13 @@ export default function EditTeamForm({ member, id }: { member: TeamMemberData, i
           </div>
         </div>
 
-        <button type="submit" disabled={isSubmitting} className="w-full bg-[#00f0ff] text-black font-bold py-4 rounded-xl hover:bg-white transition-colors flex justify-center items-center gap-2">
+        <button 
+          type="submit" 
+          disabled={isSubmitting} 
+          className={`w-full font-bold py-4 rounded-xl flex justify-center items-center gap-2 transition-colors ${
+            isSubmitting ? "bg-gray-600 text-gray-400 cursor-not-allowed" : "bg-[#00f0ff] text-black hover:bg-white"
+          }`}
+        >
           {isSubmitting ? "Saving..." : <><Save size={20} /> Update Member</>}
         </button>
       </form>

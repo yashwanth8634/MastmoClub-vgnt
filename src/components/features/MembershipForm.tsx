@@ -66,7 +66,7 @@ export default function MembershipForm() {
   }
 
   return (
-    <div className="max-w-xl mx-auto bg-white/5 border border-white/10 rounded-3xl p-8 shadow-2xl backdrop-blur-sm">
+    <div className="max-w-xl mx-auto bg-white/5 border border-white/40 rounded-3xl p-8 shadow-2xl backdrop-blur-sm">
       <h1 className="text-3xl font-bold mb-2 text-center text-white">Join MASTMO</h1>
       <p className="text-gray-400 text-center mb-8 text-sm">Become a permanent member of the club.</p>
 

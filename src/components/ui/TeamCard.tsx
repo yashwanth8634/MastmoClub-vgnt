@@ -20,10 +20,10 @@ export default function TeamCard({ member }: { member: TeamMemberProps }) {
   const hasValidImage = member.image && (member.image.startsWith("/") || member.image.startsWith("http"));
 
   return (
-    <div className="group relative bg-black border border-white/10 rounded-xl p-6 hover:border-[#00f0ff]/50 transition-all duration-300 hover:-translate-y-1 flex flex-col items-center text-center">
+    <div className="group relative bg-black border border-white/40 rounded-xl p-6 hover:border-[#00f0ff]/50 transition-all duration-300 hover:-translate-y-1 flex flex-col items-center text-center">
       
       {/* 1. Circular Avatar */}
-      <div className="relative w-24 h-24 mb-4 rounded-full overflow-hidden border-2 border-white/10 group-hover:border-[#00f0ff] transition-colors bg-black/50 flex items-center justify-center">
+      <div className="relative w-24 h-24 mb-4 rounded-full overflow-hidden border-2 border-white/30 group-hover:border-[#00f0ff] transition-colors bg-black/50 flex items-center justify-center">
         {hasValidImage ? (
           <Image 
             src={member.image} 

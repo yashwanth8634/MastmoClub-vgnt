@@ -14,7 +14,7 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="inline-block mb-6 px-4 py-1 rounded-full border border-[#00f0ff]/30 bg-[#00f0ff]/10"
+          className="inline-block mb-6 px-4 py-1 rounded-full border border-[#00f0ff]/50 bg-[#00f0ff]/10"
         >
           <span className="text-[#00f0ff] text-xs font-bold tracking-[0.2em] uppercase">
             VGNT Campus Chapter
@@ -60,13 +60,13 @@ const HeroSection = () => {
         >
           <Link
             href="/events"
-            className="px-10 py-4 bg-white text-black font-bold rounded-full hover:bg-[#00f0ff] transition-all duration-300 flex items-center gap-2"
+            className="px-10 py-4 bg-white text-black font-bold rounded-full border-white/40 hover:bg-[#00f0ff] transition-all duration-300 flex items-center gap-2"
           >
             Explore Events <ArrowRight size={20} />
           </Link>
           <Link
             href="/join"
-            className="px-10 py-4 border border-white/20 text-white font-bold rounded-full hover:bg-white/10 transition-all duration-300"
+            className="px-10 py-4 border border-white/40 text-white font-bold rounded-full hover:bg-white/10 transition-all duration-300"
           >
             Become a Member
           </Link>
@@ -169,7 +169,7 @@ const FooterSection = () => {
             <span className="text-[10px] text-gray-500 uppercase tracking-widest">Supported By</span>
             {/* Make sure vignan-logo.png exists in your public folder */}
             <div className="relative w-32 h-10 opacity-90">
-              <Image src="/vignan-logo.png" alt="VGNT Logo" fill className="object-contain" />
+              <Image src="/vgnt-logo.png" alt="VGNT Logo" fill className="object-contain" />
             </div>
           </div>
         </div>

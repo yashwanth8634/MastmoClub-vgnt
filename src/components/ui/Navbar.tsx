@@ -31,7 +31,7 @@ export default function Navbar() {
         </Link>
 
         {/* DESKTOP MENU */}
-        <div className="hidden md:flex items-center gap-8 bg-black/80 backdrop-blur-md px-8 py-3 rounded-full border border-white/10">
+        <div className="hidden md:flex items-center gap-8 bg-black/80 backdrop-blur-md px-8 py-3 rounded-full border border-white/40">
           <Link href="/events" className="text-sm font-bold tracking-widest text-gray-300 hover:text-[#00f0ff] uppercase transition-colors">
             Events
           </Link>

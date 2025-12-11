@@ -103,7 +103,7 @@ export default function AboutPage() {
         <section className="mb-32">
           <div className="flex items-center gap-4 mb-12">
             <h2 className="text-3xl font-bold text-white uppercase tracking-widest">Our Visionaries</h2>
-            <div className="h-px flex-1 bg-white/10"></div>
+            <div className="h-px flex-1 bg-white/50"></div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 bg-transparent">
@@ -114,7 +114,7 @@ export default function AboutPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="relative p-8 rounded-2xl bg-gradient-to-br from-white/5 to-black border border-white/10 hover:border-[#00f0ff]/30 transition-all duration-300 bg-black"
+                className="relative p-8 rounded-2xl bg-gradient-to-br from-white/5 to-black border border-white/40 hover:border-[#00f0ff]/30 transition-all duration-300 bg-black"
               >
                 <Quote className="text-[#00f0ff] mb-4 opacity-50" size={24} />
                 <h3 className="text-xl font-bold text-white mb-1">{person.name}</h3>
@@ -137,7 +137,7 @@ export default function AboutPage() {
           transition={{ duration: 0.8 }}
           className="mb-32 grid grid-cols-1 md:grid-cols-2 gap-12 items-center"
         >
-          <div className="bg-black border border-white/10 p-10 rounded-3xl backdrop-blur-sm">
+          <div className="bg-black border border-white/40 p-10 rounded-3xl backdrop-blur-sm">
             <h2 className="text-3xl font-bold mb-6">Why MASTMO?</h2>
             <p className="text-gray-300 mb-6 leading-relaxed">
               Most engineering curricula emphasize theory without sufficient application. We bridge that gap. 
@@ -146,7 +146,7 @@ export default function AboutPage() {
             </p>
             <div className="flex flex-col gap-4">
               {THEMES.map((theme, i) => (
-                <div key={i} className="pl-4 border-l-2 border-[#00f0ff]">
+                <div key={i} className="pl-4 border-l-3 border-[#00f0ff]">
                   <h4 className="font-bold text-white">{theme.title}</h4>
                   <p className="text-sm text-gray-400">{theme.desc}</p>
                 </div>
@@ -154,12 +154,12 @@ export default function AboutPage() {
             </div>
           </div>
 
-          <div className="relative h-full min-h-[400px] rounded-3xl overflow-hidden border border-white/10 bg-black/50 flex items-center justify-center">
+          <div className="relative h-full min-h-[400px] rounded-3xl overflow-hidden border border-white/40 bg-black/50 flex items-center justify-center">
             <div className="absolute inset-0 bg-gradient-to-br from-[#00f0ff]/20 to-purple-500/20 blur-3xl"></div>
             <div className="relative text-center p-8">
               <Globe size={64} className="text-[#00f0ff] mx-auto mb-6 opacity-80" />
               <h3 className="text-2xl font-bold mb-2">From Theory</h3>
-              <div className="w-0.5 h-8 bg-white/70 mx-auto my-2"></div>
+              <div className="w-0.5 h-8 bg-white mx-auto my-2"></div>
               <h3 className="text-2xl font-bold text-[#00f0ff]">To Application</h3>
             </div>
           </div>
@@ -169,7 +169,7 @@ export default function AboutPage() {
         <section>
           <div className="flex items-center gap-4 mb-12">
             <h2 className="text-3xl font-bold text-white uppercase tracking-widest">Core Objectives</h2>
-            <div className="h-px flex-1 bg-white/10"></div>
+            <div className="h-px flex-1 bg-white/50"></div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 bg-transparent">
@@ -180,7 +180,7 @@ export default function AboutPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="relative p-8 rounded-2xl bg-gradient-to-br from-white/5 to-black border border-white/10 hover:border-[#00f0ff]/30  transition-all duration-300 bg-black"
+                className="relative p-8 rounded-2xl bg-gradient-to-br from-white/5 to-black border border-white/40 hover:border-[#00f0ff]/30  transition-all duration-300 bg-black"
                 
               >
                 
@@ -197,7 +197,7 @@ export default function AboutPage() {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="mt-32 text-center p-12 rounded-3xl bg-gradient-to-b from-white/5 to-transparent border border-white/10 bg-black"
+          className="mt-32 text-center p-12 rounded-3xl bg-gradient-to-b from-white/5 to-transparent border border-white/40 bg-black"
         >
           <h2 className="text-4xl font-bold mb-6">Ready to solve the impossible?</h2>
           <p className="text-gray-400 mb-8 max-w-xl mx-auto">

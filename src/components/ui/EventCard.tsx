@@ -17,7 +17,7 @@ interface EventProps {
 
 export default function EventCard({ event }: { event: EventProps }) {
   return (
-    <div className={`group relative p-6 rounded-2xl border transition-all duration-300 bg-black ${event.isPast ? "border-white/10 opacity-80" : "border-white/20 hover:border-[#00f0ff]"}`}>
+    <div className={`group relative p-6 rounded-2xl border transition-all duration-300 bg-[#050505] ${event.isPast ? "border-white/40 opacity-90" : "border-white/20 hover:border-[#00f0ff]" }`}>
       <span className="inline-block px-3 py-1 rounded-full bg-[#00f0ff]/10 text-[#00f0ff] text-xs font-bold uppercase mb-4">
         {event.category}
       </span>

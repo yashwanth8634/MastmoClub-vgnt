@@ -1,28 +1,30 @@
-import mongoose, { Schema, model, models } from "mongoose";
+import mongoose from "mongoose";
 
-const EventSchema = new Schema({
+const EventSchema = new mongoose.Schema({
   title: { type: String, required: true },
-  description: { type: String },
-  category: { type: String, default: "General" }, // 'Membership', 'Hackathon', etc.
-  location: { type: String },
-  date: { type: Date, required: true },
-  isPast: { type: Boolean, default: false },
-
-  // Constraints
-  registrationOpen: { type: Boolean, default: true },
-  deadline: { type: Date },
-  maxRegistrations: { type: Number, default: 0 },
-  currentRegistrations: { type: Number, default: 0 },
-
-  // Team Logic
+  description: { type: String, required: true },
+  date: { type: Date, required: true }, // When the event happens
+  time: { type: String, required: true },
+  location: { type: String, required: true },
+  category: { type: String, default: "Event" },
+  
+  // ✅ NEW FIELDS FOR LOGIC
+  deadline: { type: Date }, // Registration closes at this time
+  maxRegistrations: { type: Number, default: 0 }, // 0 = Unlimited
+  currentRegistrations: { type: Number, default: 0 }, // Auto-increases
+  
+  // Team Settings
   isTeamEvent: { type: Boolean, default: false },
   minTeamSize: { type: Number, default: 1 },
   maxTeamSize: { type: Number, default: 1 },
+  
+  // Manual Override (Optional)
+  isPast: { type: Boolean, default: false },
+  registrationOpen: { type: Boolean, default: true },
 
-  // Optional arrays
-  rules: [{ type: String }],
-  gallery: [{ type: String }],
+  // Other fields
+  rules: [String],
+  image: String,
 }, { timestamps: true });
 
-const Event = models.Event || model("Event", EventSchema);
-export default Event;
+export default mongoose.models.Event || mongoose.model("Event", EventSchema);

@@ -2,38 +2,59 @@ import dbConnect from "@/lib/db";
 import Event from "@/models/Event";
 import EventCard from "@/components/ui/EventCard";
 
-export const dynamic = "force-dynamic"; // Ensures new events show up immediately
+export const dynamic = "force-dynamic";
 
 export default async function EventsPage() {
   await dbConnect();
-  // Fetch raw data from DB
   const events = await Event.find({}).sort({ date: 1 }).lean();
+  
+  const now = new Date(); // Current Real-Time
+
+  // ✅ AUTOMATIC SORTING
+  // An event is Upcoming if: Date is in future AND 'isPast' manual flag is false
+  const upcomingEvents = events.filter((e: any) => {
+    const eventDate = new Date(e.date);
+    // Even if date is today, check if time has passed? 
+    // Usually comparing just Date > Now is safer for "Upcoming"
+    return eventDate >= now && !e.isPast;
+  });
+
+  // An event is Past if: Date is older than Now OR 'isPast' is manually true
+  const pastEvents = events.filter((e: any) => {
+    const eventDate = new Date(e.date);
+    return eventDate < now || e.isPast;
+  });
 
   return (
-    <main className="min-h-screen pt-32 px-6 bg-black">
-      <h1 className="text-4xl md:text-6xl font-bold text-center mb-12">Upcoming Events</h1>
+    <main className="min-h-screen pt-32 px-6">
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto pb-20">
-        {events.length > 0 ? (
-          events.map((event: any) => (
-            <EventCard 
-              key={event._id.toString()} 
-              event={{
-                id: event._id.toString(),
-                title: event.title,
-                date: event.date?.toString(), // Safely convert date to string
-                time: event.time,
-                location: event.location,
-                category: event.category,
-                description: event.description,
-                isPast: event.isPast
-              }} 
-            />
-          ))
-        ) : (
-          <p className="text-center text-gray-500 col-span-full">No upcoming events found.</p>
-        )}
-      </div>
+      {/* 1. UPCOMING */}
+      <section className="mb-20">
+        <h1 className="text-4xl md:text-6xl font-bold text-center mb-12 text-white">
+          Upcoming <span className="text-[#00f0ff]">Events</span>
+        </h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+          {upcomingEvents.length > 0 ? (
+            upcomingEvents.map((event: any) => (
+              <EventCard key={event._id.toString()} event={{ ...event, id: event._id.toString(), isPast: false }} />
+            ))
+          ) : (
+             <p className="text-center text-gray-500 col-span-full">No upcoming events.</p>
+          )}
+        </div>
+      </section>
+
+      {/* 2. PAST (Only if exists) */}
+      {pastEvents.length > 0 && (
+        <section className="border-t border-white/40 pt-20 pb-20">
+          <h2 className="text-3xl md:text-5xl font-bold text-center mb-12 text-gray-400">Past Recaps</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto opacity-70 hover:opacity-100 transition-opacity">
+            {pastEvents.map((event: any) => (
+              <EventCard key={event._id.toString()} event={{ ...event, id: event._id.toString(), isPast: true }} />
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }

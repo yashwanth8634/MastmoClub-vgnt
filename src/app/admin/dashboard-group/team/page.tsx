@@ -75,7 +75,7 @@ export default async function TeamManager() {
                       </td>
                       <td className="p-4 text-right pr-6 flex justify-end gap-2">
                         <Link
-                          href={`/admin/team/${member._id}/edit`}
+                          href={`/admin/dashboard-group/team/${member._id}/edit`}
                           className="p-2 text-gray-500 hover:text-[#00f0ff] hover:bg-[#00f0ff]/10 rounded-lg transition-all"
                         >
                           <Pencil size={18} />
