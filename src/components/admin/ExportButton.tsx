@@ -1,7 +1,7 @@
 "use client";
 
 import { Download } from "lucide-react";
-
+import * as XLSX from "xlsx";
 
 interface Registration {
   teamName?: string;
