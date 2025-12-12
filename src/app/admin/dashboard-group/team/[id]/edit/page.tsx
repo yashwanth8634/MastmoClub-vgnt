@@ -24,5 +24,5 @@ export default async function EditMemberPage({ params }: { params: Promise<{ id:
     socials: member.socials || {}
   };
 
-  return <EditTeamForm member={serializedMember} id={id} />;
+  return <EditTeamForm member={serializedMember}  />;
 }

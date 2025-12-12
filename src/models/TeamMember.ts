@@ -3,7 +3,8 @@ import mongoose, { Schema, model, models } from "mongoose";
 const TeamMemberSchema = new Schema(
   {
     name: { type: String, required: true },
-    role: { type: String, required: true }, // President, Faculty, etc.
+    role: { type: String, required: true },
+     // President, Faculty, etc.
     position: { type: String },
     details: { type: String }, // Roll No or Class
     category: { 
