@@ -33,7 +33,7 @@ export default function HoverExpandGallery({
   return (
     <div className={cn("w-full", className)}>
       <div className="flex w-full overflow-x-auto pb-6 pt-2 no-scrollbar px-2 snap-x">
-        <div className="flex min-w-full items-center justify-center gap-2 md:gap-4 mx-auto">
+        <div className="flex min-w-full w-max items-center justify-start gap-2 md:gap-4 mx-auto">
           {processedImages.map((image, index) => (
             <motion.div
               key={image.id}
