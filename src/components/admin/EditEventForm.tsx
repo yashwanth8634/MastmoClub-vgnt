@@ -3,8 +3,11 @@
 import { useState } from "react";
 import { updateEvent } from "@/actions/eventActions";
 import { useRouter } from "next/navigation";
-import { Save, ArrowLeft, Loader2, CalendarClock, Users, MapPin } from "lucide-react";
+import { Save, ArrowLeft, Loader2, CalendarClock, Users, MapPin,Image as ImageIcon, X } from "lucide-react";
 import Link from "next/link";
+import { UploadDropzone } from "@/utils/uploadthing"; // ✅ Ensure this path is correct
+import Image from "next/image";
+
 
 interface EventData {
   _id: string;
@@ -20,10 +23,19 @@ interface EventData {
   rules?: string[];
   deadline?: string; 
   maxRegistrations?: number;
+  gallery?: string[];
 }
 
 export default function EditEventForm({ event, id }: { event: EventData, id: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [gallery, setGallery] = useState<string[]>(
+    (event.gallery || []).map((item: any) => {
+       if (typeof item === "object" && item !== null) {
+         return item.src || item.imageUrl || ""; // Extract URL
+       }
+       return item; // Keep String
+    }).filter(url => typeof url === 'string' && url.length > 0)
+  );
   const router = useRouter();
 
   // Helper: Format ISO date string to "YYYY-MM-DDTHH:MM" for input fields
@@ -39,6 +51,7 @@ export default function EditEventForm({ event, id }: { event: EventData, id: str
   async function handleSubmit(formData: FormData) {
     if (isSubmitting) return;
     setIsSubmitting(true);
+    formData.set("galleryJSON", JSON.stringify(gallery));
     
     const result = await updateEvent(id, formData);
     
@@ -50,6 +63,10 @@ export default function EditEventForm({ event, id }: { event: EventData, id: str
       router.refresh();
     }
   }
+
+  const removeImage = (urlToRemove: string) => {
+    setGallery(prev => prev.filter(url => url !== urlToRemove));
+  };
 
   return (
     <div className="max-w-4xl mx-auto pb-20">
@@ -192,6 +209,55 @@ export default function EditEventForm({ event, id }: { event: EventData, id: str
             className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white focus:border-[#00f0ff] outline-none font-mono text-sm" 
           />
         </div>
+
+        {/* SECTION 5: EVENT GALLERY */}
+<div className="p-6 bg-white/5 border border-white/10 rounded-2xl space-y-4">
+    <h3 className="text-sm font-bold text-pink-500 uppercase mb-2 border-b border-white/10 pb-2 flex items-center gap-2">
+        <ImageIcon size={16} /> 5. Event Gallery
+    </h3>
+
+    {/* Uploader */}
+    <div className="bg-black/40 border border-dashed border-white/20 rounded-xl overflow-hidden">
+        <UploadDropzone
+            endpoint="galleryImage"
+            onClientUploadComplete={(res) => {
+                // ✅ CRITICAL FIX: Extract just the URLs from the response
+                if (res) {
+                        const newUrls = res.map((file) => file.url);
+                        setGallery((prev) => [...prev, ...newUrls]);
+                        alert("Photos uploaded! Click 'Update Event' to save.");
+                    }
+                }}
+            onUploadError={(error: Error) => {
+                alert(`Error: ${error.message}`);
+            }}
+            appearance={{
+                container: { border: "none", padding: "20px" },
+                label: { color: "#00f0ff" },
+                button: { background: "#00f0ff", color: "black" }
+            }}
+        />
+    </div>
+
+    {/* Preview Grid */}
+    {gallery.length > 0 && (
+        <div className="grid grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+            {gallery.map((url, index) => (
+                <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-white/10 group">
+                    {/* ✅ Use standard img tag or Next Image */}
+                    <Image src={url} alt="Gallery" fill className="object-cover" />
+                    <button
+                        type="button"
+                        onClick={() => setGallery(prev => prev.filter(u => u !== url))}
+                        className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                        <X size={14} />
+                    </button>
+                </div>
+            ))}
+        </div>
+    )}
+</div>
 
         {/* SUBMIT BUTTON */}
         <button 

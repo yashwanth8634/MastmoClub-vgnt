@@ -96,6 +96,16 @@ export async function updateEvent(id: string, formData: FormData) {
   try { await verifyAdmin(); } catch (e) { return { success: false, message: "Unauthorized" }; }
   await dbConnect();
 
+  
+    // ✅ CRITICAL FIX: Parse the JSON string back into an Array
+    const galleryRaw = formData.get("galleryJSON") as string;
+    let gallery = [];
+    try {
+      gallery = galleryRaw ? JSON.parse(galleryRaw) : [];
+    } catch (e) {
+      console.log("Error parsing gallery JSON, skipping.");
+    }
+
   try {
     const rules = (formData.get("rules") as string)?.split("\n").filter(r => r.trim()) || [];
     
@@ -105,6 +115,7 @@ export async function updateEvent(id: string, formData: FormData) {
       location: formData.get("location"),
       category: formData.get("category"),
       time: formData.get("time"),
+      gallery: gallery,
       
       // ✅ USE THE HELPER HERE TOO
       date: toISTDate(formData.get("date")),
@@ -124,6 +135,8 @@ export async function updateEvent(id: string, formData: FormData) {
     revalidatePath(`/admin/dashboard-group/events/${id}/edit`);
     revalidatePath("/events");
     revalidatePath(`/events/${id}`); 
+    revalidatePath("/gallery"); // ✅ Make sure Gallery page updates instantly
+    return { success: true, message: "Event updated successfully" };
 
     return { success: true, message: "Event updated" };
 

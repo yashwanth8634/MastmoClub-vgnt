@@ -4,6 +4,10 @@ import "./globals.css";
 import StarField from "@/components/3d/StarField";
 import { GoogleAnalytics } from '@next/third-parties/google';
 import Navbar from "@/components/ui/Navbar";
+import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
+import { extractRouterConfig } from "uploadthing/server";
+import { ourFileRouter } from "@/app/api/uploadthing/core";
+
 
 const spaceGrotesk = MedievalSharp({
   subsets: ["latin"],
@@ -118,6 +122,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 </head>
 
       <body className={`${spaceGrotesk.className} antialiased text-white font-sans`}>
+        <NextSSRPlugin
+          /**
+           * The `extractRouterConfig` will extract all the route configs
+           * from the router to prevent additional network requests.
+           */
+          routerConfig={extractRouterConfig(ourFileRouter)}
+        />
         <StarField />
         <Navbar />
         {children}

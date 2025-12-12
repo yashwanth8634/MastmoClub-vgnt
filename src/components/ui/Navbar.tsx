@@ -41,6 +41,9 @@ export default function Navbar() {
           <Link href="/team" className="text-sm font-bold tracking-widest text-gray-300 hover:text-[#00f0ff] uppercase transition-colors">
             Team
           </Link>
+          <Link href="/gallery" className="text-sm font-bold tracking-widest text-gray-300 hover:text-[#00f0ff] uppercase transition-colors">
+    Gallery
+  </Link>
           <Link 
             href="/join" 
             className="text-sm font-bold tracking-widest text-[#00f0ff] hover:text-white uppercase transition-colors"
@@ -87,6 +90,9 @@ export default function Navbar() {
         >
           Team
         </Link>
+        <Link href="/gallery" onClick={() => setIsOpen(false)} className="text-2xl font-bold text-white uppercase hover:text-[#00f0ff] transition-colors">
+      Gallery
+    </Link>
         <Link 
           href="/join" 
           onClick={() => setIsOpen(false)} 

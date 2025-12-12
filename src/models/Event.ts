@@ -25,6 +25,8 @@ const EventSchema = new mongoose.Schema({
   // Other fields
   rules: [String],
   image: String,
+
+  gallery: { type: [String], default: [] },
 }, { timestamps: true });
 
 export default mongoose.models.Event || mongoose.model("Event", EventSchema);
