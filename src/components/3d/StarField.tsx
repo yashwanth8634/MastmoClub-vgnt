@@ -65,6 +65,9 @@ export default function StarField() {
   if (pathname.includes("/join")) {
     return null;
   }
+  if (pathname.includes("/gallery")) {
+    return null;
+  }
   
   return (
     <div className="fixed top-0 left-0 w-full h-full -z-10 bg-black">

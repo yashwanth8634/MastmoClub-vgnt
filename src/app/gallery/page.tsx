@@ -18,7 +18,7 @@ export default async function GalleryPage() {
                         .lean();
 
   return (
-    <main className="min-h-screen bg-black text-white selection:bg-[#00f0ff]/30">
+    <main className="min-h-screen text-white selection:bg-[#00f0ff]/30">
       <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 md:px-6 pt-32 pb-20">
