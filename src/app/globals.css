@@ -17,3 +17,19 @@ body {
   font-family: var(--font-sans);
   overflow-x: hidden;
 }
+
+/* ✅ 1. Skip rendering off-screen content (Huge Scroll Boost) */
+.optimize-visibility {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 500px; /* Guess height of a card */
+}
+
+/* ✅ 2. Tell GPU to handle scrolling (Reduces Jitter) */
+html {
+  scroll-behavior: smooth;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

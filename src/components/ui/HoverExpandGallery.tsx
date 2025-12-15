@@ -83,7 +83,8 @@ export default function HoverExpandGallery({
                 src={image.src}
                 alt={image.alt}
                 fill
-                unoptimized={true}
+                quality={65}          // ✅ Reduce quality (Standard is 75). 65 is faster.
+                decoding="async"
                 sizes="(max-width: 768px) 300px, 600px" // Download small images on mobile
                 className="object-cover"
                 priority={index === 0} // Load first image immediately
