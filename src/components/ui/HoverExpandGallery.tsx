@@ -83,6 +83,7 @@ export default function HoverExpandGallery({
                 src={image.src}
                 alt={image.alt}
                 fill
+                unoptimized={true}
                 sizes="(max-width: 768px) 300px, 600px" // Download small images on mobile
                 className="object-cover"
                 priority={index === 0} // Load first image immediately
