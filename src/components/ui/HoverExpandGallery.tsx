@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useState } from "react";
-import Image from "next/image"; // ✅ Use Next.js Image for performance
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 export default function HoverExpandGallery({ 
@@ -42,12 +42,11 @@ export default function HoverExpandGallery({
               onHoverStart={() => setActiveImage(index)}
               className={cn(
                 "relative cursor-pointer overflow-hidden rounded-2xl border border-white/10 bg-white/5 shrink-0 snap-center",
-                "h-[300px] md:h-[400px]", // Fixed height prevents layout shifts
-                "will-change-[width,opacity]" // ✅ GPU Hint for smoothness
+                "h-[300px] md:h-[400px]", 
+                "will-change-[width]" // ✅ GPU Hint
               )}
               initial={false}
               animate={{
-                // Smoother width transition logic
                 width: activeImage === index 
                   ? (typeof window !== 'undefined' && window.innerWidth < 768 ? "18rem" : "32rem") 
                   : (typeof window !== 'undefined' && window.innerWidth < 768 ? "3rem" : "5rem"),
@@ -55,40 +54,44 @@ export default function HoverExpandGallery({
               }}
               transition={{ 
                 duration: 0.4, 
-                ease: "easeOut" // ✅ Snappier, less "heavy" than spring
+                ease: "circOut" 
               }}
             >
-              {/* Overlays */}
               <AnimatePresence mode="wait">
                 {activeImage === index && (
                   <>
                      <motion.div 
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
-                        transition={{ duration: 0.2 }}
-                        className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-transparent to-transparent" 
+                        className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" 
                      />
                      <motion.div 
                         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} 
-                        transition={{ duration: 0.2 }}
-                        className="absolute bottom-0 left-0 z-20 flex w-full flex-col justify-end p-4 md:p-6"
+                        className="absolute bottom-0 left-0 z-20 p-4 md:p-6 pointer-events-none"
                      >
-                        <p className="text-lg md:text-xl font-bold text-white tracking-widest font-mono">{image.code}</p>
+                        <p className="text-xl md:text-2xl font-bold text-white tracking-widest font-mono">{image.code}</p>
                      </motion.div>
                   </>
                 )}
               </AnimatePresence>
               
-              {/* ✅ OPTIMIZED IMAGE */}
-              <Image
-                src={image.src}
-                alt={image.alt}
-                fill
-                quality={65}          // ✅ Reduce quality (Standard is 75). 65 is faster.
-                decoding="async"
-                sizes="(max-width: 768px) 300px, 600px" // Download small images on mobile
-                className="object-cover"
-                priority={index === 0} // Load first image immediately
-              />
+              {/* ✅ OPTIMIZED IMAGE CONFIGURATION */}
+              <div className="relative w-full h-full">
+                <Image
+                    src={image.src}
+                    alt={image.alt}
+                    fill
+                    // ✅ 1. Precise Sizes: Tells browser to download ~288px image for mobile, ~512px for desktop
+                    sizes="(max-width: 768px) 300px, 520px"
+                    
+                    // ✅ 2. Priority: Preloads the first 4 images (Visible in viewport)
+                    priority={index < 4} 
+                    
+                    className="object-cover"
+                    
+                    // ✅ 3. Quality: 75 is the sweet spot for sharpness vs speed
+                    quality={75} 
+                />
+              </div>
             </motion.div>
           ))}
         </div>

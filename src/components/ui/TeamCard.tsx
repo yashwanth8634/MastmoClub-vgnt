@@ -28,6 +28,8 @@ export default function TeamCard({ member }: { member: TeamMemberProps }) {
           <Image 
             src={member.image} 
             alt={member.name}
+            quality={65}
+            decoding="async"
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 33vw"
