@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "MASTMO Gallery - Our Memories",
     description: "Check out the highlights from the Mathematical & Statistical Modeling Club events.",
-    images: ["/images/gallery-banner.jpg"], // Ensure you have a default image here
+    images: ["/images/team-banner.png"], // Ensure you have a default image here
   },
 };
 

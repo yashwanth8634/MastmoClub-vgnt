@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Upcoming Events",
-  description: "Explore workshops, hackathons, and quizzes organized by the Maths & Stats Club.",
+  description: "Explore workshops, hackathons, and quizzes organized by the Mathematical and Stastistical Modeling Club (MASTMO).",
   openGraph: {
     title: "MASTMO Events",
     description: "Don't miss out on our upcoming tech and math events!",
