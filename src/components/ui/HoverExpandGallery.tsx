@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import React, { useState } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { ImageOff } from "lucide-react"; // Import an icon for fallbacks
 
 export default function HoverExpandGallery({ 
   photos, 
@@ -13,8 +14,20 @@ export default function HoverExpandGallery({
   className?: string 
 }) {
   const [activeImage, setActiveImage] = useState<number | null>(0);
+  
+  // Track loading state per image
+  const [imageStatus, setImageStatus] = useState<Record<number, 'loading' | 'loaded' | 'error'>>({});
 
-  // Filter out bad data
+  const handleImageLoad = (index: number) => {
+    setImageStatus(prev => ({ ...prev, [index]: 'loaded' }));
+  };
+
+  const handleImageError = (index: number) => {
+    setImageStatus(prev => ({ ...prev, [index]: 'error' }));
+    console.error(`Failed to load image at index ${index}`);
+  };
+
+  // Robust Data Processing
   const processedImages = photos.map((item, index) => {
     let src = "";
     if (typeof item === 'string') src = item;
@@ -34,16 +47,21 @@ export default function HoverExpandGallery({
     <div className={cn("w-full", className)}>
       <div className="flex w-full overflow-x-auto pb-6 pt-2 no-scrollbar px-2 snap-x touch-pan-x">
         <div className="flex min-w-full w-max items-center justify-start gap-2 md:gap-4 mx-auto">
-          {processedImages.map((image, index) => (
+          {processedImages.map((image, index) => {
+            const status = imageStatus[index] || 'loading';
+
+            return (
             <motion.div
               key={image.id}
               layout
               onClick={() => setActiveImage(index)}
               onHoverStart={() => setActiveImage(index)}
               className={cn(
-                "relative cursor-pointer overflow-hidden rounded-2xl border border-white/10 bg-white/5 shrink-0 snap-center",
+                "relative cursor-pointer overflow-hidden rounded-2xl border border-white/10 shrink-0 snap-center",
                 "h-[300px] md:h-[400px]", 
-                "will-change-[width]" // ✅ Critical for smooth animation performance
+                "will-change-[width]",
+                // Show pulsing skeleton only while loading
+                status === 'loading' ? "bg-white/5 animate-pulse" : "bg-black"
               )}
               initial={false}
               animate={{
@@ -56,9 +74,11 @@ export default function HoverExpandGallery({
                 duration: 0.4, 
                 ease: "circOut" 
               }}
+              // Stop animation if loaded or failed
+              style={{ animationDuration: status !== 'loading' ? '0s' : '2s' }}
             >
               <AnimatePresence mode="wait">
-                {activeImage === index && (
+                {activeImage === index && status === 'loaded' && (
                   <>
                      <motion.div 
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
@@ -74,32 +94,37 @@ export default function HoverExpandGallery({
                 )}
               </AnimatePresence>
               
-              {/* ✅ OPTIMIZED IMAGE */}
-              <div className="relative w-full h-full">
+              <div className="relative w-full h-full flex items-center justify-center">
+                {/* Fallback for actual CDN failures */}
+                {status === 'error' && (
+                    <div className="flex flex-col items-center text-gray-500">
+                        <ImageOff size={24} />
+                        <span className="text-[10px] mt-2">Failed to load</span>
+                    </div>
+                )}
+
+                {/* The Image Component */}
                 <Image
                     src={image.src}
                     alt={image.alt}
                     fill
+                    // ✅ CRITICAL FIX: Disable server-side optimization to prevent 500 errors
+                    unoptimized={true}
                     
-                    // ✅ 1. PRECISE SIZES
-                    // Mobile: "90vw" (because we expand to 85vw)
-                    // Desktop: "550px" (because we expand to 32rem which is ~512px)
-                    // This prevents downloading 4k images for a small card.
-                    sizes="(max-width: 768px) 90vw, 550px"
-                    
-                    // ✅ 2. PRIORITY
-                    // Only load the first 4 images immediately. Lazy load the rest.
+                    // ✅ Keep priority for speed
                     priority={index < 4} 
                     
-                    // ✅ 3. QUALITY
-                    // 60 is the "sweet spot" for speed vs visual fidelity.
-                    quality={60} 
-                    
-                    className="object-cover"
+                    onLoad={() => handleImageLoad(index)}
+                    onError={() => handleImageError(index)}
+                    className={cn(
+                        "object-cover transition-opacity duration-500",
+                        // Only show image if successfully loaded
+                        status === 'loaded' ? "opacity-100" : "opacity-0"
+                    )}
                 />
               </div>
             </motion.div>
-          ))}
+          )})}
         </div>
       </div>
     </div>

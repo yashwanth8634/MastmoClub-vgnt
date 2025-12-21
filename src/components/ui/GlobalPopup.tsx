@@ -10,20 +10,22 @@ export default function GlobalPopup({ popupData }: { popupData: any }) {
   const [viewMode, setViewMode] = useState<"text" | "gallery">("text");
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // Ensure images is always an array
   const images = popupData?.images || [];
 
   useEffect(() => {
+    // 1. Only check if Admin turned it ON
     if (!popupData?.isActive) return;
-    const hasSeen = sessionStorage.getItem("seenPopup_" + popupData._id);
-    if (!hasSeen) {
-      setTimeout(() => setIsOpen(true), 1500);
-    }
+
+    // ⚠️ REMOVED: The check for 'sessionStorage' (seenPopup)
+    // Now it will simply run every time this component mounts (page reload)
+
+    const timer = setTimeout(() => setIsOpen(true), 1000); // 1s delay for smooth entrance
+    return () => clearTimeout(timer);
   }, [popupData]);
 
   const handleClose = () => {
     setIsOpen(false);
-    if (popupData?._id) sessionStorage.setItem("seenPopup_" + popupData._id, "true");
+    // ⚠️ REMOVED: We don't save to storage anymore, so it forgets you closed it.
   };
 
   const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % images.length);
@@ -35,12 +37,15 @@ export default function GlobalPopup({ popupData }: { popupData: any }) {
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+          
+          {/* Backdrop */}
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={handleClose} 
             className="absolute inset-0 bg-black/80 backdrop-blur-sm" 
           />
 
+          {/* Popup Card */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
             className="relative w-full max-w-lg bg-[#0a0a0a] border border-[#00f0ff]/30 rounded-3xl overflow-hidden shadow-2xl"
@@ -55,13 +60,18 @@ export default function GlobalPopup({ popupData }: { popupData: any }) {
                 <div className="flex flex-col">
                     <div className="relative h-56 w-full">
                         {images.length > 0 ? (
-                            <Image src={images[0]} alt="Cover" fill className="object-cover" />
+                            <Image 
+                                src={images[0]} 
+                                alt="Cover" 
+                                fill 
+                                className="object-cover" 
+                                unoptimized={true} 
+                            />
                         ) : (
                             <div className="w-full h-full bg-gray-900 flex items-center justify-center text-gray-700">No Image</div>
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] to-transparent"></div>
                         
-                        {/* Gallery Button (Only shows if >1 image) */}
                         {images.length > 1 && (
                             <button 
                                 onClick={() => setViewMode("gallery")}
@@ -86,14 +96,12 @@ export default function GlobalPopup({ popupData }: { popupData: any }) {
             {/* === MODE 2: GALLERY SLIDER === */}
             {viewMode === "gallery" && (
                 <div className="relative h-[500px] bg-black flex flex-col">
-                    {/* Header */}
                     <div className="absolute top-0 left-0 w-full z-20 p-4 flex items-center gap-2 bg-gradient-to-b from-black/80 to-transparent">
                         <button onClick={() => setViewMode("text")} className="text-white hover:text-[#00f0ff] flex items-center gap-2 text-sm font-bold">
                             <ArrowLeft size={16} /> Back
                         </button>
                     </div>
 
-                    {/* Slider Image */}
                     <div className="relative flex-1 bg-gray-900">
                         <AnimatePresence mode="wait">
                             <motion.div 
@@ -102,20 +110,12 @@ export default function GlobalPopup({ popupData }: { popupData: any }) {
                                 transition={{ duration: 0.3 }}
                                 className="relative w-full h-full"
                             >
-                                <Image src={images[currentSlide]} alt="Gallery" fill className="object-contain" />
+                                <Image src={images[currentSlide]} alt="Gallery" fill className="object-contain" unoptimized={true} />
                             </motion.div>
                         </AnimatePresence>
                         
-                        {/* Navigation Arrows */}
                         <button onClick={prevSlide} className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 text-white rounded-full hover:bg-[#00f0ff] hover:text-black"><ChevronLeft size={24} /></button>
                         <button onClick={nextSlide} className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 text-white rounded-full hover:bg-[#00f0ff] hover:text-black"><ChevronRight size={24} /></button>
-                    </div>
-
-                    {/* Footer Dots */}
-                    <div className="h-12 bg-black flex items-center justify-center gap-2">
-                        {images.map((_: any, idx: number) => (
-                            <div key={idx} className={`w-2 h-2 rounded-full transition-colors ${currentSlide === idx ? "bg-[#00f0ff]" : "bg-gray-700"}`} />
-                        ))}
                     </div>
                 </div>
             )}
