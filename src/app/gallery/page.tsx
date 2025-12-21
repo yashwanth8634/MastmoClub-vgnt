@@ -47,7 +47,7 @@ export default async function GalleryPage() {
               <section key={event._id} className="animate-in fade-in slide-in-from-bottom-8 duration-700">
                 
                 {/* Header */}
-                <div className="max-w-6xl mx-auto mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/10 pb-4">
+                <div className="max-w-6xl mx-auto mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/40 pb-4">
                   <div>
                     <span className="inline-block px-3 py-1 mb-3 rounded-full bg-[#00f0ff]/10 text-[#00f0ff] text-xs font-bold uppercase tracking-widest">
                         {event.category || "Event"}
@@ -74,7 +74,7 @@ export default async function GalleryPage() {
             ))
           ) : (
             <div className="text-center py-32 bg-white/5 rounded-3xl border border-white/10">
-              <p className="text-gray-500 text-lg">No photos uploaded yet.</p>
+              <p className="text-gray-300 text-lg">No photos uploaded yet.</p>
             </div>
           )}
         </div>

@@ -94,10 +94,10 @@ export default function AboutContent() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-gray-400 text-lg md:text-xl max-w-3xl mx-auto leading-relaxed"
+            className="text-gray-300 text-lg md:text-xl max-w-3xl mx-auto leading-relaxed"
           >
             Data Science and Engineering problems are increasingly solved using models that simulate real-world phenomena. 
-            <strong className="text-gray-200"> MASTMO</strong> exists to master the mathematics that underpins these technologies.
+            <strong className="text-gray-100"> MASTMO</strong> exists to master the mathematics that underpins these technologies.
           </motion.p>
         </div>
 
@@ -123,7 +123,7 @@ export default function AboutContent() {
                 <p className="text-xs font-bold text-[#00f0ff] uppercase tracking-widest mb-4">
                   {person.role}
                 </p>
-                <p className="text-gray-400 text-sm leading-relaxed">
+                <p className="text-gray-300 text-sm leading-relaxed">
                   {person.desc}
                 </p>
               </motion.div>
@@ -188,7 +188,7 @@ export default function AboutContent() {
                 
                 <obj.icon className="text-gray-500 group-hover:text-[#00f0ff] mb-6 transition-colors" size={32} />
                 <h3 className="text-xl font-bold text-white mb-3">{obj.title}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">{obj.desc}</p>
+                <p className="text-gray-300 text-sm leading-relaxed">{obj.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -202,7 +202,7 @@ export default function AboutContent() {
           className="mt-32 text-center p-12 rounded-3xl bg-gradient-to-b from-white/5 to-transparent border border-white/40 bg-black"
         >
           <h2 className="text-4xl font-bold mb-6">Ready to solve the impossible?</h2>
-          <p className="text-gray-400 mb-8 max-w-xl mx-auto">
+          <p className="text-gray-300 mb-8 max-w-xl mx-auto">
             Join a community of thinkers, builders, and innovators. 
             The future is written in code, but defined by math.
           </p>

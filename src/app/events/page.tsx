@@ -51,7 +51,7 @@ export default async function EventsPage() {
               <EventCard key={event._id.toString()} event={{ ...event, id: event._id.toString(), isPast: false }} />
             ))
           ) : (
-             <p className="text-center text-gray-500 col-span-full">No upcoming events.</p>
+             <p className="text-center text-gray-200 col-span-full text-2xl">No upcoming events.</p>
           )}
         </div>
       </section>

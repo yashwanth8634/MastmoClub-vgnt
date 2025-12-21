@@ -64,7 +64,7 @@ export default async function TeamPage() {
           <section className="mb-24 animate-in fade-in slide-in-from-bottom-8 duration-700">
             <div className="flex items-center gap-4 mb-10">
               <h2 className="text-2xl font-bold text-white uppercase tracking-widest">Faculty Board</h2>
-              <div className="h-px flex-1 bg-white/20"></div>
+              <div className="h-px flex-1 bg-white/50"></div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-center optimize-visibility">
               {serialize(faculty).map((member) => (

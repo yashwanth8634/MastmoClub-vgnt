@@ -10,6 +10,8 @@ import { ourFileRouter } from "@/app/api/uploadthing/core";
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/react";
 import ChatBot from "@/components/ui/ChatBot";
+import GlobalPopup from "@/components/ui/GlobalPopup"; // ✅ 1. Import Popup
+import { getPopup } from "@/actions/popupActions";     
 
 
 const spaceGrotesk = MedievalSharp({
@@ -84,7 +86,8 @@ export const metadata : Metadata = {
   }
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const popupData = await getPopup();
   return (
     <html lang="en" suppressHydrationWarning>
       <head suppressHydrationWarning>
@@ -135,6 +138,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <StarField />
         <Navbar />
         {children}
+        <GlobalPopup popupData={popupData} />
         <ChatBot />
         <Analytics />
         <SpeedInsights />

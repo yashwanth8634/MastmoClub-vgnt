@@ -39,13 +39,13 @@ const HeroSection = () => {
           Mathematical & Statistical Modeling
         </motion.p>
         
-             <p className="block md:hidden text-gray-400 text-sm max-w-xs mx-auto mb-8 leading-relaxed font-light">
+             <p className="block md:hidden text-gray-300 text-sm max-w-xs mx-auto mb-8 leading-relaxed font-light">
           We code the equations that define the future. Bridging abstract math
           with real-world engineering at Vignan.
         </p>
 
         {/* DESKTOP VERSION */}
-        <p className="hidden md:block text-gray-400 text-base md:text-lg max-w-2xl mx-auto mb-10 leading-relaxed font-light">
+        <p className="hidden md:block text-gray-300 text-base md:text-lg max-w-2xl mx-auto mb-10 leading-relaxed font-light">
           We are the architects of logic at Vignan.{" "}
           <strong className="text-gray-200">MASTMO</strong> bridges the gap
           between abstract theorems and real-world engineering challenges. From
@@ -60,13 +60,13 @@ const HeroSection = () => {
         >
           <Link
             href="/events"
-            className="px-10 py-4 bg-white text-black font-bold rounded-full border-white/40 hover:bg-[#00f0ff] transition-all duration-300 flex items-center gap-2"
+            className="px-10 py-4 bg-white text-black font-bold rounded-full border-white/80 hover:bg-[#00f0ff] transition-all duration-300 flex items-center gap-2"
           >
             Explore Events <ArrowRight size={20} />
           </Link>
           <Link
             href="/join"
-            className="px-10 py-4 border border-white/40 text-white font-bold rounded-full hover:bg-white/10 transition-all duration-300"
+            className="px-10 py-4 border border-white/80 text-white font-bold rounded-full hover:bg-white/10 transition-all duration-300"
           >
             Become a Member
           </Link>
@@ -101,7 +101,7 @@ const AboutSection = () => {
           whileInView={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
           viewport={{ once: true }}
-          className="bg-black border border-white/10 p-8 md:p-12 rounded-3xl backdrop-blur-sm"
+          className="bg-black border border-white/40 p-8 md:p-12 rounded-3xl backdrop-blur-sm"
         >
           <p className="text-gray-300 text-lg leading-relaxed mb-6">
             <strong className="text-white">MASTMO</strong> is the intersection
@@ -134,7 +134,7 @@ const DomainsSection = () => {
           className="text-center mb-16"
         >
           <h2 className="text-3xl md:text-5xl font-bold mb-4">Our Domains</h2>
-          <p className="text-gray-400">The four pillars of the club.</p>
+          <p className="text-gray-300">The four pillars of the club.</p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -145,11 +145,11 @@ const DomainsSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
               viewport={{ once: true }}
-              className="bg-black border border-white/10 p-8 rounded-2xl hover:border-[#00f0ff]/50 hover:bg-[#00f0ff]/5 transition-all group"
+              className="bg-black border border-white/40 p-8 rounded-2xl hover:border-[#00f0ff]/50 hover:bg-[#00f0ff]/5 transition-all group"
             >
               <d.icon size={40} className="text-gray-500 group-hover:text-[#00f0ff] mb-6 transition-colors" />
               <h3 className="text-xl font-bold text-white mb-2">{d.title}</h3>
-              <p className="text-gray-400 text-sm">{d.desc}</p>
+              <p className="text-gray-300 text-sm">{d.desc}</p>
             </motion.div>
           ))}
         </div>
@@ -161,19 +161,19 @@ const DomainsSection = () => {
 // --- FOOTER SECTION ---
 const FooterSection = () => {
   return (
-    <footer className="py-20 px-6 border-t border-white/10 bg-black/90 backdrop-blur-xl snap-end">
+    <footer className="py-20 px-6 border-t border-white/40 bg-black/90 backdrop-blur-xl snap-end">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10">
         <div className="text-center md:text-left flex flex-col gap-6">
           <h2 className="text-2xl font-bold text-white tracking-widest">MASTMO CLUB</h2>
           <div className="flex flex-col items-center md:items-start gap-3">
-            <span className="text-[10px] text-gray-500 uppercase tracking-widest">Supported By</span>
+            <span className="text-[15px] text-gray-200 uppercase tracking-widest">Supported By</span>
             {/* Make sure vignan-logo.png exists in your public folder */}
             <div className="relative w-32 h-10 opacity-90">
               <Image src="/vgnt-logo.png" alt="VGNT Logo" fill className="object-contain" />
             </div>
           </div>
         </div>
-        <div className="text-xs text-gray-600">© 2025 MASTMO. All rights reserved.</div>
+        <div className="text-xs text-gray-200">© 2025 MASTMO. All rights reserved.</div>
       </div>
     </footer>
   );
