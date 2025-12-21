@@ -1,114 +1,109 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
-import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { ImageOff } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
-export default function HoverExpandGallery({ 
-  photos, 
-  className 
-}: { 
-  photos: any[], 
-  className?: string 
-}) {
-  const [activeImage, setActiveImage] = useState<number | null>(0);
-  const [imageStatus, setImageStatus] = useState<Record<number, 'loading' | 'loaded' | 'error'>>({});
+export default function HoverExpandGallery({ photos }: { photos: any[] }) {
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileIndex, setMobileIndex] = useState(0);
 
-  // ✅ 1. Function to handle success
-  const handleImageLoad = (index: number) => {
-    setImageStatus(prev => ({ ...prev, [index]: 'loaded' }));
-  };
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
-  // ✅ 2. Function to handle failure (THIS WAS MISSING)
-  const handleImageError = (index: number) => {
-    setImageStatus(prev => ({ ...prev, [index]: 'error' }));
-    console.error(`Failed to load image at index ${index}`);
-  };
-
-  const processedImages = photos.map((item, index) => {
-    let src = "";
-    if (typeof item === 'string') src = item;
-    else if (item && typeof item === 'object') src = item.src || item.imageUrl || item.url || "";
-
-    return {
-      id: index,
-      src: src,
-      alt: `Event photo ${index + 1}`,
-      code: `#${String(index + 1).padStart(2, '0')}`
-    };
-  }).filter(img => img.src && img.src.startsWith("http"));
+  const processedImages = photos.map((item, index) => ({
+    id: index,
+    src: typeof item === 'string' ? item : item.src || item.imageUrl || "",
+    alt: `Photo ${index + 1}`
+  })).filter(img => img.src);
 
   if (processedImages.length === 0) return null;
 
-  return (
-    <div className={cn("w-full", className)}>
-      <div className="flex w-full overflow-x-auto pb-6 pt-2 no-scrollbar px-2 snap-x touch-pan-x">
-        <div className="flex min-w-full w-max items-center justify-start gap-2 md:gap-4 mx-auto">
-          {processedImages.map((image, index) => {
-            const status = imageStatus[index] || 'loading';
+  // --- 📱 MOBILE VIEW (Fixed Scrolling) ---
+  if (isMobile) {
+    const next = (e: React.MouseEvent) => {
+      e.stopPropagation(); // Stop clicking through
+      setMobileIndex((prev) => (prev + 1) % processedImages.length);
+    };
+    const prev = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setMobileIndex((prev) => (prev - 1 + processedImages.length) % processedImages.length);
+    };
 
-            return (
-            <motion.div
-              key={image.id}
-              layout
-              onClick={() => setActiveImage(index)}
-              onHoverStart={() => setActiveImage(index)}
-              className={cn(
-                "relative cursor-pointer overflow-hidden rounded-2xl border border-white/10 shrink-0 snap-center",
-                "h-[300px] md:h-[400px]", 
-                "will-change-[width]",
-                status === 'loading' ? "bg-white/5 animate-pulse" : "bg-black"
-              )}
-              initial={false}
-              animate={{
-                width: activeImage === index 
-                  ? (typeof window !== 'undefined' && window.innerWidth < 768 ? "85vw" : "32rem") 
-                  : (typeof window !== 'undefined' && window.innerWidth < 768 ? "4rem" : "5rem"),
-                opacity: 1
-              }}
-              transition={{ duration: 0.4, ease: "circOut" }}
-            >
-              <AnimatePresence mode="wait">
-                {activeImage === index && status === 'loaded' && (
-                  <motion.div 
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
-                    className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" 
-                  >
-                     <div className="absolute bottom-0 left-0 p-4 md:p-6">
-                        <p className="text-xl md:text-2xl font-bold text-white tracking-widest font-mono">{image.code}</p>
-                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              
-              <div className="relative w-full h-full flex items-center justify-center">
-                {status === 'error' && (
-                    <div className="flex flex-col items-center text-gray-500">
-                        <ImageOff size={24} />
-                    </div>
-                )}
+    return (
+      // ✅ FIX: 'touch-pan-y' allows vertical page scroll
+      // ✅ FIX: 'select-none' prevents blue highlight selection
+      <div className="relative w-full aspect-video overflow-hidden rounded-xl border border-white/10 bg-black touch-pan-y select-none group">
+        
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={mobileIndex}
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="relative w-full h-full"
+          >
+            <Image 
+              src={processedImages[mobileIndex].src} 
+              alt="Gallery" 
+              fill 
+              className="object-contain" 
+              sizes="100vw"
+              draggable={false} // Prevents ghost image drag
+            />
+          </motion.div>
+        </AnimatePresence>
 
-                <Image
-                    src={image.src}
-                    alt={image.alt}
-                    fill
-                    sizes="(max-width: 768px) 85vw, 600px"
-                    quality={60}
-                    priority={index < 2} 
-                    onLoad={() => handleImageLoad(index)}
-                    onError={() => handleImageError(index)} // ✅ Now this works!
-                    className={cn(
-                        "object-cover transition-opacity duration-500",
-                        status === 'loaded' ? "opacity-100" : "opacity-0"
-                    )}
-                />
-              </div>
-            </motion.div>
-          )})}
+        {/* Navigation Buttons (Always visible on mobile) */}
+        <button 
+          onClick={prev} 
+          className="absolute left-2 top-1/2 -translate-y-1/2 p-3 bg-black/60 text-white rounded-full border border-white/20 active:scale-95 transition-transform z-20"
+        >
+          <ChevronLeft size={20}/>
+        </button>
+        
+        <button 
+          onClick={next} 
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-3 bg-black/60 text-white rounded-full border border-white/20 active:scale-95 transition-transform z-20"
+        >
+          <ChevronRight size={20}/>
+        </button>
+
+        {/* Counter Badge */}
+        <div className="absolute bottom-2 right-2 bg-black/60 px-2 py-1 rounded-md text-xs text-white border border-white/10">
+            {mobileIndex + 1} / {processedImages.length}
         </div>
       </div>
+    );
+  }
+
+  // --- 💻 DESKTOP VIEW (Original Hover Effect) ---
+  return (
+    <div className="flex w-full overflow-hidden justify-center gap-2">
+      {processedImages.slice(0, 5).map((image, index) => (
+        <motion.div
+          key={image.id}
+          className="relative h-[400px] rounded-2xl overflow-hidden cursor-pointer border border-white/10"
+          initial={{ width: "5rem" }}
+          whileHover={{ width: "25rem" }}
+          transition={{ duration: 0.4, ease: "circOut" }}
+        >
+          <Image
+            src={image.src}
+            alt={image.alt}
+            fill
+            className="object-cover"
+            sizes="30vw"
+          />
+        </motion.div>
+      ))}
     </div>
   );
 }
