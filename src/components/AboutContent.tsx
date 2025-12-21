@@ -20,7 +20,7 @@ const VISIONARIES = [
   {
     name: "Prof. Dr. G. Y. Sagar",
     role: "Chairman & Faculty Advisor",
-    desc: "With over 15 years of expertise in the field of Statistics, his technical leadership guides our curriculum. He ensures that our modeling projects maintain the highest standards of mathematical rigor.",
+    desc: "With over 22 years of distinguished expertise in Statistics and Mathematical Modeling, he brings unparalleled depth to MASTMO. His career spans 14 years as a Professor at Gambella University, Ethiopia, and 8 years of industry experience. He ensures our curriculum maintains the highest standards of mathematical rigor while bridging theory with real-world applications.",
   }
 ];
 

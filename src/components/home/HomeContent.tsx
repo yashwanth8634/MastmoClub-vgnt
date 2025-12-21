@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Brain, Calculator, Code2, Sigma } from "lucide-react";
 import { motion } from "framer-motion";
+import { Instagram, Mail } from "lucide-react";
 
 // --- HERO SECTION ---
 const HeroSection = () => {
@@ -159,26 +160,144 @@ const DomainsSection = () => {
 };
 
 // --- FOOTER SECTION ---
+// --- ENHANCED FOOTER SECTION ---
 const FooterSection = () => {
   return (
-    <footer className="py-20 px-6 border-t border-white/40 bg-black/90 backdrop-blur-xl snap-end">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10">
-        <div className="text-center md:text-left flex flex-col gap-6">
-          <h2 className="text-2xl font-bold text-white tracking-widest">MASTMO CLUB</h2>
-          <div className="flex flex-col items-center md:items-start gap-3">
-            <span className="text-[15px] text-gray-200 uppercase tracking-widest">Supported By</span>
-            {/* Make sure vignan-logo.png exists in your public folder */}
-            <div className="relative w-32 h-10 opacity-90">
-              <Image src="/vgnt-logo.png" alt="VGNT Logo" fill className="object-contain" priority={true} />
+    <footer className="py-12 md:py-20 px-4 sm:px-6 border-t border-white/40 bg-black/90 backdrop-blur-xl snap-end">
+      <div className="max-w-7xl mx-auto">
+        {/* Main Footer Content */}
+        <div className="flex flex-col lg:flex-row justify-between items-center lg:items-start gap-10 lg:gap-16 mb-10">
+          
+          {/* Left Section - Club Info */}
+          <div className="text-center lg:text-left flex flex-col gap-6 w-full lg:w-auto">
+            <h2 className="text-xl sm:text-2xl font-bold text-white tracking-widest">
+              MASTMO CLUB
+            </h2>
+            <p className="text-gray-400 text-sm sm:text-base max-w-xs mx-auto lg:mx-0">
+              Mathematical & Statistical Modeling at Vignan Institute of Technology and Science
+            </p>
+            
+            {/* Vignan Logo */}
+            <div className="flex flex-col items-center lg:items-start gap-3 mt-2">
+              <span className="text-xs sm:text-[15px] text-gray-200 uppercase tracking-widest">
+                Supported By
+              </span>
+              <Link 
+                href="https://vignanits.ac.in" 
+                target="_blank"
+                className="relative w-28 sm:w-32 h-9 sm:h-10 opacity-90 hover:opacity-100 transition-opacity"
+              >
+                <Image 
+                  src="/vgnt-logo.png" 
+                  alt="VGNT Logo" 
+                  fill 
+                  className="object-contain" 
+                  priority={true} 
+                />
+              </Link>
             </div>
           </div>
+
+          {/* Middle Section - Quick Links */}
+          <div className="text-center lg:text-left w-full lg:w-auto">
+            <h3 className="text-base sm:text-lg font-semibold text-white mb-4 tracking-wide">
+              Quick Links
+            </h3>
+            <ul className="flex flex-col gap-3 text-sm sm:text-base">
+              <li>
+                <Link 
+                  href="/events" 
+                  className="text-gray-300 hover:text-[#00f0ff] transition-colors"
+                >
+                  Events
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  href="/team" 
+                  className="text-gray-300 hover:text-[#00f0ff] transition-colors"
+                >
+                  Our Team
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  href="/join" 
+                  className="text-gray-300 hover:text-[#00f0ff] transition-colors"
+                >
+                  Join Us
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  href="/resources" 
+                  className="text-gray-300 hover:text-[#00f0ff] transition-colors"
+                >
+                  Resources
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Right Section - Contact */}
+          <div className="text-center lg:text-left w-full lg:w-auto">
+            <h3 className="text-base sm:text-lg font-semibold text-white mb-4 tracking-wide">
+              Get In Touch
+            </h3>
+            <ul className="flex flex-col gap-3 text-sm sm:text-base text-gray-300">
+              <li>
+                <a 
+                  href="mailto:mastmo.vgnt@gmail.com" 
+                  className="hover:text-[#00f0ff] transition-colors break-all"
+                >
+                  mastmo.vgnt@gmail.com
+                </a>
+              </li>
+              <li className="max-w-xs mx-auto lg:mx-0">
+                Vignan Institute of Technology<br />
+                Deshmukhi, Telangana
+              </li>
+              {/* Social Links */}
+              <li className="flex gap-4 justify-center lg:justify-start mt-2">
+                <a 
+                  href="mailto:mastmo.vgnt@gmail.com"
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-white/40 flex items-center justify-center hover:border-[#00f0ff] hover:bg-[#00f0ff]/10 transition-all group"
+                  aria-label="Email"
+                >
+                  <Mail size={18} className="text-gray-300 group-hover:text-[#00f0ff] transition-colors" />
+                </a>
+                <a 
+                  href="https://www.instagram.com/mastmo_vgnt/" 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-white/40 flex items-center justify-center hover:border-[#00f0ff] hover:bg-[#00f0ff]/10 transition-all group"
+                  aria-label="Instagram"
+                >
+                  <Instagram size={18} className="text-gray-300 group-hover:text-[#00f0ff] transition-colors" />
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
-        <div className="text-xs text-gray-200">© 2025 MASTMO. All rights reserved.</div>
+
+        {/* Bottom Bar */}
+        <div className="pt-8 border-t border-white/20 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs sm:text-sm text-gray-400">
+          <p className="text-center sm:text-left">
+            © 2025 MASTMO. All rights reserved.
+          </p>
+          <div className="flex gap-4 sm:gap-6">
+            <Link href="/privacy" className="hover:text-[#00f0ff] transition-colors">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="hover:text-[#00f0ff] transition-colors">
+              Terms of Service
+            </Link>
+          </div>
+        </div>
       </div>
     </footer>
   );
 };
-
 // --- EXPORT MAIN CONTENT ---
 export default function HomeContent() {
   return (
