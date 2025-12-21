@@ -1,22 +1,20 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   images: {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "utfs.io", // Allow UploadThing images
+        hostname: "utfs.io", // ✅ Allow UploadThing
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "img.clerk.com", // (Optional) If you use Clerk for Auth
       },
     ],
-    // ✅ ADD THIS: Limit caching to prevent memory overflow
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048], 
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-  },
-  // ✅ ADD THIS: aggressive garbage collection
-  experimental: {
-    serverActions: {
-      bodySizeLimit: '2mb',
-    },
+    // ✅ FORCE SPEED: Compresses images even more for mobile users
+    minimumCacheTTL: 60,
+    formats: ['image/avif', 'image/webp'], 
   },
 };
 

@@ -7,6 +7,8 @@ import Navbar from "@/components/ui/Navbar";
 import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
 import { extractRouterConfig } from "uploadthing/server";
 import { ourFileRouter } from "@/app/api/uploadthing/core";
+import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from "@vercel/analytics/react";
 
 
 const spaceGrotesk = MedievalSharp({
@@ -132,6 +134,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <StarField />
         <Navbar />
         {children}
+        <Analytics />
+        <SpeedInsights />
       </body>
 
       <GoogleAnalytics gaId="G-JNQY7WG0HS" />

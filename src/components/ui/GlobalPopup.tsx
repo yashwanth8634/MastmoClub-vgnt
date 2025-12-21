@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { X, ChevronLeft, ChevronRight, Images, ArrowLeft } from "lucide-react";
-import { cn } from "@/lib/utils"; // Ensure you have this, or remove 'cn' and use standard strings
 
 export default function GlobalPopup({ popupData }: { popupData: any }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -29,34 +28,22 @@ export default function GlobalPopup({ popupData }: { popupData: any }) {
   return (
     <AnimatePresence>
       {isOpen && (
-        // 1. FULL SCREEN OVERLAY CONTAINER
         <div className="fixed inset-0 z-[100] h-screen w-screen flex items-center justify-center p-4">
           
-          {/* Backdrop */}
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={handleClose} 
             className="absolute inset-0 bg-black/90 backdrop-blur-md" 
           />
 
-          {/* 2. RESPONSIVE CARD WRAPPER 
-             - w-[95%] or w-[90%] for Mobile
-             - max-w-2xl for Desktop (Limits width)
-          */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
             className="relative w-[95%] md:w-full md:max-w-xl lg:max-w-2xl"
           >
              {/* 🌟 MOVING BORDER CONTAINER */}
              <div className="relative overflow-hidden rounded-3xl p-[2px]">
-                
-                {/* Gold Comet Animation (Slowed Down) */}
                 <div className="absolute inset-[-100%] animate-[spin_10s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#000000_50%,#FFD700_100%)] opacity-100" />
                 
-                {/* 3. INNER CONTENT CARD 
-                   - max-h-[85vh]: Prevents popup from being taller than the screen
-                   - overflow-y-auto: Allows scrolling inside the popup on small phones
-                */}
                 <div className="relative h-full w-full bg-[#050505] rounded-[22px] overflow-hidden max-h-[85vh] flex flex-col">
                     
                     <button 
@@ -68,18 +55,22 @@ export default function GlobalPopup({ popupData }: { popupData: any }) {
 
                     {/* === MODE 1: STANDARD TEXT VIEW === */}
                     {viewMode === "text" && (
-                        // 'overflow-y-auto' makes this specific section scrollable if needed
                         <div className="flex flex-col p-6 overflow-y-auto custom-scrollbar">
                             
-                            {/* Responsive Image Aspect Ratio */}
-                            <div className="relative w-full aspect-video md:aspect-[16/9] rounded-xl overflow-hidden border border-[#FFD700]/30 shadow-lg shadow-black/50 mb-6 bg-gray-900 group shrink-0">
+                            {/* ✅ FIX: Aspect ratio container with 'object-contain' */}
+                            <div className="relative w-full h-64 md:h-80 rounded-xl overflow-hidden border border-[#FFD700]/30 shadow-lg shadow-black/50 mb-6 bg-black group shrink-0">
                                 {images.length > 0 ? (
                                     <Image 
                                         src={images[0]} 
                                         alt="Cover" 
                                         fill 
-                                        className="object-cover transition-transform duration-700 group-hover:scale-105" 
-                                        unoptimized={true} 
+                                        // ⚠️ CHANGED from 'object-cover' to 'object-contain'
+                                        // This ensures the top/bottom are NEVER cut off.
+                                        className="object-contain transition-transform duration-700 group-hover:scale-105" 
+                                        
+                                        // ✅ OPTIMIZATION: Use Vercel's speed (since you are on Vercel now)
+                                        sizes="(max-width: 768px) 100vw, 600px"
+                                        priority={true}
                                     />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center text-gray-700">No Image</div>
@@ -95,7 +86,6 @@ export default function GlobalPopup({ popupData }: { popupData: any }) {
                                 )}
                             </div>
 
-                            {/* Text Content */}
                             <div className="text-center shrink-0">
                                 <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 tracking-wide drop-shadow-lg leading-tight">
                                     {popupData.title}
@@ -117,7 +107,7 @@ export default function GlobalPopup({ popupData }: { popupData: any }) {
                         </div>
                     )}
 
-                    {/* === MODE 2: GALLERY SLIDER (Responsive Height) === */}
+                    {/* === MODE 2: GALLERY SLIDER === */}
                     {viewMode === "gallery" && (
                         <div className="relative h-[60vh] md:h-[500px] bg-black flex flex-col">
                             <div className="absolute top-0 left-0 w-full z-20 p-4 flex items-center gap-2 bg-gradient-to-b from-black/80 to-transparent">
@@ -135,7 +125,14 @@ export default function GlobalPopup({ popupData }: { popupData: any }) {
                                         className="relative w-full h-full p-4"
                                     >
                                         <div className="relative w-full h-full rounded-xl overflow-hidden border border-white/10">
-                                           <Image src={images[currentSlide]} alt="Gallery" fill className="object-contain" unoptimized={true} />
+                                            {/* Gallery is also updated to use Vercel optimization */}
+                                           <Image 
+                                              src={images[currentSlide]} 
+                                              alt="Gallery" 
+                                              fill 
+                                              className="object-contain" 
+                                              priority={true}
+                                           />
                                         </div>
                                     </motion.div>
                                 </AnimatePresence>
