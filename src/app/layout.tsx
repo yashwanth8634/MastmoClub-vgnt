@@ -9,6 +9,7 @@ import { extractRouterConfig } from "uploadthing/server";
 import { ourFileRouter } from "@/app/api/uploadthing/core";
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/react";
+import ChatBot from "@/components/ui/ChatBot";
 
 
 const spaceGrotesk = MedievalSharp({
@@ -134,6 +135,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <StarField />
         <Navbar />
         {children}
+        <ChatBot />
         <Analytics />
         <SpeedInsights />
       </body>
