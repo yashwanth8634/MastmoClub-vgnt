@@ -16,7 +16,10 @@ const VGNT_INFO = `
 - Contact: info@vignanits.ac.in
 `;
 
-export async function getChatResponse(history: { role: "user" | "model"; parts: string }[], newMessage: string) {
+export async function getChatResponse(
+  history: { role: "user" | "model"; parts: string }[], 
+  newMessage: string
+) {
   try {
     if (!API_KEY) {
       console.error("❌ GEMINI_API_KEY is missing in Environment Variables!");
@@ -37,34 +40,36 @@ export async function getChatResponse(history: { role: "user" | "model"; parts: 
       }
     } catch (dbError) {
       console.warn("⚠️ Chatbot DB connection failed (ignoring):", dbError);
-      // We continue anyway! The chat must go on.
     }
 
     const SYSTEM_PROMPT = `
-    You are **MASTMO AI**, the assistant for the MASTMO Club at VGNT.
-    
-    **CONTEXT:**
-    - CLUB: Mathematical & Statistical Modeling Club.
-    - LIVE UPDATES: ${popupContext}
-    - COLLEGE: ${VGNT_INFO}
+You are **MASTMO AI**, the assistant for the MASTMO Club at VGNT.
 
-    **RULES:**
-    - Be helpful, clever, and mathematical (♾️).
-    - If user asks about tech support, say: "Contact Support Team via Team Page".
-    - Short answers (under 3 sentences).
-    `;
+**CONTEXT:**
+- CLUB: Mathematical & Statistical Modeling Club.
+- LIVE UPDATES: ${popupContext}
+- COLLEGE: ${VGNT_INFO}
+
+**RULES:**
+- Be helpful, clever, and mathematical (♾️).
+- If user asks about tech support, say: "Contact Support Team via Team Page".
+- Short answers (under 3 sentences).
+    `.trim();
 
     const genAI = new GoogleGenerativeAI(API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    // ✅ FIX: Properly format the history with parts as arrays
+    const formattedHistory = history.slice(-4).map(msg => ({
+      role: msg.role,
+      parts: [{ text: msg.parts }] // Ensure parts is an array of objects
+    }));
 
     const chat = model.startChat({
       history: [
         { role: "user", parts: [{ text: SYSTEM_PROMPT }] },
         { role: "model", parts: [{ text: "Ready. I am MASTMO AI." }] },
-        ...history.slice(-4).map(msg => ({
-            role: msg.role,
-            parts: [{ text: msg.parts }]
-        }))
+        ...formattedHistory
       ],
     });
 
@@ -75,6 +80,15 @@ export async function getChatResponse(history: { role: "user" | "model"; parts: 
 
   } catch (error: any) {
     console.error("🔥 AI Critical Error:", error);
-    return { success: false, message: "Connection trouble. Please try again! 🤖" };
+    
+    // More detailed error logging
+    if (error.message?.includes('404')) {
+      console.error("Model not found. Check your model name.");
+    }
+    
+    return { 
+      success: false, 
+      message: "Connection trouble. Please try again! 🤖" 
+    };
   }
 }
