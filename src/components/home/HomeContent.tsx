@@ -41,8 +41,7 @@ const HeroSection = () => {
         </motion.p>
         
              <p className="block md:hidden text-gray-300 text-sm max-w-xs mx-auto mb-8 leading-relaxed font-light">
-          We code the equations that define the future. Bridging abstract math
-          with real-world engineering at Vignan.
+          We code the equations that define the future by delivering hands-on modeling projects, real-world case studies, and step-by-step tutorials. Include a featured project narrative: problem, methodology (mathematical modeling, statistical analysis, data pipeline), results, and impact on engineering challenges at Vignan.
         </p>
 
         {/* DESKTOP VERSION */}
@@ -118,15 +117,33 @@ const AboutSection = () => {
 // --- DOMAINS SECTION ---
 const DomainsSection = () => {
   const domains = [
-    { icon: Calculator, title: "Pure Mathematics", desc: "Calculus, Linear Algebra, and Number Theory." },
-    { icon: Code2, title: "Algorithmic Logic", desc: "Data Structures, Competitive Programming, and Optimization." },
-    { icon: Brain, title: "Machine Learning", desc: "Statistical Modeling, Neural Nets, and Predictive AI." },
-    { icon: Sigma, title: "Data Science", desc: "Big Data Analysis, Probability, and Visualization." },
+    { 
+      icon: Calculator, 
+      title: "Pure Mathematics", 
+      desc: "Calculus, Linear Algebra, Number Theory, and proofs-focused explorations with problems and projects each semester." 
+    },
+    { 
+      icon: Code2, 
+      title: "Algorithmic Logic", 
+      desc: "Data Structures, Competitive Programming, Optimization, and algorithm design challenges with live coding sessions." 
+    },
+    { 
+      icon: Brain, 
+      title: "Machine Learning", 
+      desc: "Statistical Modeling, Neural Nets, Predictive AI, with hands-on notebooks, datasets, and end-to-end projects." 
+    },
+    { 
+      icon: Sigma, 
+      title: "Data Science", 
+      desc: "Big Data Analysis, Probability, Visualization, and dashboards with reproducible pipelines." 
+    },
   ];
 
   return (
     <section className="min-h-screen flex flex-col justify-center px-6 py-20 snap-start">
       <div className="max-w-7xl mx-auto w-full">
+        
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -134,10 +151,11 @@ const DomainsSection = () => {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <h2 className="text-3xl md:text-5xl font-bold mb-4">Our Domains</h2>
-          <p className="text-gray-300">The four pillars of the club.</p>
+          <h2 className="text-3xl md:text-5xl font-bold mb-4 text-white">Our Domains</h2>
+          <p className="text-gray-300 text-lg">The four pillars of the club.</p>
         </motion.div>
 
+        {/* Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {domains.map((d, i) => (
             <motion.div
@@ -146,11 +164,19 @@ const DomainsSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
               viewport={{ once: true }}
-              className="bg-black border border-white/40 p-8 rounded-2xl hover:border-[#00f0ff]/50 hover:bg-[#00f0ff]/5 transition-all group"
+              className="bg-[#0a0a0a] border border-white/20 p-8 rounded-2xl hover:border-[#00f0ff]/50 hover:bg-[#00f0ff]/5 transition-all group h-full flex flex-col"
             >
-              <d.icon size={40} className="text-gray-500 group-hover:text-[#00f0ff] mb-6 transition-colors" />
-              <h3 className="text-xl font-bold text-white mb-2">{d.title}</h3>
-              <p className="text-gray-300 text-sm">{d.desc}</p>
+              <div className="mb-6 p-3 bg-white/5 w-fit rounded-lg group-hover:bg-[#00f0ff]/10 transition-colors">
+                 <d.icon size={32} className="text-gray-400 group-hover:text-[#00f0ff] transition-colors" />
+              </div>
+              
+              <h3 className="text-xl font-bold text-white mb-3 group-hover:text-[#00f0ff] transition-colors">
+                {d.title}
+              </h3>
+              
+              <p className="text-gray-400 text-sm leading-relaxed">
+                {d.desc}
+              </p>
             </motion.div>
           ))}
         </div>

@@ -27,7 +27,7 @@ export const metadata : Metadata = {
     template: "%s | Mastmo@Vgnt",
   },
   description:
-    "MASTMO is the official Mathematical & Statistical Modeling Club of Vignan Institute of Technology and Science,Deshmukhi. We organize events, hackathons, modeling workshops, and research activities for students.",
+    "Join MASTMO, the Mathematical Modeling Club at Vignan Institute of Technology. Participate in events, workshops, and hackathons!",
   
   keywords: [
     // Club Identity
@@ -56,9 +56,9 @@ export const metadata : Metadata = {
   },
 
   openGraph: {
-    title: "MASTMO @ VGNT | Mathematical & Statistical Modeling Club",
+    title: "Join the Mathematical Modeling Club at Vignan Institute",
     description:
-      "Join the official Mathematical & Statistical Modeling Club of Vignan Institute of Technology and Science,Deshmukhi. Participate in events, modeling challenges, hackathons, and research workshops.",
+      "Join MASTMO, the Mathematical Modeling Club at Vignan Institute of Technology. Participate in events, workshops, and hackathons!.",
     url: "https://www.mastmovgnt.in",
     siteName: "MASTMO Club",
     locale: "en_US",
@@ -75,9 +75,9 @@ export const metadata : Metadata = {
 
   twitter: {
     card: "summary_large_image",
-    title: "MASTMO @ VGNT",
+    title: "Join the Mathematical Modeling Club at Vignan Institute",
     description:
-      "Explore mathematics, statistics, events, and student-driven projects with MASTMO.",
+      "Join MASTMO, the Mathematical Modeling Club at Vignan Institute of Technology. Participate in events, workshops, and hackathons!",
     images: ["https://www.mastmovgnt.in/icon.png"]
   },
 

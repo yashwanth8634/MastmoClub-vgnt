@@ -16,6 +16,16 @@ const nextConfig = {
     minimumCacheTTL: 60,
     formats: ['image/avif', 'image/webp'], 
   },
+
+  async redirects() {
+    return [
+      {
+        source: '/instagram',
+        destination: 'https://www.instagram.com/mastmo_vgnt', // Your actual Insta URL
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
