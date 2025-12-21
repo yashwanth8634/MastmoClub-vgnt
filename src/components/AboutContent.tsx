@@ -13,11 +13,6 @@ const VISIONARIES = [
     desc: "The driving force behind MASTMO. It was his visionary initiative to establish a dedicated club that bridges the gap between raw mathematical theory and modern engineering applications.",
   },
   {
-    name: "Dr. N. Phani Kumar",
-    role: "Ex-HOD, BSH",
-    desc: "A pillar of support during our foundational phase. His mentorship and academic guidance were instrumental in structuring the club's philosophy and core objectives.",
-  },
-  {
     name: "Prof. Dr. G. Y. Sagar",
     role: "Chairman & Faculty Advisor",
     desc: "With over 22 years of distinguished expertise in Statistics and Mathematical Modeling, he brings unparalleled depth to MASTMO. His career spans 14 years as a Professor at Gambella University, Ethiopia, and 8 years of industry experience. He ensures our curriculum maintains the highest standards of mathematical rigor while bridging theory with real-world applications.",
@@ -108,7 +103,7 @@ export default function AboutContent() {
             <div className="h-px flex-1 bg-white/50"></div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 bg-transparent">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-transparent">
             {VISIONARIES.map((person, i) => (
               <motion.div
                 key={i}

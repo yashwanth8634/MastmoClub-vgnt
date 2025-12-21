@@ -93,7 +93,7 @@ export default function HoverExpandGallery({ photos }: { photos: any[] }) {
   return (
     // ✅ CHANGED: justify-start (Aligns left instead of center)
     <div className="flex w-full overflow-hidden justify-start gap-2 px-2">
-      {processedImages.slice(0, 5).map((image) => (
+      {processedImages.map((image) => (
         <motion.div
           key={image.id}
           className="relative h-[400px] rounded-2xl overflow-hidden cursor-pointer border border-white/10"

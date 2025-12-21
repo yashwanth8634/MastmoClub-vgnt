@@ -7,14 +7,14 @@ import { getChatResponse } from "@/actions/chatAction";
 import ReactMarkdown from "react-markdown";
 
 interface Message {
-  role: "user" | "model";
-  parts: string;
+  role: "user" | "assistant";
+  content: string;
 }
 
 export default function ChatBot() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: "model", parts: "Hello! I'm the MASTMO AI. Ask me anything about the club! ♾️" }
+    { role: "assistant", content: "Hello! I'm the MASTMO AI. Ask me anything about the club! ♾️" }
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -30,14 +30,14 @@ export default function ChatBot() {
     if (!input.trim() || isLoading) return;
     const userMsg = input.trim();
     setInput("");
-    setMessages((prev) => [...prev, { role: "user", parts: userMsg }]);
+    setMessages((prev) => [...prev, { role: "user", content: userMsg }]);
     setIsLoading(true);
 
     const response = await getChatResponse(messages, userMsg);
 
     setMessages((prev) => [
       ...prev,
-      { role: "model", parts: response.message || "Error connecting to AI." }
+      { role: "assistant", content: response.message || "Error connecting to AI." }
     ]);
     setIsLoading(false);
   };
@@ -70,7 +70,6 @@ export default function ChatBot() {
             initial={{ opacity: 0, y: 20, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            // ✅ Added 'border-2' (Thick Border)
             className="fixed bottom-24 right-6 z-[90] w-[90vw] md:w-[350px] h-[500px] bg-black border-2 border-[#FFD700] rounded-2xl shadow-2xl flex flex-col overflow-hidden"
           >
             {/* Header */}
@@ -100,7 +99,7 @@ export default function ChatBot() {
                       ? "bg-white text-black rounded-tr-none" 
                       : "bg-[#1f1f1f] text-gray-200 border border-white/10 rounded-tl-none"
                   }`}>
-                    <ReactMarkdown>{msg.parts}</ReactMarkdown>
+                    <ReactMarkdown>{msg.content}</ReactMarkdown>
                   </div>
                 </div>
               ))}
