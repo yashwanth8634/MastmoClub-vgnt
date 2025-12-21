@@ -1,7 +1,4 @@
 import HomeContent from "@/components/home/HomeContent";
-import GlobalPopup from "@/components/ui/GlobalPopup"; // ✅ 1. Import Popup
-import { getPopup } from "@/actions/popupActions";     // ✅ 2. Import Data Fetcher
-
 
 export const dynamic = "force-dynamic"; // ✅ Ensure we always get the latest Popup status
 

@@ -93,6 +93,7 @@ export default function GlobalPopup({ popupData }: { popupData: any }) {
                     </button>
 
                     {/* 🖼️ IMAGE AREA */}
+                    {/* 🖼️ IMAGE AREA */}
                     <div className="relative w-full h-[55vh] md:h-[60vh] bg-black group shrink-0">
                         <AnimatePresence mode="wait">
                             <motion.div
@@ -115,35 +116,44 @@ export default function GlobalPopup({ popupData }: { popupData: any }) {
                             </motion.div>
                         </AnimatePresence>
 
-                        {/* Navigation Buttons (Only if > 1 image) */}
-                        {images.length > 1 && (
-                            <>
-                                <button 
-                                    onClick={(e) => { e.stopPropagation(); prevSlide(); }} 
-                                    className="absolute left-2 top-1/2 -translate-y-1/2 p-3 bg-black/80 text-white rounded-full hover:bg-[#FFD700] hover:text-black border border-white/20 z-[60] cursor-pointer shadow-xl active:scale-95 transition-all"
-                                >
-                                    <ChevronLeft size={28} />
-                                </button>
-                                
-                                <button 
-                                    onClick={(e) => { e.stopPropagation(); nextSlide(); }} 
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-3 bg-black/80 text-white rounded-full hover:bg-[#FFD700] hover:text-black border border-white/20 z-[60] cursor-pointer shadow-xl active:scale-95 transition-all"
-                                >
-                                    <ChevronRight size={28} />
-                                </button>
+                        {/* ⬅️ LEFT BUTTON (Always Visible) */}
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); prevSlide(); }} 
+                            disabled={images.length <= 1} // Disable if only 1 image
+                            className={`absolute left-2 top-1/2 -translate-y-1/2 p-3 rounded-full border border-white/20 z-[100] shadow-xl active:scale-95 transition-all
+                                ${images.length > 1 
+                                    ? "bg-[#FFD700] text-black hover:bg-white cursor-pointer" // Active Style (Gold)
+                                    : "bg-gray-800/50 text-gray-500 cursor-not-allowed opacity-50" // Disabled Style
+                                }`}
+                        >
+                            <ChevronLeft size={28} />
+                        </button>
+                        
+                        {/* ➡️ RIGHT BUTTON (Always Visible) */}
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); nextSlide(); }} 
+                            disabled={images.length <= 1}
+                            className={`absolute right-2 top-1/2 -translate-y-1/2 p-3 rounded-full border border-white/20 z-[100] shadow-xl active:scale-95 transition-all
+                                ${images.length > 1 
+                                    ? "bg-[#FFD700] text-black hover:bg-white cursor-pointer" 
+                                    : "bg-gray-800/50 text-gray-500 cursor-not-allowed opacity-50"
+                                }`}
+                        >
+                            <ChevronRight size={28} />
+                        </button>
 
-                                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-[60]">
-                                    {images.map((_: any, idx: number) => (
-                                        <div 
-                                            key={idx} 
-                                            className={`h-2 rounded-full transition-all duration-300 shadow-md ${currentSlide === idx ? "w-8 bg-[#FFD700]" : "w-2 bg-white/50"}`} 
-                                        />
-                                    ))}
-                                </div>
-                            </>
+                        {/* Dots (Only show if multiple images) */}
+                        {images.length > 1 && (
+                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-[60]">
+                                {images.map((_: any, idx: number) => (
+                                    <div 
+                                        key={idx} 
+                                        className={`h-2 rounded-full transition-all duration-300 shadow-md ${currentSlide === idx ? "w-8 bg-[#FFD700]" : "w-2 bg-white/50"}`} 
+                                    />
+                                ))}
+                            </div>
                         )}
                     </div>
-
                     {/* 📝 TEXT AREA */}
                     <div className="p-4 md:p-6 text-center bg-[#0a0a0a] border-t border-white/10 flex flex-col justify-center relative z-[70]">
                         <h2 className="text-xl md:text-2xl font-bold text-white mb-2 line-clamp-1">{popupData.title}</h2>

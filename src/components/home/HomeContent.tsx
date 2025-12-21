@@ -169,7 +169,7 @@ const FooterSection = () => {
             <span className="text-[15px] text-gray-200 uppercase tracking-widest">Supported By</span>
             {/* Make sure vignan-logo.png exists in your public folder */}
             <div className="relative w-32 h-10 opacity-90">
-              <Image src="/vgnt-logo.png" alt="VGNT Logo" fill className="object-contain" />
+              <Image src="/vgnt-logo.png" alt="VGNT Logo" fill className="object-contain" priority={true} />
             </div>
           </div>
         </div>
