@@ -18,18 +18,18 @@ const spaceGrotesk = MedievalSharp({
 export const metadata : Metadata = {
   metadataBase: new URL("https://www.mastmovgnt.in"),
   title: {
-    default: "Mastmo@Vgnt | Math & Stats Club",
-    template: "%s | MASTMO VGNT"
+    default: "Mastmo@Vgnt | Mathematical & Statistical Modeling Club",
+    template: "%s | Mastmo@Vgnt",
   },
   description:
-    "MASTMO is the official Math & Stats Club of VGNT. We organize events, hackathons, modeling workshops, and research activities for students.",
+    "MASTMO is the official Mathematical & Statistical Modeling Club of Vignan Institute of Technology and Science,Deshmukhi. We organize events, hackathons, modeling workshops, and research activities for students.",
   
   keywords: [
     // Club Identity
     "MASTMO", "MASTMO Club", "VGNT Club", "Vignan Math Club",
     
     // College & Location
-    "Vignan's Institute of Information Technology", "VGNT Deshmukhi",
+    "Vignan's Institute of Technology and Science", "VGNT Deshmukhi",
     "VIIT Student Clubs", "Engineering Club Hyderabad", "vgnt",
     
     // Core Subjects
@@ -51,9 +51,9 @@ export const metadata : Metadata = {
   },
 
   openGraph: {
-    title: "MASTMO @ VGNT | Math & Stats Student Club",
+    title: "MASTMO @ VGNT | Mathematical & Statistical Modeling Club",
     description:
-      "Join the official Math & Stats Club of VGNT. Participate in events, modeling challenges, hackathons, and research workshops.",
+      "Join the official Mathematical & Statistical Modeling Club of Vignan Institute of Technology and Science,Deshmukhi. Participate in events, modeling challenges, hackathons, and research workshops.",
     url: "https://www.mastmovgnt.in",
     siteName: "MASTMO Club",
     locale: "en_US",

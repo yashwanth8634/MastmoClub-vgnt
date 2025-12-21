@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Navbar from "@/components/ui/Navbar";
+import type { Metadata, ResolvingMetadata } from "next";
 import { 
   Calendar, 
   Clock, 
@@ -16,6 +17,38 @@ import Event from "@/models/Event";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
+
+type Props = {
+  params: { id: string };
+};
+
+// ✅ Next.js automatically calls this function for SEO
+export async function generateMetadata(
+  { params }: Props,
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  // 1. Fetch data
+  await dbConnect();
+  const id = params.id;
+  const event = await Event.findById(id).lean();
+
+  if (!event) {
+    return {
+      title: "Event Not Found | MASTMO",
+    };
+  }
+
+  // 2. Return Dynamic SEO Tags
+  return {
+    title: `${event.title} | MASTMO Events`,
+    description: `Join us for ${event.title} on ${new Date(event.date).toDateString()}. ${event.description.substring(0, 150)}...`,
+    
+    openGraph: {
+      title: event.title,
+      description: "Register now for this event!",
+    },
+  };
+}
 
 export default async function EventDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;

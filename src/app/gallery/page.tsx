@@ -5,8 +5,20 @@ import { Calendar, ImageOff } from "lucide-react";
 import HoverExpandGallery from "@/components/ui/HoverExpandGallery";
 import GallerySkeleton from "@/components/ui/GallerySkeleton";
 import { Suspense } from "react";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+
+export const metadata: Metadata = {
+  title: "Event Gallery",
+  description: "Relive the moments! Explore our collection of photos from past hackathons, workshops, and club events.",
+  openGraph: {
+    title: "MASTMO Gallery - Our Memories",
+    description: "Check out the highlights from the Mathematical & Statistical Modeling Club events.",
+    images: ["/images/gallery-banner.jpg"], // Ensure you have a default image here
+  },
+};
 
 export default async function GalleryPage() {
   await dbConnect();

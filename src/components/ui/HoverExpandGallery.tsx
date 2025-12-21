@@ -14,7 +14,7 @@ export default function HoverExpandGallery({
 }) {
   const [activeImage, setActiveImage] = useState<number | null>(0);
 
-  // Robust Data Processing
+  // Filter out bad data
   const processedImages = photos.map((item, index) => {
     let src = "";
     if (typeof item === 'string') src = item;
@@ -32,7 +32,7 @@ export default function HoverExpandGallery({
 
   return (
     <div className={cn("w-full", className)}>
-      <div className="flex w-full overflow-x-auto pb-6 pt-2 no-scrollbar px-2 snap-x">
+      <div className="flex w-full overflow-x-auto pb-6 pt-2 no-scrollbar px-2 snap-x touch-pan-x">
         <div className="flex min-w-full w-max items-center justify-start gap-2 md:gap-4 mx-auto">
           {processedImages.map((image, index) => (
             <motion.div
@@ -43,13 +43,13 @@ export default function HoverExpandGallery({
               className={cn(
                 "relative cursor-pointer overflow-hidden rounded-2xl border border-white/10 bg-white/5 shrink-0 snap-center",
                 "h-[300px] md:h-[400px]", 
-                "will-change-[width]" // ✅ GPU Hint
+                "will-change-[width]" // ✅ Critical for smooth animation performance
               )}
               initial={false}
               animate={{
                 width: activeImage === index 
-                  ? (typeof window !== 'undefined' && window.innerWidth < 768 ? "18rem" : "32rem") 
-                  : (typeof window !== 'undefined' && window.innerWidth < 768 ? "3rem" : "5rem"),
+                  ? (typeof window !== 'undefined' && window.innerWidth < 768 ? "85vw" : "32rem") 
+                  : (typeof window !== 'undefined' && window.innerWidth < 768 ? "4rem" : "5rem"),
                 opacity: 1
               }}
               transition={{ 
@@ -74,22 +74,28 @@ export default function HoverExpandGallery({
                 )}
               </AnimatePresence>
               
-              {/* ✅ OPTIMIZED IMAGE CONFIGURATION */}
+              {/* ✅ OPTIMIZED IMAGE */}
               <div className="relative w-full h-full">
                 <Image
                     src={image.src}
                     alt={image.alt}
                     fill
-                    // ✅ 1. Precise Sizes: Tells browser to download ~288px image for mobile, ~512px for desktop
-                    sizes="(max-width: 768px) 300px, 520px"
                     
-                    // ✅ 2. Priority: Preloads the first 4 images (Visible in viewport)
+                    // ✅ 1. PRECISE SIZES
+                    // Mobile: "90vw" (because we expand to 85vw)
+                    // Desktop: "550px" (because we expand to 32rem which is ~512px)
+                    // This prevents downloading 4k images for a small card.
+                    sizes="(max-width: 768px) 90vw, 550px"
+                    
+                    // ✅ 2. PRIORITY
+                    // Only load the first 4 images immediately. Lazy load the rest.
                     priority={index < 4} 
                     
-                    className="object-cover"
+                    // ✅ 3. QUALITY
+                    // 60 is the "sweet spot" for speed vs visual fidelity.
+                    quality={60} 
                     
-                    // ✅ 3. Quality: 75 is the sweet spot for sharpness vs speed
-                    quality={75} 
+                    className="object-cover"
                 />
               </div>
             </motion.div>

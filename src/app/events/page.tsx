@@ -1,8 +1,20 @@
 import dbConnect from "@/lib/db";
 import Event from "@/models/Event";
 import EventCard from "@/components/ui/EventCard";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Upcoming Events",
+  description: "Explore workshops, hackathons, and quizzes organized by the Maths & Stats Club.",
+  openGraph: {
+    title: "MASTMO Events",
+    description: "Don't miss out on our upcoming tech and math events!",
+  },
+};
+
+
 
 export default async function EventsPage() {
   await dbConnect();

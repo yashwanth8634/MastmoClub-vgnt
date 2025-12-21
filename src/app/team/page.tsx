@@ -1,8 +1,23 @@
 import TeamCard from "@/components/ui/TeamCard";
 import dbConnect from "@/lib/db";
 import TeamMember from "@/models/TeamMember";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Team",
+  description: "Meet the Core Council, Faculty Board, and Coordinators behind the Mathematical & Statistical Modeling Club at VGNT.",
+  openGraph: {
+    title: "Meet the MASTMO Team",
+    description: "The minds and hearts behind the club.",
+    images: ["/images/team-banner.png"], // Make sure you have a banner image
+  },
+};
+
+
+
+
 
 export default async function TeamPage() {
   await dbConnect();
@@ -25,6 +40,9 @@ export default async function TeamPage() {
     _id: m._id.toString(),
     socials: m.socials || {} 
   }));
+
+
+  
 
   return (
     <main className="relative min-h-screen bg-transparent font-sans text-white selection:bg-[#00f0ff]/30">

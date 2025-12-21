@@ -1,4 +1,15 @@
 import MembershipForm from "@/components/features/MembershipForm";
+import type { Metadata } from "next";
+
+
+export const metadata: Metadata = {
+  title: "Join Us | MASTMO Club",
+  description: "Become a member of the Mathematical & Statistical Modeling Club. Register now to participate in events and workshops.",
+  openGraph: {
+    title: "Join the MASTMO Community",
+    description: "Be a part of the most active club at VGNT.",
+  },
+};
 
 
 export default function JoinPage() {

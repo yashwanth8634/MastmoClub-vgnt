@@ -26,6 +26,7 @@ export async function createTeamMember(formData: FormData) {
       category: formData.get("category"),
       image: formData.get("image"),
       socials: socials,
+      order: Number(formData.get("order")) || 0,
     });
 
     revalidatePath("/admin/dashboard-group/team");
@@ -72,6 +73,7 @@ export async function updateTeamMember(id: string, formData: FormData) {
       category: formData.get("category"),
       image: formData.get("image"), // ✅ This receives the URL from the client form
       socials: socials,
+      order: Number(formData.get("order")) || 0,
     };
 
     await TeamMember.findByIdAndUpdate(id, data, { new: true });

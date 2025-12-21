@@ -3,7 +3,7 @@
 import { updateTeamMember } from "@/actions/teamActions";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, ArrowLeft, Image as ImageIcon, Trash2, Loader2 } from "lucide-react";
+import { Save, ArrowLeft, Image as ImageIcon, Trash2, Loader2 ,ListOrdered } from "lucide-react";
 import { UploadDropzone } from "@/utils/uploadthing"; // ✅ Ensure this path matches your project
 import Link from "next/link";
 import Image from "next/image";
@@ -15,6 +15,7 @@ interface TeamMemberData {
   category: string;
   details?: string;
   image?: string;
+  order?: number;
   socials?: {
     email?: string;
     linkedin?: string;
@@ -67,6 +68,23 @@ export default function EditTeamForm({ member }: { member: TeamMemberData }) {
             <label className="text-xs font-bold uppercase text-gray-400">Role</label>
             <input name="role" defaultValue={member.role} required className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-[#00f0ff] outline-none" />
           </div>
+        </div>
+
+        <div className="p-4 bg-[#00f0ff]/5 border border-[#00f0ff]/20 rounded-xl flex items-center gap-4">
+            <div className="p-3 bg-[#00f0ff]/10 rounded-lg text-[#00f0ff]">
+                <ListOrdered size={24} />
+            </div>
+            <div className="flex-1">
+                <label className="text-xs font-bold uppercase text-[#00f0ff] mb-1 block">Display Order (Rank)</label>
+                <p className="text-[10px] text-gray-400 mb-2">Lower number = Shows First (e.g. 1 is President, 2 is Vice President)</p>
+                <input 
+                    name="order" 
+                    type="number" 
+                    defaultValue={member.order || 0} 
+                    className="w-full bg-black border border-white/10 rounded-lg p-3 text-white focus:border-[#00f0ff] outline-none font-mono text-lg" 
+                    placeholder="0"
+                />
+            </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
