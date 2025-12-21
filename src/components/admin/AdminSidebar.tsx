@@ -48,6 +48,11 @@ export default function AdminSidebar() {
       name: "Backup & Recovery", 
       href: "/admin/dashboard-group/backup", 
       icon: Database 
+    },
+    { 
+      name: "PopUp", 
+      href: "/admin/dashboard-group/popup", 
+      icon: Database 
     }
   ];
 
