@@ -20,7 +20,7 @@ const VGNT_INFO = `
 
 const CONTACT_INFO = `
 **CONTACT MASTMO:**
-- Email: mastmovgnt@gmail.com
+- Email: mastmo.vgnt@gmail.com
 - Instagram: @mastmo_vgnt (https://www.instagram.com/mastmo_vgnt/)
 - For urgent queries, DM us on Instagram!
 `;
@@ -186,7 +186,7 @@ ${CONTACT_INFO}
 2. When asked about team members, events, or club info: Use the website data above to give accurate answers.
 3. Format team member lists clearly with names and roles.
 4. For technical questions (math, coding, ML), give brief helpful answers and suggest resources.
-5. If you don't have specific information, say: "I don't have that info yet! For the latest details, contact us on Instagram @mastmo_vgnt or email mastmovgnt@gmail.com 📧"
+5. If you don't have specific information, say: "I don't have that info yet! For the latest details, contact us on Instagram @mastmo_vgnt or email mastmo.vgnt@gmail.com 📧"
 6. Keep responses under 4 sentences for simple queries, longer for detailed questions (team lists, event details).
 7. If asked for tech support or website issues, say: "Please contact our Tech Team via the Team Page or Instagram @mastmo_vgnt"
 8. Be encouraging about joining the club and attending events!
