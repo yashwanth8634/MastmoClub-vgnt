@@ -19,7 +19,7 @@ import { notFound } from "next/navigation";
 export const dynamic = "force-dynamic";
 
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 // ✅ Next.js automatically calls this function for SEO
@@ -27,9 +27,11 @@ export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  // 1. Fetch data
+  // 1. Await the params object first!
+  const resolvedParams = await params;
+  const id = resolvedParams.id;
+
   await dbConnect();
-  const id = params.id;
   const event = await Event.findById(id).lean();
 
   if (!event) {
