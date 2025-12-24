@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
 import { verifyAdmin } from "@/lib/auth";
 import { emailTemplates } from "@/lib/emailTemplates";
 import { sendEmail } from "@/lib/email";
-import { utapi } from "@/utils/uploadthing";
+import { UTApi } from "uploadthing/server";
 
 // Helper: Convert date strings to IST Date objects
 function toISTDate(dateString: any) {
@@ -102,6 +102,7 @@ export async function deleteEvent(id: string) {
   try {
     await verifyAdmin();
     await dbConnect();
+    const utapi = new UTApi();
 
     const event = await Event.findById(id);
     if (!event) return { success: false, message: "Event not found" };
@@ -160,6 +161,8 @@ export async function updateEvent(id: string, formData: FormData) {
   try {
     await verifyAdmin();
     await dbConnect();
+
+    const utapi = new UTApi();
 
     // 1. Fetch the EXISTING event to see what photos it had
     const existingEvent = await Event.findById(id);

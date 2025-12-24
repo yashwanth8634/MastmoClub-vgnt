@@ -4,7 +4,7 @@ import dbConnect from "@/lib/db";
 import TeamMember from "@/models/TeamMember";
 import { revalidatePath } from "next/cache";
 import { verifyAdmin } from "@/lib/auth"; // ✅ Essential for protection
-import { utapi } from "@/utils/uploadthing";
+import { UTApi } from "uploadthing/server";
 
 
 
@@ -52,6 +52,8 @@ export async function deleteTeamMember(id: string) {
   try {
     await verifyAdmin();
     await dbConnect();
+
+    const utapi = new UTApi();
   
     // 1. Find member to get image
     const member = await TeamMember.findById(id);
@@ -81,6 +83,8 @@ export async function updateTeamMember(id: string, formData: FormData) {
   try {
     await verifyAdmin();
     await dbConnect();
+
+    const utapi = new UTApi();
 
     // 1. Fetch Existing Member
     const existingMember = await TeamMember.findById(id);
