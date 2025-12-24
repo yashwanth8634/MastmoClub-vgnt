@@ -51,13 +51,14 @@ export default function FacultyJoinPage() {
               <label className="block text-sm text-gray-400 mb-1">Department</label>
               <select name="department" required className="w-full bg-black/50 border border-white/10 rounded-lg p-3 focus:border-[#00f0ff] outline-none text-white">
                 <option value="" className="bg-black">Select Dept</option>
-                <option value="H&S" className="bg-black">H&S</option>
+                <option value="H&S" className="bg-black">BS&H</option>
                 <option value="CSE" className="bg-black">CSE</option>
                 <option value="ECE" className="bg-black">ECE</option>
                 <option value="EEE" className="bg-black">EEE</option>
                 <option value="MECH" className="bg-black">Mechanical</option>
                 <option value="CIVIL" className="bg-black">Civil</option>
                 <option value="AI&DS" className="bg-black">AI & DS</option>
+                <option value="AI&DS" className="bg-black">CSM</option>
               </select>
             </div>
             <div>
