@@ -34,9 +34,6 @@ export default async function GalleryPage() {
         <h1 className="text-4xl md:text-6xl font-bold text-center mb-4">
           Event <span className="text-[#00f0ff]">Gallery</span>
         </h1>
-        <p className="text-center text-gray-400 mb-20 max-w-2xl mx-auto">
-          Hover (or tap) the cards to explore memories from our past events.
-        </p>
 
         <div className="space-y-24">
           {events.length > 0 ? (

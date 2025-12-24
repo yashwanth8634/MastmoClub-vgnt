@@ -1,4 +1,5 @@
 import TeamCard from "@/components/ui/TeamCard";
+import PatronSection from "@/components/team/PatronSection";
 import dbConnect from "@/lib/db";
 import TeamMember from "@/models/TeamMember";
 import type { Metadata } from "next";
@@ -11,38 +12,44 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Meet the MASTMO Team",
     description: "The minds and hearts behind the club.",
-    images: ["/images/team-banner.png"], // Make sure you have a banner image
+    images: ["/images/team-banner.png"], 
   },
 };
-
-
-
-
 
 export default async function TeamPage() {
   await dbConnect();
 
-  // 1. FETCH & SORT MEMBERS
-  const allMembers = await TeamMember.find({})
-    .sort({ order: 1 }) // ✅ FIX: Sort by "Display Order" (1, 2, 3...)
-    .lean();
+  // 1. FETCH MEMBERS
+  const allMembers = await TeamMember.find({}).sort({ order: 1 }).lean();
 
-  // 2. FILTER INTO CATEGORIES
-  // (We filter AFTER sorting, so the sort order is preserved within each category)
-  const faculty = allMembers.filter(m => m.category === "faculty");
-  const core = allMembers.filter(m => m.category === "core");
-  const coordinators = allMembers.filter(m => m.category === "coordinator");
-  const support = allMembers.filter(m => m.category === "support");
-
-  // Helper to serialize data for Client Components
   const serialize = (members: any[]) => members.map(m => ({
     ...m,
     _id: m._id.toString(),
     socials: m.socials || {} 
   }));
 
+  const serializedMembers = serialize(allMembers);
 
+  // ---------------------------------------------------------
+  // ✅ FIX: FILTER BY ROLE (Not Category)
+  // ---------------------------------------------------------
   
+  // 1. Find anyone whose ROLE contains "Patron" (case insensitive)
+  const patrons = serializedMembers.filter(m => 
+    m.role && m.role.toLowerCase().includes("patron")
+  );
+
+  // 2. Filter other categories, but EXCLUDE anyone we already identified as a Patron
+  // (This prevents them from appearing twice)
+  const isPatron = (id: string) => patrons.some(p => p._id === id);
+
+  const faculty = serializedMembers.filter(m => 
+    m.category === "faculty" && !isPatron(m._id)
+  );
+  
+  const core = serializedMembers.filter(m => m.category === "core");
+  const coordinators = serializedMembers.filter(m => m.category === "coordinator");
+  const support = serializedMembers.filter(m => m.category === "support");
 
   return (
     <main className="relative min-h-screen bg-transparent font-sans text-white selection:bg-[#00f0ff]/30">
@@ -59,37 +66,42 @@ export default async function TeamPage() {
           </p>
         </div>
 
-        {/* 1. FACULTY SECTION */}
+
+        {/* FACULTY SECTION */}
         {faculty.length > 0 && (
-          <section className="mb-24 animate-in fade-in slide-in-from-bottom-8 duration-700">
+          <section className="mb-24 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-75">
             <div className="flex items-center gap-4 mb-10">
               <h2 className="text-2xl font-bold text-white uppercase tracking-widest">Faculty Board</h2>
               <div className="h-px flex-1 bg-white/50"></div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-center optimize-visibility">
-              {serialize(faculty).map((member) => (
+              {faculty.map((member) => (
                 <TeamCard key={member._id} member={member} />
               ))}
             </div>
           </section>
         )}
 
-        {/* 2. CORE COUNCIL SECTION */}
+        {/* 👑 PATRON SECTION (Based on Role) */}
+        {patrons.length > 0 && (
+           <PatronSection patrons={patrons} />
+        )}
+        {/* CORE COUNCIL */}
         {core.length > 0 && (
-          <section className="mb-24 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
+          <section className="mb-24 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150">
             <div className="flex items-center gap-4 mb-10">
               <h2 className="text-2xl font-bold text-white uppercase tracking-widest">Core Council</h2>
               <div className="h-px flex-1 bg-white/20"></div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-center">
-              {serialize(core).map((member) => (
+              {core.map((member) => (
                 <TeamCard key={member._id} member={member} />
               ))}
             </div>
           </section>
         )}
 
-        {/* 3. COORDINATORS SECTION */}
+        {/* COORDINATORS */}
         {coordinators.length > 0 && (
           <section className="mb-24 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
             <div className="flex items-center gap-4 mb-10">
@@ -97,14 +109,14 @@ export default async function TeamPage() {
               <div className="h-px flex-1 bg-white/10"></div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-center">
-              {serialize(coordinators).map((member) => (
+              {coordinators.map((member) => (
                 <TeamCard key={member._id} member={member} />
               ))}
             </div>
           </section>
         )}
 
-        {/* 4. SUPPORTING TEAM */}
+        {/* SUPPORT */}
         {support.length > 0 && (
           <section className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
             <div className="flex items-center gap-4 mb-10">
@@ -112,7 +124,7 @@ export default async function TeamPage() {
               <div className="h-px flex-1 bg-white/10"></div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 justify-center">
-              {serialize(support).map((member) => (
+              {support.map((member) => (
                 <TeamCard key={member._id} member={member} />
               ))}
             </div>
