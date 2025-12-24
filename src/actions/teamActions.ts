@@ -4,7 +4,7 @@ import dbConnect from "@/lib/db";
 import TeamMember from "@/models/TeamMember";
 import { revalidatePath } from "next/cache";
 import { verifyAdmin } from "@/lib/auth"; // ✅ Essential for protection
-import { UTApi } from "uploadthing/server";
+import { deleteFilesFromUT } from "@/lib/utapi-server";
 
 
 
@@ -53,17 +53,18 @@ export async function deleteTeamMember(id: string) {
     await verifyAdmin();
     await dbConnect();
 
-    const utapi = new UTApi();
+    // ❌ REMOVED: const utapi = new UTApi(); (This was causing the error)
   
     // 1. Find member to get image
     const member = await TeamMember.findById(id);
     if (!member) return { success: false, message: "Member not found" };
 
-    // 2. Delete Image from UploadThing
+    // 2. Delete Image from UploadThing using the Helper
     if (member.image) {
       const key = getFileKey(member.image);
       if (key) {
-        await utapi.deleteFiles(key);
+        // ✅ Use the safe server helper
+        await deleteFilesFromUT(key);
       }
     }
     
@@ -77,14 +78,14 @@ export async function deleteTeamMember(id: string) {
   } catch (error) {
     return { success: false, message: "Failed to delete" };
   }
-} 
+}
 // 3. UPDATE MEMBER
 export async function updateTeamMember(id: string, formData: FormData) {
   try {
     await verifyAdmin();
     await dbConnect();
 
-    const utapi = new UTApi();
+    // ❌ REMOVED: const utapi = new UTApi();
 
     // 1. Fetch Existing Member
     const existingMember = await TeamMember.findById(id);
@@ -98,7 +99,8 @@ export async function updateTeamMember(id: string, formData: FormData) {
     if (newImage && oldImage && newImage !== oldImage) {
       const key = getFileKey(oldImage);
       if (key) {
-        await utapi.deleteFiles(key);
+        // ✅ Use the safe server helper
+        await deleteFilesFromUT(key);
       }
     }
 

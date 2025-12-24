@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
 import { verifyAdmin } from "@/lib/auth";
 import { emailTemplates } from "@/lib/emailTemplates";
 import { sendEmail } from "@/lib/email";
-import { UTApi } from "uploadthing/server";
+import { deleteFilesFromUT } from "@/lib/utapi-server";
 
 // Helper: Convert date strings to IST Date objects
 function toISTDate(dateString: any) {
@@ -102,21 +102,17 @@ export async function deleteEvent(id: string) {
   try {
     await verifyAdmin();
     await dbConnect();
-    const utapi = new UTApi();
 
     const event = await Event.findById(id);
     if (!event) return { success: false, message: "Event not found" };
 
-    // Collect ALL keys to delete (Cover + Gallery)
     const keysToDelete: string[] = [];
 
-    // Cover Image
     if (event.image) {
       const key = getFileKey(event.image);
       if (key) keysToDelete.push(key);
     }
 
-    // Gallery Images
     if (event.gallery && event.gallery.length > 0) {
       event.gallery.forEach((img: string) => {
         const key = getFileKey(img);
@@ -124,12 +120,11 @@ export async function deleteEvent(id: string) {
       });
     }
 
-    // Bulk Delete from UploadThing
+    // ✅ Use the helper
     if (keysToDelete.length > 0) {
-      await utapi.deleteFiles(keysToDelete);
+      await deleteFilesFromUT(keysToDelete);
     }
 
-    // Delete from DB
     await Event.findByIdAndDelete(id);
 
     revalidatePath("/admin/dashboard-group/events");
@@ -161,33 +156,25 @@ export async function updateEvent(id: string, formData: FormData) {
   try {
     await verifyAdmin();
     await dbConnect();
+    
+    // No need to initialize UTApi here anymore
 
-    const utapi = new UTApi();
-
-    // 1. Fetch the EXISTING event to see what photos it had
     const existingEvent = await Event.findById(id);
     if (!existingEvent) return { success: false, message: "Event not found" };
 
-    // 2. Get New Data
     const newImage = formData.get("image") as string;
     const newGalleryRaw = formData.get("gallery") as string;
     const newGallery = newGalleryRaw ? JSON.parse(newGalleryRaw) : [];
 
-    // ---------------------------------------------------------
-    // 🗑️ SMART DELETION LOGIC
-    // ---------------------------------------------------------
-    
-    // A. Check Main Image (Cover)
+    // --- SMART DELETION ---
     const oldImage = existingEvent.image;
-    // If we have a new image AND it's different from the old one, delete the old one
     if (newImage && oldImage && newImage !== oldImage) {
       const key = getFileKey(oldImage);
-      if (key) await utapi.deleteFiles(key);
+      // ✅ Use the helper
+      if (key) await deleteFilesFromUT(key);
     }
 
-    // B. Check Gallery Images
     const oldGallery = existingEvent.gallery || [];
-    // Find images that were in the OLD gallery but are NOT in the NEW gallery
     const removedImages = oldGallery.filter((img: string) => !newGallery.includes(img));
 
     if (removedImages.length > 0) {
@@ -195,13 +182,13 @@ export async function updateEvent(id: string, formData: FormData) {
         .map((img: string) => getFileKey(img))
         .filter((key: string | null) => key !== null) as string[];
       
+      // ✅ Use the helper
       if (keysToDelete.length > 0) {
-        await utapi.deleteFiles(keysToDelete);
+        await deleteFilesFromUT(keysToDelete);
       }
     }
-    // ---------------------------------------------------------
+    // ----------------------
 
-    // 3. Update Database
     const data = {
       title: formData.get("title"),
       date: new Date(formData.get("date") as string),
