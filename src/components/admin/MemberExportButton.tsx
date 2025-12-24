@@ -1,9 +1,8 @@
 "use client";
 
-import React from "react";
+import { Download } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { Download, FileText } from "lucide-react";
 
 interface Member {
   name: string;
@@ -15,21 +14,22 @@ interface Member {
   section: string;
 }
 
-// ✅ Added 'title' and 'fileName' props
+interface ExportProps {
+  members: Member[];
+  title?: string;
+  fileName?: string;
+}
+
 export default function MemberExportButton({ 
   members, 
-  title = "MASTMO CLUB - REGISTRY", 
-  fileName = "Report" 
-}: { 
-  members: Member[], 
-  title?: string, 
-  fileName?: string 
-}) {
+  title = "Club Members", 
+  fileName = "Members_List" 
+}: ExportProps) {
 
   const generatePDF = () => {
     const doc = new jsPDF();
 
-    // 1. SORTING (Year > Branch > Section > Roll No)
+    // 1. Sort Data: Year > Branch > Section > RollNo
     const sortedMembers = [...members].sort((a, b) => {
       if (a.year !== b.year) return a.year.localeCompare(b.year);
       if (a.branch !== b.branch) return a.branch.localeCompare(b.branch);
@@ -37,45 +37,78 @@ export default function MemberExportButton({
       return a.rollNumber.localeCompare(b.rollNumber);
     });
 
-    // 2. HEADER
-    const pageWidth = doc.internal.pageSize.getWidth();
-    doc.setFontSize(18);
-    doc.text(title, pageWidth / 2, 15, { align: "center" }); // ✅ Dynamic Title
-    
-    doc.setFontSize(11);
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, pageWidth / 2, 22, { align: "center" });
-    doc.text(`Total Participants: ${members.length}`, pageWidth / 2, 27, { align: "center" });
+    // 2. Prepare Table Data with Group Headers
+    const tableBody: any[] = [];
+    let lastGroup = "";
+    let serialNo = 1;
 
-    // 3. TABLE
-    const tableRows = sortedMembers.map((m, index) => [
-      index + 1,
-      m.rollNumber.toUpperCase(),
-      m.name,
-      `${m.year}-${m.branch}-${m.section}`,
-      m.phone,
-      m.email
-    ]);
+    sortedMembers.forEach((m) => {
+      // ✅ FORMAT: "1st Year CSE A"
+      const currentGroup = `${m.year} Year ${m.branch} ${m.section}`;
 
-    autoTable(doc, {
-      head: [["S.No", "Roll No", "Name", "Class", "Phone", "Email"]],
-      body: tableRows,
-      startY: 35,
-      theme: "grid",
-      headStyles: { fillColor: [0, 240, 255], textColor: [0, 0, 0], fontStyle: "bold", halign: "center" },
-      columnStyles: { 0: { halign: "center", cellWidth: 15 }, 3: { halign: "center" } },
+      // If group changes, insert a Header Row
+      if (currentGroup !== lastGroup) {
+        tableBody.push([
+          { 
+            content: currentGroup.toUpperCase(), // e.g., "1ST YEAR CSE A"
+            colSpan: 6, 
+            styles: { 
+              fillColor: [200, 200, 200], // Light Gray background
+              textColor: [0, 0, 0],       // Black Text
+              fontStyle: "bold",
+              halign: "left",
+              fontSize: 10
+            } 
+          }
+        ]);
+        lastGroup = currentGroup;
+      }
+
+      // Insert Student Row
+      tableBody.push([
+        serialNo++,
+        m.rollNumber,
+        m.name,
+        m.phone,
+        m.email,
+        "" // Attendance Column
+      ]);
     });
 
-    doc.save(`${fileName}_${new Date().toISOString().split('T')[0]}.pdf`);
+    // 3. Document Title
+    doc.setFontSize(16);
+    doc.text(title, 14, 20);
+    doc.setFontSize(10);
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 28);
+
+    // 4. Generate Table
+    autoTable(doc, {
+      startY: 35,
+      head: [["S.No", "Roll No", "Name", "Phone", "Email", "Sign"]],
+      body: tableBody,
+      theme: "grid",
+      headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255] },
+      styles: { fontSize: 9, cellPadding: 3 },
+      columnStyles: {
+        0: { cellWidth: 12 }, 
+        1: { cellWidth: 30 }, // Roll No
+        2: { cellWidth: 50 }, // Name
+        3: { cellWidth: 30 }, // Phone
+        4: { cellWidth: 45 }, // Email
+        5: { cellWidth: 20 }  // Sign
+      }
+    });
+
+    // 5. Save File
+    doc.save(`${fileName}.pdf`);
   };
 
   return (
     <button
       onClick={generatePDF}
-      className="flex items-center gap-2 px-4 py-2 bg-[#00f0ff] hover:bg-white text-black font-bold rounded-lg transition-all shadow-[0_0_15px_rgba(0,240,255,0.4)]"
+      className="flex items-center gap-2 bg-[#00f0ff] text-black px-4 py-2 rounded-lg font-bold hover:bg-white hover:scale-105 transition-all text-sm"
     >
-      <FileText size={18} />
-      Export PDF
+      <Download size={16} /> Export PDF
     </button>
   );
 }

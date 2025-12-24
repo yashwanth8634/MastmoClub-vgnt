@@ -30,7 +30,7 @@ export default function FacultyJoinPage() {
           {/* Name */}
           <div>
             <label className="block text-sm text-gray-400 mb-1">Full Name</label>
-            <input name="fullName" required type="text" className="w-full bg-black/50 border border-white/10 rounded-lg p-3 focus:border-[#00f0ff] outline-none transition-colors" placeholder="Dr. John Doe" />
+            <input name="fullName" required type="text" className="w-full bg-black/50 border border-white/10 rounded-lg p-3 focus:border-[#00f0ff] outline-none transition-colors" placeholder="Dr.G.Y Sagar" />
           </div>
 
           {/* Email & Phone */}
@@ -63,7 +63,7 @@ export default function FacultyJoinPage() {
             </div>
             <div>
               <label className="block text-sm text-gray-400 mb-1">Branch / Specialization</label>
-              <input name="branch" required type="text" className="w-full bg-black/50 border border-white/10 rounded-lg p-3 focus:border-[#00f0ff] outline-none" placeholder="e.g. Data Science" />
+              <input name="branch" required type="text" className="w-full bg-black/50 border border-white/10 rounded-lg p-3 focus:border-[#00f0ff] outline-none" placeholder="e.g. Maths" />
             </div>
           </div>
 

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, X, Send, Bot, User, Loader2 } from "lucide-react";
 import { getChatResponse } from "@/actions/chatAction";
 import ReactMarkdown from "react-markdown";
+import { usePathname } from "next/navigation"; // ✅ Import this
 
 interface Message {
   role: "user" | "assistant";
@@ -12,6 +13,7 @@ interface Message {
 }
 
 export default function ChatBot() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", content: "Hello! I'm the MASTMO AI. Ask me anything about the club! ♾️" }
@@ -25,6 +27,11 @@ export default function ChatBot() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isOpen]);
+
+  // ✅ HIDE CHATBOT ON ADMIN PAGES
+  if (pathname?.startsWith("/admin")) {
+    return null; 
+  }
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;

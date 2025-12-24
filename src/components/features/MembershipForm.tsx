@@ -83,7 +83,7 @@ export default function MembershipForm() {
               onChange={handleChange}
               required 
               className="w-full bg-black border border-white/20 rounded-lg py-3 pl-10 text-white focus:border-[#00f0ff] outline-none" 
-              placeholder="John Doe" 
+              placeholder="Yashwanth Reddy" 
             />
           </div>
         </div>
@@ -101,7 +101,7 @@ export default function MembershipForm() {
                 onChange={handleChange}
                 required 
                 className="w-full bg-black border border-white/20 rounded-lg py-3 pl-10 text-white focus:border-[#00f0ff] outline-none" 
-                placeholder="john@vgnt.ac.in" 
+                placeholder="yashwanth@vgnt.ac.in" 
               />
             </div>
           </div>
@@ -115,7 +115,7 @@ export default function MembershipForm() {
                 onChange={handleChange}
                 required 
                 className="w-full bg-black border border-white/20 rounded-lg py-3 pl-10 text-white focus:border-[#00f0ff] outline-none" 
-                placeholder="98765..." 
+                placeholder="9876543210" 
               />
             </div>
           </div>
@@ -132,7 +132,7 @@ export default function MembershipForm() {
               onChange={handleChange}
               required 
               className="w-full bg-black border border-white/20 rounded-lg py-3 pl-10 text-white font-mono uppercase focus:border-[#00f0ff] outline-none" 
-              placeholder="24891A05..." 
+              placeholder="24891A0593" 
             />
           </div>
         </div>

@@ -26,52 +26,62 @@ export async function deleteRegistration(id: string) {
 // 2. UPDATE STATUS (Approve/Reject + Email)
 export async function updateStatus(id: string, status: string) {
   try { 
-    await verifyAdmin(); // Security Check
+    await verifyAdmin();
     await dbConnect();
     
-    // Update DB
-    const registration = await Registration.findByIdAndUpdate(
-      id, 
-      { status },
-      { new: true }
-    );
-
+    // 1. Fetch the registration first
+    const registration = await Registration.findById(id);
     if (!registration) return { success: false, message: "Not found" };
 
-    // Check if we need to send Membership Emails
-    // Covers both "General Membership" (Students) and "Faculty Membership"
     const isMembership = 
       registration.eventName === "General Membership" || 
       registration.eventName === "Faculty Membership";
 
-    if (isMembership) {
-      const member = registration.members[0];
-      if (member && member.email) {
-        let emailData;
-        
-        if (status === "approved") {
-          emailData = emailTemplates.membershipApproved(member.fullName);
-        } else if (status === "rejected") {
-          emailData = emailTemplates.membershipRejected(member.fullName);
-        }
+    const member = registration.members[0];
 
-        if (emailData) {
-           await sendEmail(member.email, emailData.subject, emailData.html);
-        }
+    // =========================================================
+    // CASE: REJECTION (Hard Delete)
+    // =========================================================
+    if (status === "rejected") {
+      // Send Rejection Email (Optional: Remove if you don't want to notify)
+      if (isMembership && member && member.email) {
+        const emailData = emailTemplates.membershipRejected(member.fullName);
+        await sendEmail(member.email, emailData.subject, emailData.html);
       }
+
+      // 🛑 PERMANENTLY DELETE RECORD
+      await Registration.findByIdAndDelete(id);
+
+      revalidatePath("/admin/dashboard-group/registrations");
+      revalidatePath("/admin/dashboard-group/members");
+      return { success: true, message: "Application Rejected & Deleted" };
     }
 
-    revalidatePath("/admin/dashboard-group/registrations");
-    revalidatePath("/admin/dashboard-group/members");
-    
-    return { success: true, message: `Registration ${status}` };
+    // =========================================================
+    // CASE: APPROVAL (Update Status)
+    // =========================================================
+    if (status === "approved") {
+      // Send Approval Email
+      if (isMembership && member && member.email) {
+        const emailData = emailTemplates.membershipApproved(member.fullName);
+        await sendEmail(member.email, emailData.subject, emailData.html);
+      }
+
+      // Update Database
+      await Registration.findByIdAndUpdate(id, { status: "approved" });
+
+      revalidatePath("/admin/dashboard-group/registrations");
+      revalidatePath("/admin/dashboard-group/members");
+      return { success: true, message: "Application Approved" };
+    }
     
   } catch (error: any) {
     console.error("Status update error:", error);
     return { success: false, message: error.message };
   }
+  
+  return { success: false, message: "Invalid action" };
 }
-
 // 3. DELETE MEMBER (Specific for Members page)
 export async function deleteMember(id: string) {
   try { 

@@ -3,21 +3,30 @@ import Registration from "@/models/Registration";
 import Event from "@/models/Event";
 import MemberExportButton from "@/components/admin/MemberExportButton";
 
-// Force dynamic to get latest data
 export const dynamic = "force-dynamic";
+
+// Helper to calculate year from Roll No (Assuming 2025 is current academic context)
+const getYearFromRoll = (rollNo: string) => {
+  if (!rollNo) return "N/A";
+  const prefix = rollNo.substring(0, 2);
+  const yearMap: { [key: string]: string } = {
+    "25": "1st",
+    "24": "2nd",
+    "23": "3rd",
+    "22": "4th"
+  };
+  return yearMap[prefix] || "N/A";
+};
 
 export default async function RegistrationsPage() {
   await dbConnect();
   
-  // 1. Fetch Events
   const events = await Event.find({}).sort({ createdAt: -1 }).lean();
 
-  // 2. ✅ FIX: Fetch Registrations for ALL events in parallel
-  // We transform the data BEFORE rendering to avoid async issues in JSX
   const eventsWithData = await Promise.all(
     events.map(async (event) => {
       const regs = await Registration.find({ eventId: event._id }).lean();
-      return { ...event, registrations: regs }; // Attach regs to the event object
+      return { ...event, registrations: regs };
     })
   );
 
@@ -28,21 +37,24 @@ export default async function RegistrationsPage() {
       <div className="space-y-12">
         {eventsWithData.map((event: any) => {
           const regs = event.registrations;
-          
-          // Skip events with no registrations
           if (!regs || regs.length === 0) return null;
 
-          // 3. PREPARE DATA FOR PDF (Flatten Teams -> Individual Students)
+          // 3. PREPARE DATA FOR PDF (With Auto-Calculated Year)
           const allParticipants = regs.flatMap((reg: any) => 
-            reg.members.map((member: any) => ({
-              name: member.fullName,
-              rollNumber: member.rollNo,
-              email: member.email,
-              phone: member.phone || member.mobile || "N/A",
-              branch: member.branch || "N/A",
-              year: member.year || "N/A",
-              section: member.section || "N/A"
-            }))
+            reg.members.map((member: any) => {
+              // Calculate Year if missing
+              const calculatedYear = member.year || getYearFromRoll(member.rollNo);
+              
+              return {
+                name: member.fullName,
+                rollNumber: member.rollNo,
+                email: member.email,
+                phone: member.phone || member.mobile || "N/A",
+                branch: member.branch || "N/A",
+                year: calculatedYear, // ✅ Now sends "1st", "2nd" etc.
+                section: member.section || "N/A"
+              };
+            })
           );
 
           return (
@@ -56,7 +68,6 @@ export default async function RegistrationsPage() {
                   </p>
                 </div>
                 
-                {/* PDF EXPORT BUTTON */}
                 <MemberExportButton 
                   members={allParticipants} 
                   title={`EVENT REPORT: ${event.title.toUpperCase()}`}
@@ -85,10 +96,10 @@ export default async function RegistrationsPage() {
                         <td className="p-4 text-white">{reg.members[0]?.fullName}</td>
                         <td className="p-4 font-mono text-[#00f0ff]">{reg.members[0]?.rollNo}</td>
                         <td className="p-4">
-                            {reg.members[0]?.year ? `${reg.members[0].year} - ` : ""}
-                            {reg.members[0]?.branch || "N/A"}
+                           {/* Display calculated year in table too */}
+                           {getYearFromRoll(reg.members[0]?.rollNo)} Year - {reg.members[0]?.branch}
                         </td>
-                        <td className="p-4">{reg.members[0]?.section || "N/A"}</td>
+                        <td className="p-4">{reg.members[0]?.section}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -97,13 +108,6 @@ export default async function RegistrationsPage() {
             </div>
           );
         })}
-        
-        {/* Empty State */}
-        {eventsWithData.every((e: any) => e.registrations.length === 0) && (
-             <div className="text-center py-20 bg-white/5 rounded-xl border border-white/10">
-               <p className="text-gray-400">No event registrations found yet.</p>
-             </div>
-        )}
       </div>
     </div>
   );

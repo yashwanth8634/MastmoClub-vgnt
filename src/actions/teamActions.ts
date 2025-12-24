@@ -4,6 +4,15 @@ import dbConnect from "@/lib/db";
 import TeamMember from "@/models/TeamMember";
 import { revalidatePath } from "next/cache";
 import { verifyAdmin } from "@/lib/auth"; // ✅ Essential for protection
+import { utapi } from "@/utils/uploadthing";
+
+
+
+// Helper to extract File Key from UploadThing URL
+const getFileKey = (url: string) => {
+  if (!url || !url.includes("utfs.io")) return null;
+  return url.split("/").pop();
+};
 
 // 1. CREATE MEMBER
 export async function createTeamMember(formData: FormData) {
@@ -41,17 +50,24 @@ export async function createTeamMember(formData: FormData) {
 // 2. DELETE MEMBER
 export async function deleteTeamMember(id: string) {
   try {
-    await verifyAdmin(); // 🔴 ADDED SECURITY CHECK HERE
-  } catch (e) {
-    return { success: false, message: "Unauthorized" };
-  }
-
-  await dbConnect();
+    await verifyAdmin();
+    await dbConnect();
   
-  try {
+    // 1. Find member to get image
+    const member = await TeamMember.findById(id);
+    if (!member) return { success: false, message: "Member not found" };
+
+    // 2. Delete Image from UploadThing
+    if (member.image) {
+      const key = getFileKey(member.image);
+      if (key) {
+        await utapi.deleteFiles(key);
+      }
+    }
+    
+    // 3. Delete from DB
     await TeamMember.findByIdAndDelete(id);
     
-    // ✅ Fix: Use the correct admin path
     revalidatePath("/admin/dashboard-group/team"); 
     revalidatePath("/team");
     
@@ -59,14 +75,30 @@ export async function deleteTeamMember(id: string) {
   } catch (error) {
     return { success: false, message: "Failed to delete" };
   }
-}
-
+} 
 // 3. UPDATE MEMBER
 export async function updateTeamMember(id: string, formData: FormData) {
   try {
-    await verifyAdmin(); // Security Check
+    await verifyAdmin();
     await dbConnect();
 
+    // 1. Fetch Existing Member
+    const existingMember = await TeamMember.findById(id);
+    if (!existingMember) return { success: false, message: "Member not found" };
+
+    // 2. Compare Images
+    const newImage = formData.get("image") as string;
+    const oldImage = existingMember.image;
+
+    // 🗑️ SMART DELETION: If image changed, delete the old one
+    if (newImage && oldImage && newImage !== oldImage) {
+      const key = getFileKey(oldImage);
+      if (key) {
+        await utapi.deleteFiles(key);
+      }
+    }
+
+    // 3. Update Database
     const socials = {
       linkedin: formData.get("linkedin") || "",
       github: formData.get("github") || "",
@@ -79,7 +111,7 @@ export async function updateTeamMember(id: string, formData: FormData) {
       role: formData.get("role"),
       details: formData.get("details"),
       category: formData.get("category"),
-      image: formData.get("image"),
+      image: newImage, 
       socials: socials,
       order: Number(formData.get("order")) || 0,
     };

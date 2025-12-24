@@ -1,142 +1,143 @@
 import dbConnect from "@/lib/db";
 import Registration from "@/models/Registration";
-import Event from "@/models/Event";
-import { Users, Calendar, CheckCircle, GraduationCap, History } from "lucide-react";
+import { CheckCircle, GraduationCap, ArrowRight, Clock } from "lucide-react";
+import Link from "next/link";
+
+export const dynamic = "force-dynamic"; // Ensure real-time data
 
 export default async function Dashboard() {
   await dbConnect();
 
-  // 1. EVENT REGISTRATIONS (Exclude Memberships)
-  const eventRegistrations = await Registration.countDocuments({ 
-    eventName: { $nin: ["General Membership", "Faculty Membership"] } 
-  });
-  
-  // 2. MEMBER STATISTICS
-  const studentPending = await Registration.countDocuments({ eventName: "General Membership", status: "pending" });
-  const studentApproved = await Registration.countDocuments({ eventName: "General Membership", status: "approved" });
-  
-  const facultyPending = await Registration.countDocuments({ eventName: "Faculty Membership", status: "pending" });
-  const facultyApproved = await Registration.countDocuments({ eventName: "Faculty Membership", status: "approved" });
+  // 🚀 OPTIMIZATION: Use Promise.all to fetch data in parallel (faster load times)
+  const [
+    studentPending,
+    studentApproved,
+    facultyPending,
+    facultyApproved,
+    recentPending
+  ] = await Promise.all([
+    Registration.countDocuments({ eventName: "General Membership", status: "pending" }),
+    Registration.countDocuments({ eventName: "General Membership", status: "approved" }),
+    Registration.countDocuments({ eventName: "Faculty Membership", status: "pending" }),
+    Registration.countDocuments({ eventName: "Faculty Membership", status: "approved" }),
+    // Fetch top 5 recent pending requests for the "Quick View" table
+    Registration.find({ status: "pending", eventName: { $in: ["General Membership", "Faculty Membership"] } })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .lean()
+  ]);
 
-  // 3. EVENT STATISTICS (✅ FIXED LOGIC)
-  // Active = isPast is false (Upcoming)
-  const activeEvents = await Event.countDocuments({ isPast: false });
-  // Past = isPast is true (Closed/Completed)
-  const pastEvents = await Event.countDocuments({ isPast: true });
-
-  // 4. TOTALS
+  // Derived Totals
   const totalPending = studentPending + facultyPending;
   const totalMembers = studentApproved + facultyApproved;
 
   return (
-    <div>
+    <div className="max-w-7xl mx-auto">
       <h1 className="text-3xl font-bold mb-8">Dashboard Overview</h1>
 
-      {/* STATS GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-        {/* Event Regs */}
-        <div className="bg-white/5 border border-white/10 p-6 rounded-2xl flex items-center justify-between">
-          <div>
-            <p className="text-gray-400 text-sm mb-1">Event Registrations</p>
-            <h3 className="text-3xl font-bold text-white">{eventRegistrations}</h3>
-          </div>
-          <div className="p-4 bg-white/5 rounded-full text-blue-400">
-            <Users size={24} />
-          </div>
-        </div>
-
-        {/* ✅ ACTIVE EVENTS (Fixed) */}
-        <div className="bg-white/5 border border-white/10 p-6 rounded-2xl flex items-center justify-between">
-          <div>
-            <p className="text-gray-400 text-sm mb-1">Active / Upcoming</p>
-            <h3 className="text-3xl font-bold text-green-400">{activeEvents}</h3>
-            <p className="text-xs text-gray-500 mt-1">{pastEvents} Past Events</p>
-          </div>
-          <div className="p-4 bg-white/5 rounded-full text-green-400">
-            <Calendar size={24} />
-          </div>
-        </div>
-
-        {/* Total Members */}
-        <div className="bg-white/5 border border-white/10 p-6 rounded-2xl flex items-center justify-between">
-          <div>
-            <p className="text-gray-400 text-sm mb-1">Total Club Members</p>
-            <h3 className="text-3xl font-bold text-white">{totalMembers}</h3>
-            <p className="text-xs text-gray-500 mt-1">{facultyApproved} Faculty • {studentApproved} Students</p>
-          </div>
-          <div className="p-4 bg-white/5 rounded-full text-purple-400">
-            <GraduationCap size={24} />
-          </div>
-        </div>
-
-        {/* Pending Approvals */}
-        <div className="bg-white/5 border border-white/10 p-6 rounded-2xl flex items-center justify-between">
-          <div>
-            <p className="text-gray-400 text-sm mb-1">Pending Approvals</p>
-            <h3 className="text-3xl font-bold text-yellow-400">{totalPending}</h3>
-            <p className="text-xs text-gray-500 mt-1">{facultyPending} Faculty • {studentPending} Students</p>
-          </div>
-          <div className="p-4 bg-white/5 rounded-full text-yellow-400">
-            <CheckCircle size={24} />
-          </div>
-        </div>
-      </div>
-
-      {/* DETAILED SUMMARY */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+      {/* ---------------------------------------------------------------------- */}
+      {/* 1. KEY METRICS (HERO CARDS) */}
+      {/* ---------------------------------------------------------------------- */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
         
-        {/* Membership Breakdown */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-          <h2 className="text-xl font-bold mb-6 text-[#00f0ff]">Membership Status</h2>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center p-3 bg-black/40 rounded-lg">
-              <div>
-                <span className="text-gray-300 block">Students</span>
-                <span className="text-xs text-gray-500">General Membership</span>
-              </div>
-              <div className="text-right">
-                <span className="text-xl font-bold text-white block">{studentApproved}</span>
-                {studentPending > 0 && <span className="text-xs text-yellow-400">{studentPending} Pending</span>}
-              </div>
+        {/* Total Members Card */}
+        <div className="bg-gradient-to-br from-white/10 to-white/5 border border-white/10 p-8 rounded-3xl flex items-center justify-between relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+             <GraduationCap size={120} />
+          </div>
+          <div>
+            <p className="text-gray-400 font-medium mb-2">Total Club Members</p>
+            <h3 className="text-5xl font-bold text-white mb-2">{totalMembers}</h3>
+            <div className="flex gap-4 text-sm text-gray-400 mt-4">
+               <span className="bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full border border-purple-500/30">
+                 {facultyApproved} Faculty
+               </span>
+               <span className="bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full border border-blue-500/30">
+                 {studentApproved} Students
+               </span>
             </div>
-
-            <div className="flex justify-between items-center p-3 bg-purple-900/10 rounded-lg border border-purple-500/20">
-              <div>
-                <span className="text-purple-300 block">Faculty</span>
-                <span className="text-xs text-purple-400/60">Faculty Membership</span>
-              </div>
-              <div className="text-right">
-                <span className="text-xl font-bold text-purple-300 block">{facultyApproved}</span>
-                {facultyPending > 0 && <span className="text-xs text-yellow-400">{facultyPending} Pending</span>}
-              </div>
-            </div>
-            
-            <a href="/admin/dashboard-group/members" className="block text-center mt-4 p-3 bg-[#00f0ff]/10 text-[#00f0ff] rounded-lg hover:bg-[#00f0ff]/20 transition-colors font-semibold">
-              Manage All Members
-            </a>
           </div>
         </div>
 
-        {/* Event Summary */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-          <h2 className="text-xl font-bold mb-6 text-green-400">Events Overview</h2>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center p-3 bg-green-500/10 rounded-lg border border-green-500/20">
-              <span className="text-gray-300">Currently Active</span>
-              <span className="text-2xl font-bold text-green-400">{activeEvents}</span>
-            </div>
+        {/* Pending Approvals Card (Glows if > 0) */}
+        <div className={`
+          relative p-8 rounded-3xl border flex items-center justify-between overflow-hidden transition-all
+          ${totalPending > 0 
+            ? "bg-yellow-500/10 border-yellow-500/30 shadow-[0_0_30px_rgba(234,179,8,0.1)]" 
+            : "bg-white/5 border-white/10"}
+        `}>
+          <div className="absolute top-0 right-0 p-8 opacity-10">
+             <CheckCircle size={120} />
+          </div>
+          
+          <div className="z-10 w-full">
+            <p className={`font-medium mb-2 ${totalPending > 0 ? "text-yellow-400" : "text-gray-400"}`}>
+              Pending Approvals
+            </p>
+            <h3 className={`text-5xl font-bold mb-4 ${totalPending > 0 ? "text-yellow-400" : "text-white"}`}>
+              {totalPending}
+            </h3>
             
-            <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg border border-white/5">
-              <span className="text-gray-400">Past / Closed</span>
-              <span className="text-2xl font-bold text-gray-400">{pastEvents}</span>
-            </div>
-
-            <a href="/admin/dashboard-group/events" className="block text-center mt-4 p-3 bg-green-500/10 text-green-400 rounded-lg hover:bg-green-500/20 transition-colors font-semibold">
-              Manage Events
-            </a>
+            {totalPending > 0 ? (
+              <Link 
+                href="/admin/dashboard-group/members"
+                className="inline-flex items-center gap-2 bg-yellow-400 text-black px-5 py-2.5 rounded-xl font-bold hover:bg-white transition-colors"
+              >
+                Review Requests <ArrowRight size={18} />
+              </Link>
+            ) : (
+              <p className="text-green-400 flex items-center gap-2">
+                <CheckCircle size={18} /> All caught up!
+              </p>
+            )}
           </div>
         </div>
       </div>
+
+      {/* ---------------------------------------------------------------------- */}
+      {/* 2. RECENT PENDING REQUESTS (Actionable Table) */}
+      {/* ---------------------------------------------------------------------- */}
+      {recentPending.length > 0 && (
+        <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+          <div className="p-6 border-b border-white/10 flex justify-between items-center">
+            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+              <Clock size={20} className="text-[#00f0ff]" /> Recently Applied
+            </h3>
+            <Link href="/admin/dashboard-group/members" className="text-sm text-gray-400 hover:text-[#00f0ff] transition-colors">
+              View All &rarr;
+            </Link>
+          </div>
+          <table className="w-full text-left text-sm">
+            <thead className="bg-black/20 text-gray-500">
+              <tr>
+                <th className="p-4">Name</th>
+                <th className="p-4">Role</th>
+                <th className="p-4">Branch/Dept</th>
+                <th className="p-4 text-right">Date</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {recentPending.map((req: any) => (
+                <tr key={req._id.toString()} className="hover:bg-white/5 transition-colors">
+                  <td className="p-4 font-bold text-white">{req.members[0].fullName}</td>
+                  <td className="p-4">
+                    {req.eventName === "Faculty Membership" ? (
+                      <span className="text-purple-400 text-xs bg-purple-400/10 px-2 py-1 rounded">Faculty</span>
+                    ) : (
+                      <span className="text-blue-400 text-xs bg-blue-400/10 px-2 py-1 rounded">Student</span>
+                    )}
+                  </td>
+                  <td className="p-4 text-gray-300">{req.members[0].branch}</td>
+                  <td className="p-4 text-right text-gray-500">
+                    {new Date(req.createdAt).toLocaleDateString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
     </div>
   );
 }

@@ -7,12 +7,18 @@ import { revalidatePath } from "next/cache";
 import { verifyAdmin } from "@/lib/auth";
 import { emailTemplates } from "@/lib/emailTemplates";
 import { sendEmail } from "@/lib/email";
+import { utapi } from "@/utils/uploadthing";
 
 // Helper: Convert date strings to IST Date objects
 function toISTDate(dateString: any) {
   if (!dateString) return null;
   return new Date(`${dateString}+05:30`);
 }
+
+const getFileKey = (url: string) => {
+  if (!url || !url.includes("utfs.io")) return null;
+  return url.split("/").pop();
+};
 
 // 1. CREATE EVENT
 export async function createEvent(formData: FormData) {
@@ -93,16 +99,44 @@ export async function createEvent(formData: FormData) {
 
 // 2. DELETE EVENT
 export async function deleteEvent(id: string) {
-  try { await verifyAdmin(); } catch (e) { return { success: false, message: "Unauthorized" }; }
-  await dbConnect();
-  
   try {
+    await verifyAdmin();
+    await dbConnect();
+
+    const event = await Event.findById(id);
+    if (!event) return { success: false, message: "Event not found" };
+
+    // Collect ALL keys to delete (Cover + Gallery)
+    const keysToDelete: string[] = [];
+
+    // Cover Image
+    if (event.image) {
+      const key = getFileKey(event.image);
+      if (key) keysToDelete.push(key);
+    }
+
+    // Gallery Images
+    if (event.gallery && event.gallery.length > 0) {
+      event.gallery.forEach((img: string) => {
+        const key = getFileKey(img);
+        if (key) keysToDelete.push(key);
+      });
+    }
+
+    // Bulk Delete from UploadThing
+    if (keysToDelete.length > 0) {
+      await utapi.deleteFiles(keysToDelete);
+    }
+
+    // Delete from DB
     await Event.findByIdAndDelete(id);
+
     revalidatePath("/admin/dashboard-group/events");
-    revalidatePath("/events");
+    revalidatePath("/gallery");
+    
     return { success: true };
   } catch (error) {
-    return { success: false, message: "Failed to delete event" };
+    return { success: false, message: "Failed to delete" };
   }
 }
 
@@ -123,43 +157,69 @@ export async function toggleEventStatus(id: string, currentStatus: boolean) {
 
 // 4. UPDATE EVENT
 export async function updateEvent(id: string, formData: FormData) {
-  try { await verifyAdmin(); } catch (e) { return { success: false, message: "Unauthorized" }; }
-  await dbConnect();
-
-  const galleryRaw = formData.get("galleryJSON") as string;
-  let gallery = [];
-  try { gallery = galleryRaw ? JSON.parse(galleryRaw) : []; } catch (e) {}
-
   try {
-    const rules = (formData.get("rules") as string)?.split("\n").filter(r => r.trim()) || [];
+    await verifyAdmin();
+    await dbConnect();
+
+    // 1. Fetch the EXISTING event to see what photos it had
+    const existingEvent = await Event.findById(id);
+    if (!existingEvent) return { success: false, message: "Event not found" };
+
+    // 2. Get New Data
+    const newImage = formData.get("image") as string;
+    const newGalleryRaw = formData.get("gallery") as string;
+    const newGallery = newGalleryRaw ? JSON.parse(newGalleryRaw) : [];
+
+    // ---------------------------------------------------------
+    // 🗑️ SMART DELETION LOGIC
+    // ---------------------------------------------------------
+    
+    // A. Check Main Image (Cover)
+    const oldImage = existingEvent.image;
+    // If we have a new image AND it's different from the old one, delete the old one
+    if (newImage && oldImage && newImage !== oldImage) {
+      const key = getFileKey(oldImage);
+      if (key) await utapi.deleteFiles(key);
+    }
+
+    // B. Check Gallery Images
+    const oldGallery = existingEvent.gallery || [];
+    // Find images that were in the OLD gallery but are NOT in the NEW gallery
+    const removedImages = oldGallery.filter((img: string) => !newGallery.includes(img));
+
+    if (removedImages.length > 0) {
+      const keysToDelete = removedImages
+        .map((img: string) => getFileKey(img))
+        .filter((key: string | null) => key !== null) as string[];
+      
+      if (keysToDelete.length > 0) {
+        await utapi.deleteFiles(keysToDelete);
+      }
+    }
+    // ---------------------------------------------------------
+
+    // 3. Update Database
     const data = {
       title: formData.get("title"),
-      description: formData.get("description"),
+      date: new Date(formData.get("date") as string),
       location: formData.get("location"),
+      description: formData.get("description"),
       category: formData.get("category"),
-      time: formData.get("time"),
-      imageUrl: formData.get("imageUrl"), // Ensure image updates work
-      gallery: gallery,
-      date: toISTDate(formData.get("date")),
-      deadline: toISTDate(formData.get("deadline")),
-      maxRegistrations: Number(formData.get("maxRegistrations")) || 0,
-      isTeamEvent: formData.get("isTeamEvent") === "on", 
-      minTeamSize: Number(formData.get("minTeamSize")) || 1,
-      maxTeamSize: Number(formData.get("maxTeamSize")) || 1,
-      rules: rules,
+      image: newImage,
+      gallery: newGallery,
+      registrationLink: formData.get("registrationLink"),
+      isPast: formData.get("isPast") === "true",
+      registrationOpen: formData.get("registrationOpen") === "true",
     };
 
-    await Event.findByIdAndUpdate(id, data, { new: true, runValidators: true });
-    
-    // Revalidate all necessary paths
+    await Event.findByIdAndUpdate(id, data);
+
     revalidatePath("/admin/dashboard-group/events");
-    revalidatePath(`/admin/dashboard-group/events/${id}/edit`);
-    revalidatePath("/events");
-    revalidatePath(`/events/${id}`); 
+    revalidatePath(`/events/${id}`);
     revalidatePath("/gallery");
     
-    return { success: true, message: "Event updated successfully" };
-  } catch (error: any) { 
-    return { success: false, message: "Failed: " + error.message }; 
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, message: "Update failed" };
   }
 }
