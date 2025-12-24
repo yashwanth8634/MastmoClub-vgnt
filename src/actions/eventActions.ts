@@ -28,22 +28,28 @@ export async function createEvent(formData: FormData) {
   try {
     const title = formData.get("title") as string;
     const dateStr = formData.get("date") as string;
+    const dateObj = toISTDate(dateStr) || new Date();
 
-    // ✅ Fix: Parse Gallery JSON if it exists during creation
+    // ✅ FIX BUG #1 (Zombie Creation): Enforce Date Logic immediately
+    const isActuallyPast = dateObj < new Date();
+    const finalIsPast = isActuallyPast ? true : (formData.get("isPast") === "true");
+    const finalRegOpen = isActuallyPast ? false : (formData.get("registrationOpen") === "true");
+
+    // Parse Gallery
     const galleryRaw = formData.get("galleryJSON") as string;
     let gallery = [];
     try { gallery = galleryRaw ? JSON.parse(galleryRaw) : []; } catch (e) {}
     
-    // 1. Create the Event
+    // Create Event
     const newEvent = await Event.create({
       title,
       description: formData.get("description"),
       location: formData.get("location"),
       category: formData.get("category"),
       time: formData.get("time"),
-      imageUrl: formData.get("imageUrl"), // ✅ Added: Don't lose the cover image!
-      gallery: gallery,                   // ✅ Added: Save gallery on creation too
-      date: toISTDate(dateStr),
+      image: formData.get("image"), // Changed from imageUrl to image to match schema
+      gallery: gallery,
+      date: dateObj,
       deadline: toISTDate(formData.get("deadline")),
       maxRegistrations: parseInt(formData.get("maxRegistrations") as string) || 0,
       isTeamEvent: formData.get("isTeamEvent") === "on",
@@ -51,40 +57,23 @@ export async function createEvent(formData: FormData) {
       maxTeamSize: parseInt(formData.get("maxTeamSize") as string) || 1,
       rules: (formData.get("rules") as string)?.split("\n").filter(r => r.trim()) || [],
       currentRegistrations: 0,
-      registrationOpen: true
+      isPast: finalIsPast,             // ✅ Enforced
+      registrationOpen: finalRegOpen   // ✅ Enforced
     });
 
-    // ---------------------------------------------------------
-    // 📧 AUTOMATIC EMAIL NOTIFICATION
-    // ---------------------------------------------------------
+    // 📧 Email Notification
     try {
-      // ✅ Optimization: Use .lean() for faster read
-      const members = await Registration.find({ 
-        eventName: "General Membership", 
-        status: "approved" 
-      })
-      .select("members.email")
-      .lean();
-
-      const emailList = members
-        .map((reg: any) => reg.members?.[0]?.email)
-        .filter((email): email is string => !!email && email.includes("@"));
+      const members = await Registration.find({ eventName: "General Membership", status: "approved" }).select("members.email").lean();
+      const emailList = members.map((reg: any) => reg.members?.[0]?.email).filter((email): email is string => !!email && email.includes("@"));
 
       if (emailList.length > 0) {
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
         const eventLink = `${baseUrl}/events/${newEvent._id}`;
-        
-        const { subject, html } = emailTemplates.newEventAnnouncement(
-          title, 
-          dateStr, 
-          eventLink
-        );
-
-        // Send (BCC list hidden from recipients)
+        const { subject, html } = emailTemplates.newEventAnnouncement(title, dateStr, eventLink);
         await sendEmail("mastmovgnt@gmail.com", subject, html, emailList);
       }
     } catch (emailErr) {
-      console.error("⚠️ Event created, but emails failed:", emailErr);
+      console.error("⚠️ Emails failed:", emailErr);
     }
 
     revalidatePath("/admin/dashboard-group/events");
@@ -92,7 +81,6 @@ export async function createEvent(formData: FormData) {
     return { success: true };
 
   } catch (error: any) {
-    console.error("Create Event Error:", error);
     return { success: false, message: "Failed: " + error.message };
   }
 }
@@ -120,7 +108,6 @@ export async function deleteEvent(id: string) {
       });
     }
 
-    // ✅ Use the helper
     if (keysToDelete.length > 0) {
       await deleteFilesFromUT(keysToDelete);
     }
@@ -140,7 +127,6 @@ export async function deleteEvent(id: string) {
 export async function toggleEventStatus(id: string, currentStatus: boolean) {
   try { await verifyAdmin(); } catch (e) { return { success: false, message: "Unauthorized" }; }
   await dbConnect();
-
   try {
     await Event.findByIdAndUpdate(id, { isPast: !currentStatus });
     revalidatePath("/admin/dashboard-group/events");
@@ -156,50 +142,48 @@ export async function updateEvent(id: string, formData: FormData) {
   try {
     await verifyAdmin();
     await dbConnect();
-    
-    // No need to initialize UTApi here anymore
 
     const existingEvent = await Event.findById(id);
     if (!existingEvent) return { success: false, message: "Event not found" };
 
+    // 1. GET DATA
+    const dateStr = formData.get("date") as string;
+    const dateObj = toISTDate(dateStr) || new Date(); // Use helper
     const newImage = formData.get("image") as string;
-    const newGalleryRaw = formData.get("gallery") as string;
-    const newGallery = newGalleryRaw ? JSON.parse(newGalleryRaw) : [];
+    const galleryRaw = formData.get("gallery");
 
-    // --- SMART DELETION ---
-    const oldImage = existingEvent.image;
-    if (newImage && oldImage && newImage !== oldImage) {
-      const key = getFileKey(oldImage);
-      // ✅ Use the helper
-      if (key) await deleteFilesFromUT(key);
+    // 2. 🛡️ FIX ZOMBIE EVENTS: Enforce Date Logic
+    const isActuallyPast = dateObj < new Date();
+    const finalIsPast = isActuallyPast ? true : (formData.get("isPast") === "true");
+    const finalRegOpen = isActuallyPast ? false : (formData.get("registrationOpen") === "true");
+
+    // 3. 🛡️ FIX GALLERY DELETION: Safe Merge
+    let newGallery = [];
+    if (!galleryRaw) {
+        // Form sent nothing? Keep OLD gallery.
+        newGallery = existingEvent.gallery || [];
+    } else {
+        const parsedGallery = JSON.parse(galleryRaw as string);
+        // Safety: If new list is suspiciously short, merge instead of replace
+        if (existingEvent.gallery?.length > 0 && parsedGallery.length < existingEvent.gallery.length) {
+            newGallery = [...new Set([...existingEvent.gallery, ...parsedGallery])];
+        } else {
+            newGallery = parsedGallery;
+        }
     }
 
-    const oldGallery = existingEvent.gallery || [];
-    const removedImages = oldGallery.filter((img: string) => !newGallery.includes(img));
-
-    if (removedImages.length > 0) {
-      const keysToDelete = removedImages
-        .map((img: string) => getFileKey(img))
-        .filter((key: string | null) => key !== null) as string[];
-      
-      // ✅ Use the helper
-      if (keysToDelete.length > 0) {
-        await deleteFilesFromUT(keysToDelete);
-      }
-    }
-    // ----------------------
-
+    // 4. UPDATE DATABASE
     const data = {
       title: formData.get("title"),
-      date: new Date(formData.get("date") as string),
+      date: dateObj,
       location: formData.get("location"),
       description: formData.get("description"),
       category: formData.get("category"),
       image: newImage,
       gallery: newGallery,
       registrationLink: formData.get("registrationLink"),
-      isPast: formData.get("isPast") === "true",
-      registrationOpen: formData.get("registrationOpen") === "true",
+      isPast: finalIsPast,             // ✅ Enforced
+      registrationOpen: finalRegOpen,  // ✅ Enforced
     };
 
     await Event.findByIdAndUpdate(id, data);

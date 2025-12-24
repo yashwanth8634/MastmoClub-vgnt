@@ -1,11 +1,39 @@
 import dbConnect from "@/lib/db";
 import Registration from "@/models/Registration";
-import { Check, X, Download } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { revalidatePath } from "next/cache";
 import { sendEmail } from "@/lib/email";
 import { emailTemplates } from "@/lib/emailTemplates";
 import DeleteClubMemberButton from "@/components/admin/DeleteClubMemberButton";
 import MemberExportButton from "@/components/admin/MemberExportButton";
+
+// ✅ 1. ADD THE ROLL NUMBER DECODER LOGIC
+const getYearFromRoll = (rollNo: string) => {
+  if (!rollNo || rollNo.length < 10) return "N/A";
+
+  const joinYear = parseInt(rollNo.substring(0, 2)); // e.g., "24"
+  const typeCode = rollNo.substring(4, 6); // e.g., "1A" (Regular) or "5A" (Lateral)
+  
+  // Current Academic Year Context: Dec 2025
+  const currentYear = 25; 
+
+  const yearDiff = currentYear - joinYear;
+
+  if (typeCode === "5A") {
+    // LATERAL ENTRY (Starts in 2nd Year)
+    if (yearDiff === 0) return "2nd"; 
+    if (yearDiff === 1) return "3rd"; 
+    if (yearDiff === 2) return "4th"; 
+  } else {
+    // REGULAR ENTRY (Starts in 1st Year)
+    if (yearDiff === 0) return "1st"; 
+    if (yearDiff === 1) return "2nd"; 
+    if (yearDiff === 2) return "3rd"; 
+    if (yearDiff === 3) return "4th"; 
+  }
+
+  return "Alumni"; 
+};
 
 // Server Action to Approve/Reject with Email sending
 async function handleMembershipAction(formData: FormData) {
@@ -25,13 +53,9 @@ async function handleMembershipAction(formData: FormData) {
 
     if (!registration) return;
 
-    // ✅ FIX: Send emails for BOTH Students AND Faculty
-    if (
-      registration.eventName === "General Membership" || 
-      registration.eventName === "Faculty Membership"
-    ) {
+    // Send approval/rejection emails for membership applications
+    if (registration.eventName === "General Membership" || registration.eventName === "Faculty Membership") {
       const member = registration.members[0];
-      
       if (member && member.email) {
         if (status === "approved") {
           const { subject, html } = emailTemplates.membershipApproved(member.fullName);
@@ -60,14 +84,15 @@ export default async function MembersPage() {
   const pendingFaculty = await Registration.find({ eventName: "Faculty Membership", status: "pending" }).lean();
   const activeFaculty = await Registration.find({ eventName: "Faculty Membership", status: "approved" }).lean();
 
-  // Prepare Data for Student Export
+  // ✅ 3. PREPARE DATA FOR EXPORT (Now using Calculated Year)
   const studentExportData = activeStudents.map((reg: any) => ({
     name: reg.members[0].fullName,
     rollNumber: reg.members[0].rollNo,
     email: reg.members[0].email,
     phone: reg.members[0].phone || "N/A",
     branch: reg.members[0].branch || "N/A",
-    year: reg.members[0].year || "N/A",
+    // 🟢 APPLY LOGIC HERE
+    year: getYearFromRoll(reg.members[0].rollNo), 
     section: reg.members[0].section || "N/A"
   }));
 
@@ -117,7 +142,7 @@ export default async function MembersPage() {
               <tr>
                 <th className="p-4">Name</th>
                 <th className="p-4">Department</th>
-                <th className="p-4">Designation</th>
+                <th className="p-4">Specialization</th>
                 <th className="p-4">Contact</th>
                 <th className="p-4 text-center">Action</th>
               </tr>
@@ -181,7 +206,12 @@ export default async function MembersPage() {
         {/* Student Active Table */}
         <div className="flex flex-col sm:flex-row justify-between items-end sm:items-center mb-4 gap-4">
           <h2 className="text-lg font-bold text-gray-300">Active Students ({activeStudents.length})</h2>
-          <MemberExportButton members={studentExportData} />
+          {/* Export Button now has correct Year data */}
+          <MemberExportButton 
+            members={studentExportData} 
+            title="MASTMO CLUB MEMBERSHIP LIST"
+            fileName="Mastmo_Members_List"
+          />
         </div>
 
         <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
@@ -190,7 +220,7 @@ export default async function MembersPage() {
               <tr>
                 <th className="p-4">Name</th>
                 <th className="p-4">Roll No</th>
-                <th className="p-4">Class</th>
+                <th className="p-4">Year / Branch</th>
                 <th className="p-4">Email</th>
                 <th className="p-4 text-center">Action</th>
               </tr>
@@ -201,8 +231,8 @@ export default async function MembersPage() {
                   <td className="p-4">{mem.members[0].fullName}</td>
                   <td className="p-4 font-mono">{mem.members[0].rollNo}</td>
                   <td className="p-4">
-                    {mem.members[0].branch} 
-                    {mem.members[0].year ? ` - ${mem.members[0].year}` : ""}
+                    {/* 🟢 DISPLAY CALCULATED YEAR HERE */}
+                    {getYearFromRoll(mem.members[0].rollNo)} Year - {mem.members[0].branch} 
                     {mem.members[0].section ? ` (${mem.members[0].section})` : ""}
                   </td>
                   <td className="p-4 text-gray-400">{mem.members[0].email}</td>
