@@ -174,41 +174,50 @@ export async function updateEvent(id: string, formData: FormData) {
     const dateStr = formData.get("date") as string;
     const dateObj = toISTDate(dateStr) || new Date();
     
-    // ✅ FIX: Capture Gallery Correctly
+    // ✅ CAPTURE GALLERY
     const incomingGallery = parseGalleryFromFormData(formData);
 
-    // 2. 🛡️ DATE LOGIC
+    // 2. 🛡️ DATE & STATUS LOGIC
     const isActuallyPast = dateObj < new Date();
     const finalIsPast = isActuallyPast ? true : (formData.get("isPast") === "true");
     const finalRegOpen = isActuallyPast ? false : (formData.get("registrationOpen") === "true");
 
     // 3. 🛡️ GALLERY MERGE LOGIC
-    // We assume incomingGallery contains the FINAL list of URLs we want.
-    // If incomingGallery is empty, it might be a form error, so we default to keeping existing.
-    // BUT if you specifically want to support adding new photos to existing ones:
-    
     let finalGallery = [];
-
     if (incomingGallery.length === 0) {
-        // Fallback: If form sent nothing, keep old gallery
-        finalGallery = existingEvent.gallery || [];
+        finalGallery = existingEvent.gallery || []; // Keep old if form sent nothing
     } else {
-        // Safe Merge: Combine Old + New, remove duplicates
         const oldGallery = existingEvent.gallery || [];
-        // Combine arrays and use Set to remove duplicates
+        // Merge & Remove Duplicates
         finalGallery = Array.from(new Set([...oldGallery, ...incomingGallery]));
     }
 
-    // 4. UPDATE DATABASE
+    // 4. UPDATE DATABASE (Now includes ALL fields)
     const data = {
       title: formData.get("title"),
-      date: dateObj,
-      location: formData.get("location"),
       description: formData.get("description"),
+      location: formData.get("location"),
       category: formData.get("category"),
-      // image: ... ❌ REMOVED
-      gallery: finalGallery, // ✅ Update the array in Mongo
+      time: formData.get("time"), // ✅ Added
+      
+      gallery: finalGallery,
+      
+      date: dateObj,
+      deadline: toISTDate(formData.get("deadline")), // ✅ Added
+      
+      maxRegistrations: parseInt(formData.get("maxRegistrations") as string) || 0, // ✅ Added
+      
+      // Handle Checkbox for Team Event
+      isTeamEvent: formData.get("isTeamEvent") === "on" || formData.get("isTeamEvent") === "true", // ✅ Added
+      
+      minTeamSize: parseInt(formData.get("minTeamSize") as string) || 1, // ✅ Added
+      maxTeamSize: parseInt(formData.get("maxTeamSize") as string) || 1, // ✅ Added
+      
+      // Handle Rules (Split by newline)
+      rules: (formData.get("rules") as string)?.split("\n").filter(r => r.trim()) || [], // ✅ Added
+      
       registrationLink: formData.get("registrationLink"),
+      
       isPast: finalIsPast,
       registrationOpen: finalRegOpen,
     };
@@ -221,6 +230,7 @@ export async function updateEvent(id: string, formData: FormData) {
     
     return { success: true };
   } catch (error: any) {
+    console.error("Update Error:", error);
     return { success: false, message: "Update failed" };
   }
 }
