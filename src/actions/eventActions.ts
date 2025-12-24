@@ -20,6 +20,37 @@ const getFileKey = (url: string) => {
   return url.split("/").pop();
 };
 
+// ---------------------------------------------------------
+// 🛠️ HELPER: ROBUST GALLERY PARSER
+// ---------------------------------------------------------
+function parseGalleryFromFormData(formData: FormData): string[] {
+  // 1. Check if the frontend used a specific JSON key
+  const jsonRaw = formData.get("galleryJSON");
+  if (jsonRaw) {
+    try { return JSON.parse(jsonRaw as string); } catch (e) { return []; }
+  }
+
+  // 2. Check standard 'gallery' key
+  const galleryEntries = formData.getAll("gallery");
+
+  if (galleryEntries.length === 0) return [];
+
+  // Case: Multiple files appended (formData.append('gallery', url1); formData.append('gallery', url2))
+  if (galleryEntries.length > 1) {
+    return galleryEntries.map(entry => entry.toString()).filter(url => url.includes("utfs.io"));
+  }
+
+  // Case: Single entry (Could be one URL OR a JSON string)
+  const singleEntry = galleryEntries[0].toString();
+  if (singleEntry.startsWith("[")) {
+    try { return JSON.parse(singleEntry); } catch (e) { return []; }
+  }
+  
+  // Case: Just one URL string
+  return [singleEntry];
+}
+
+
 // 1. CREATE EVENT
 export async function createEvent(formData: FormData) {
   try { await verifyAdmin(); } catch (e) { return { success: false, message: "Unauthorized" }; }
@@ -30,25 +61,22 @@ export async function createEvent(formData: FormData) {
     const dateStr = formData.get("date") as string;
     const dateObj = toISTDate(dateStr) || new Date();
 
-    // ✅ FIX BUG #1 (Zombie Creation): Enforce Date Logic immediately
     const isActuallyPast = dateObj < new Date();
     const finalIsPast = isActuallyPast ? true : (formData.get("isPast") === "true");
     const finalRegOpen = isActuallyPast ? false : (formData.get("registrationOpen") === "true");
 
-    // Parse Gallery
-    const galleryRaw = formData.get("galleryJSON") as string;
-    let gallery = [];
-    try { gallery = galleryRaw ? JSON.parse(galleryRaw) : []; } catch (e) {}
-    
-    // Create Event
+    // ✅ FIX: Capture Gallery Array Correctly
+    const gallery = parseGalleryFromFormData(formData);
+
+    // Create Event (NO 'image' field)
     const newEvent = await Event.create({
       title,
       description: formData.get("description"),
       location: formData.get("location"),
       category: formData.get("category"),
       time: formData.get("time"),
-      image: formData.get("image"), // Changed from imageUrl to image to match schema
-      gallery: gallery,
+      // image: ... ❌ REMOVED as per your instruction
+      gallery: gallery, // ✅ Now guaranteed to be an array of strings
       date: dateObj,
       deadline: toISTDate(formData.get("deadline")),
       maxRegistrations: parseInt(formData.get("maxRegistrations") as string) || 0,
@@ -57,8 +85,8 @@ export async function createEvent(formData: FormData) {
       maxTeamSize: parseInt(formData.get("maxTeamSize") as string) || 1,
       rules: (formData.get("rules") as string)?.split("\n").filter(r => r.trim()) || [],
       currentRegistrations: 0,
-      isPast: finalIsPast,             // ✅ Enforced
-      registrationOpen: finalRegOpen   // ✅ Enforced
+      isPast: finalIsPast,
+      registrationOpen: finalRegOpen
     });
 
     // 📧 Email Notification
@@ -85,7 +113,7 @@ export async function createEvent(formData: FormData) {
   }
 }
 
-// 2. DELETE EVENT
+// 2. DELETE EVENT (Fixed to only delete Gallery images)
 export async function deleteEvent(id: string) {
   try {
     await verifyAdmin();
@@ -96,11 +124,7 @@ export async function deleteEvent(id: string) {
 
     const keysToDelete: string[] = [];
 
-    if (event.image) {
-      const key = getFileKey(event.image);
-      if (key) keysToDelete.push(key);
-    }
-
+    // Only check Gallery (No 'image' field)
     if (event.gallery && event.gallery.length > 0) {
       event.gallery.forEach((img: string) => {
         const key = getFileKey(img);
@@ -148,28 +172,31 @@ export async function updateEvent(id: string, formData: FormData) {
 
     // 1. GET DATA
     const dateStr = formData.get("date") as string;
-    const dateObj = toISTDate(dateStr) || new Date(); // Use helper
-    const newImage = formData.get("image") as string;
-    const galleryRaw = formData.get("gallery");
+    const dateObj = toISTDate(dateStr) || new Date();
+    
+    // ✅ FIX: Capture Gallery Correctly
+    const incomingGallery = parseGalleryFromFormData(formData);
 
-    // 2. 🛡️ FIX ZOMBIE EVENTS: Enforce Date Logic
+    // 2. 🛡️ DATE LOGIC
     const isActuallyPast = dateObj < new Date();
     const finalIsPast = isActuallyPast ? true : (formData.get("isPast") === "true");
     const finalRegOpen = isActuallyPast ? false : (formData.get("registrationOpen") === "true");
 
-    // 3. 🛡️ FIX GALLERY DELETION: Safe Merge
-    let newGallery = [];
-    if (!galleryRaw) {
-        // Form sent nothing? Keep OLD gallery.
-        newGallery = existingEvent.gallery || [];
+    // 3. 🛡️ GALLERY MERGE LOGIC
+    // We assume incomingGallery contains the FINAL list of URLs we want.
+    // If incomingGallery is empty, it might be a form error, so we default to keeping existing.
+    // BUT if you specifically want to support adding new photos to existing ones:
+    
+    let finalGallery = [];
+
+    if (incomingGallery.length === 0) {
+        // Fallback: If form sent nothing, keep old gallery
+        finalGallery = existingEvent.gallery || [];
     } else {
-        const parsedGallery = JSON.parse(galleryRaw as string);
-        // Safety: If new list is suspiciously short, merge instead of replace
-        if (existingEvent.gallery?.length > 0 && parsedGallery.length < existingEvent.gallery.length) {
-            newGallery = [...new Set([...existingEvent.gallery, ...parsedGallery])];
-        } else {
-            newGallery = parsedGallery;
-        }
+        // Safe Merge: Combine Old + New, remove duplicates
+        const oldGallery = existingEvent.gallery || [];
+        // Combine arrays and use Set to remove duplicates
+        finalGallery = Array.from(new Set([...oldGallery, ...incomingGallery]));
     }
 
     // 4. UPDATE DATABASE
@@ -179,11 +206,11 @@ export async function updateEvent(id: string, formData: FormData) {
       location: formData.get("location"),
       description: formData.get("description"),
       category: formData.get("category"),
-      image: newImage,
-      gallery: newGallery,
+      // image: ... ❌ REMOVED
+      gallery: finalGallery, // ✅ Update the array in Mongo
       registrationLink: formData.get("registrationLink"),
-      isPast: finalIsPast,             // ✅ Enforced
-      registrationOpen: finalRegOpen,  // ✅ Enforced
+      isPast: finalIsPast,
+      registrationOpen: finalRegOpen,
     };
 
     await Event.findByIdAndUpdate(id, data);

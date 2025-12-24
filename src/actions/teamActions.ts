@@ -17,6 +17,10 @@ export async function createTeamMember(formData: FormData) {
     await verifyAdmin();
     await dbConnect();
 
+    // ✅ FIX: Check BOTH 'image' and 'imageUrl' keys
+    // This ensures we catch the URL regardless of what the frontend named it.
+    const image = (formData.get("image") as string) || (formData.get("imageUrl") as string);
+
     const socials = {
       linkedin: formData.get("linkedin"),
       github: formData.get("github"),
@@ -29,7 +33,7 @@ export async function createTeamMember(formData: FormData) {
       role: formData.get("role"),
       details: formData.get("details"),
       category: formData.get("category"),
-      image: formData.get("image"),
+      image: image, // ✅ Now guaranteed to have the URL if sent
       socials: socials,
       order: Number(formData.get("order")) || 0,
     });
@@ -43,7 +47,7 @@ export async function createTeamMember(formData: FormData) {
   }
 }
 
-// 2. DELETE MEMBER
+// 2. DELETE MEMBER (Stays same - correct logic)
 export async function deleteTeamMember(id: string) {
   try {
     await verifyAdmin();
@@ -79,15 +83,18 @@ export async function updateTeamMember(id: string, formData: FormData) {
     const existingMember = await TeamMember.findById(id);
     if (!existingMember) return { success: false, message: "Member not found" };
 
-    // ✅ FIX BUG #2 (Accidental Wipe): Safety Check
-    let newImage = formData.get("image") as string;
+    // ✅ FIX: Check BOTH names for the new image
+    let newImage = (formData.get("image") as string) || (formData.get("imageUrl") as string);
     
-    // If form sent empty/null, it's likely a mistake. Keep the old image.
+    // 🛡️ SAFETY FALLBACK: 
+    // If the form sent NOTHING (null/empty), it's likely a React state glitch.
+    // In that case, DO NOT wipe the photo. Keep the existing one.
     if (!newImage || newImage.trim() === "") {
         newImage = existingMember.image;
     }
 
-    // 🗑️ Smart Deletion: Only delete if we have a valid NEW image that is DIFFERENT
+    // 🗑️ SMART DELETION:
+    // Only delete the old photo if we have a valid NEW photo that is DIFFERENT.
     const oldImage = existingMember.image;
     if (newImage && oldImage && newImage !== oldImage) {
       const key = getFileKey(oldImage);
@@ -108,7 +115,7 @@ export async function updateTeamMember(id: string, formData: FormData) {
       role: formData.get("role"),
       details: formData.get("details"),
       category: formData.get("category"),
-      image: newImage, // ✅ Uses safe variable
+      image: newImage, // ✅ Uses the safe, resolved URL
       socials: socials,
       order: Number(formData.get("order")) || 0,
     };
