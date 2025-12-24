@@ -1,44 +1,60 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
-export default function GlobalPopup({ popupData }: { popupData: any }) {
+interface PopupData {
+  isActive: boolean;
+  title: string;
+  description: string;
+  images: string[];
+}
+
+export default function GlobalPopup({ popupData }: { popupData: PopupData | null }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
 
+  // 🔴 STRICT FIX 1: IMMEDIATE GUARD
+  // If data says inactive, or we are in admin, render NOTHING.
+  // We check this before any hooks to be absolutely sure.
+  const shouldRender = popupData?.isActive && !pathname?.startsWith("/admin");
+
+  // Touch handling refs
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
   const images = popupData?.images || [];
 
+  // 1. OPEN LOGIC
   useEffect(() => {
-    // 1. Safety Checks: If no data, inactive, or Admin page -> Stop.
-    if (!popupData?.isActive || pathname?.startsWith("/admin")) return;
+    // If we shouldn't render, stop immediately.
+    if (!shouldRender) return;
 
-    // 2. LOGIC: "Every time on Home, Once on others"
     const hasSeen = sessionStorage.getItem("hasSeenPopup");
 
     if (pathname === "/") {
-      // ✅ CASE A: Homepage -> Always show (and mark as seen for other pages)
+      // Home: Always show after delay
       const timer = setTimeout(() => {
         setIsOpen(true);
-        sessionStorage.setItem("hasSeenPopup", "true"); 
-      }, 1000);
+        sessionStorage.setItem("hasSeenPopup", "true");
+      }, 1500);
       return () => clearTimeout(timer);
     } else {
-      // ✅ CASE B: Other Routes -> Only show if NOT seen yet
+      // Others: Show only if not seen
       if (!hasSeen) {
         const timer = setTimeout(() => {
           setIsOpen(true);
           sessionStorage.setItem("hasSeenPopup", "true");
-        }, 1000);
+        }, 1500);
         return () => clearTimeout(timer);
       }
     }
-  }, [popupData, pathname]);
+  }, [shouldRender, pathname]);
 
+  // 2. NAVIGATION LOGIC
   const nextSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev + 1) % images.length);
   }, [images.length]);
@@ -47,10 +63,10 @@ export default function GlobalPopup({ popupData }: { popupData: any }) {
     setCurrentSlide((prev) => (prev - 1 + images.length) % images.length);
   }, [images.length]);
 
-  // Keyboard Navigation
+  // Keyboard
   useEffect(() => {
+    if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isOpen) return;
       if (e.key === "ArrowRight") nextSlide();
       if (e.key === "ArrowLeft") prevSlide();
       if (e.key === "Escape") setIsOpen(false);
@@ -59,115 +75,91 @@ export default function GlobalPopup({ popupData }: { popupData: any }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, nextSlide, prevSlide]);
 
-  if (!isOpen || !popupData || pathname?.startsWith("/admin")) return null;
+  // Touch Logic
+  const handleTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.targetTouches[0].clientX; };
+  const handleTouchMove = (e: React.TouchEvent) => { touchEndX.current = e.targetTouches[0].clientX; };
+  const handleTouchEnd = () => {
+    if (!touchStartX.current || !touchEndX.current) return;
+    const distance = touchStartX.current - touchEndX.current;
+    if (distance > 50) nextSlide();
+    if (distance < -50) prevSlide();
+    touchStartX.current = 0; touchEndX.current = 0;
+  };
+
+  // 🔴 STRICT FIX 2: FINAL RENDER CHECK
+  // If not supposed to render, or state is closed, return null.
+  if (!shouldRender || !isOpen || !popupData) return null;
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed top-0 left-0 inset-0 z-[99999] h-screen w-screen flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
           
-          {/* Backdrop */}
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={() => setIsOpen(false)} 
-            className="absolute inset-0 bg-black/95 backdrop-blur-xl cursor-pointer" 
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm cursor-pointer" 
           />
 
-          {/* Popup Card */}
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-            className="relative w-[95%] md:w-full md:max-w-xl lg:max-w-2xl max-h-[90vh]"
+            initial={{ scale: 0.95, opacity: 0, y: 20 }} 
+            animate={{ scale: 1, opacity: 1, y: 0 }} 
+            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="relative w-full max-w-lg md:max-w-2xl max-h-[85vh] flex flex-col pointer-events-none"
           >
-             <div className="relative overflow-hidden rounded-3xl p-[2px]">
-                {/* Gold Border Animation */}
-                <div className="absolute inset-[-100%] animate-[spin_10s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#000000_50%,#FFD700_100%)]" />
-                
-                <div className="relative h-full w-full bg-[#050505] rounded-[22px] overflow-hidden flex flex-col">
-                    
-                    {/* Close Button */}
+             <div className="pointer-events-auto relative rounded-3xl p-[2px] overflow-hidden shadow-2xl">
+                <div className="absolute inset-[-150%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#000000_0%,#FFD700_50%,#000000_100%)]" />
+
+                <div className="relative h-full w-full bg-[#111] rounded-[22px] overflow-hidden flex flex-col">
                     <button 
                         onClick={() => setIsOpen(false)} 
-                        className="absolute top-4 right-4 z-[100] p-2 bg-black/80 text-white rounded-full hover:bg-[#FFD700] hover:text-black transition-all border border-white/20 shadow-lg cursor-pointer"
+                        className="absolute top-3 right-3 z-50 p-2 bg-black/60 text-white/80 rounded-full hover:bg-red-500 hover:text-white transition-all backdrop-blur-md border border-white/10"
                     >
                         <X size={20} />
                     </button>
 
-                    {/* 🖼️ IMAGE AREA */}
-                    {/* 🖼️ IMAGE AREA */}
-                    <div className="relative w-full h-[55vh] md:h-[60vh] bg-black group shrink-0">
+                    <div 
+                      className="relative w-full aspect-[4/3] md:aspect-[16/9] bg-black group"
+                      onTouchStart={handleTouchStart}
+                      onTouchMove={handleTouchMove}
+                      onTouchEnd={handleTouchEnd}
+                    >
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={currentSlide}
-                                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                initial={{ opacity: 0, x: 20 }} 
+                                animate={{ opacity: 1, x: 0 }} 
+                                exit={{ opacity: 0, x: -20 }}
                                 transition={{ duration: 0.3 }}
                                 className="relative w-full h-full"
                             >
                                 {images.length > 0 ? (
-                                    <Image 
-                                        src={images[currentSlide]} 
-                                        alt="Slide" 
-                                        fill 
-                                        className="object-contain" 
-                                        priority 
-                                    />
+                                    <Image src={images[currentSlide]} alt="Slide" fill className="object-contain" priority />
                                 ) : (
-                                    <div className="flex h-full items-center justify-center text-gray-500">No Image</div>
+                                    <div className="w-full h-full flex items-center justify-center text-gray-500">No Image</div>
                                 )}
                             </motion.div>
                         </AnimatePresence>
 
-                        {/* ⬅️ LEFT BUTTON (Always Visible) */}
-                        <button 
-                            onClick={(e) => { e.stopPropagation(); prevSlide(); }} 
-                            disabled={images.length <= 1} // Disable if only 1 image
-                            className={`absolute left-2 top-1/2 -translate-y-1/2 p-3 rounded-full border border-white/20 z-[100] shadow-xl active:scale-95 transition-all
-                                ${images.length > 1 
-                                    ? "bg-[#FFD700] text-black hover:bg-white cursor-pointer" // Active Style (Gold)
-                                    : "bg-gray-800/50 text-gray-500 cursor-not-allowed opacity-50" // Disabled Style
-                                }`}
-                        >
-                            <ChevronLeft size={28} />
-                        </button>
-                        
-                        {/* ➡️ RIGHT BUTTON (Always Visible) */}
-                        <button 
-                            onClick={(e) => { e.stopPropagation(); nextSlide(); }} 
-                            disabled={images.length <= 1}
-                            className={`absolute right-2 top-1/2 -translate-y-1/2 p-3 rounded-full border border-white/20 z-[100] shadow-xl active:scale-95 transition-all
-                                ${images.length > 1 
-                                    ? "bg-[#FFD700] text-black hover:bg-white cursor-pointer" 
-                                    : "bg-gray-800/50 text-gray-500 cursor-not-allowed opacity-50"
-                                }`}
-                        >
-                            <ChevronRight size={28} />
-                        </button>
-
-                        {/* Dots (Only show if multiple images) */}
                         {images.length > 1 && (
-                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-[60]">
-                                {images.map((_: any, idx: number) => (
-                                    <div 
-                                        key={idx} 
-                                        className={`h-2 rounded-full transition-all duration-300 shadow-md ${currentSlide === idx ? "w-8 bg-[#FFD700]" : "w-2 bg-white/50"}`} 
-                                    />
+                          <>
+                            <button onClick={(e) => { e.stopPropagation(); prevSlide(); }} className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white border border-white/10 hover:bg-[#FFD700] hover:text-black transition-all"><ChevronLeft size={24} /></button>
+                            <button onClick={(e) => { e.stopPropagation(); nextSlide(); }} className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white border border-white/10 hover:bg-[#FFD700] hover:text-black transition-all"><ChevronRight size={24} /></button>
+                            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-40 bg-black/30 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                                {images.map((_, idx) => (
+                                    <div key={idx} className={`h-1.5 rounded-full transition-all duration-300 ${currentSlide === idx ? "w-6 bg-[#FFD700]" : "w-1.5 bg-white/50"}`} />
                                 ))}
                             </div>
+                          </>
                         )}
                     </div>
-                    {/* 📝 TEXT AREA */}
-                    <div className="p-4 md:p-6 text-center bg-[#0a0a0a] border-t border-white/10 flex flex-col justify-center relative z-[70]">
-                        <h2 className="text-xl md:text-2xl font-bold text-white mb-2 line-clamp-1">{popupData.title}</h2>
-                        <p className="text-gray-400 text-sm line-clamp-2 mb-4 max-w-md mx-auto">
-                            {popupData.description}
-                        </p>
-                        <button 
-                            onClick={() => setIsOpen(false)} 
-                            className="w-full py-3 bg-[#FFD700] text-black font-bold text-sm uppercase rounded-xl hover:bg-white shadow-[0_0_15px_rgba(255,215,0,0.3)] transition-all cursor-pointer"
-                        >
-                            Enter Site
-                        </button>
-                    </div>
 
+                    <div className="p-5 bg-gradient-to-b from-[#111] to-[#050505] border-t border-white/10">
+                        <h2 className="text-xl font-bold text-white mb-2">{popupData.title}</h2>
+                        <p className="text-gray-400 text-sm mb-5 leading-relaxed line-clamp-3">{popupData.description}</p>
+                        <button onClick={() => setIsOpen(false)} className="w-full py-3 bg-[#FFD700] text-black font-bold text-sm uppercase tracking-wide rounded-lg hover:bg-white hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(255,215,0,0.15)]">Enter Site</button>
+                    </div>
                 </div>
              </div>
           </motion.div>

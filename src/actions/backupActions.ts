@@ -3,9 +3,8 @@
 import dbConnect from "@/lib/db";
 import Event from "@/models/Event";
 import Registration from "@/models/Registration";
-import Gallery from "@/models/Gallery";
-// Import Team model if you have one separately, or assume it's part of something else
-// import TeamMember from "@/models/TeamMember"; 
+import Popup from "@/models/Popup"; // ✅ Added Popup Model
+// import Gallery from "@/models/Gallery"; // Uncomment if you have a standalone Gallery model
 
 import { verifyAdmin } from "@/lib/auth";
 
@@ -21,28 +20,26 @@ export async function generateBackup() {
 
   try {
     // 2. Fetch ALL Data
-    // .lean() converts Mongoose objects to plain JavaScript objects (faster)
+    // .lean() converts to plain JSON (Faster & saves memory)
     const events = await Event.find({}).lean();
     const registrations = await Registration.find({}).lean();
-    const gallery = await Gallery.find({}).lean();
+    const popups = await Popup.find({}).lean(); // ✅ Backup Popup configs too
     
-    // Add other collections here if you have them, e.g.:
-    // const team = await TeamMember.find({}).lean();
-
     // 3. Bundle Data
     const backupData = {
       timestamp: new Date().toISOString(),
-      version: "1.0",
+      version: "1.1", // Bumped version
       stats: {
         events: events.length,
         registrations: registrations.length,
-        gallery: gallery.length,
+        popups: popups.length,
+        // Calculate Faculty count just for info (Faculty have eventName="Faculty Membership")
+        faculty: registrations.filter((r: any) => r.eventName === "Faculty Membership").length
       },
       data: {
         events,
-        registrations,
-        gallery,
-        // team
+        registrations, // This includes Students AND Faculty
+        popups,
       }
     };
 
@@ -54,6 +51,6 @@ export async function generateBackup() {
 
   } catch (error: any) {
     console.error("Backup Error:", error);
-    return { success: false, message: "Backup generation failed" };
+    return { success: false, message: "Backup generation failed: " + error.message };
   }
 }

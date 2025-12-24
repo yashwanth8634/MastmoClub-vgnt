@@ -35,7 +35,7 @@ export default function AdminSidebar() {
       icon: Users 
     },
     { 
-      name: "Registrations", 
+      name: "Event Registrations", 
       href: "/admin/dashboard-group/registrations", 
       icon: FileText 
     },

@@ -16,18 +16,19 @@ export async function saveGalleryItem(title: string, category: string, imageUrl:
   await dbConnect();
 
   try {
-    if (!imageUrl) {
-      return { success: false, message: "No image URL provided" };
+    // ✅ Validation: Ensure all fields are present
+    if (!imageUrl || !title || !category) {
+      return { success: false, message: "Missing required fields (Title, Category, or Image)" };
     }
 
     await Gallery.create({
       title,
       category,
-      imageUrl, // 👈 We just save the link string
+      imageUrl,
     });
 
     revalidatePath("/gallery");
-    revalidatePath("/admin/dashboard-group/gallery"); // If you have an admin list
+    revalidatePath("/admin/dashboard-group/gallery");
 
     return { success: true, message: "Gallery item saved!" };
 
@@ -48,16 +49,18 @@ export async function deleteGalleryItem(id: string) {
   await dbConnect();
 
   try {
-    // We only delete the database record.
-    // (Optional: You can use utapi.deleteFiles(fileKey) if you want to clean up UploadThing too, 
-    // but usually just deleting the DB entry is enough for small apps).
-    await Gallery.findByIdAndDelete(id);
+    const result = await Gallery.findByIdAndDelete(id);
+    
+    if (!result) {
+      return { success: false, message: "Image not found" };
+    }
 
     revalidatePath("/gallery");
     revalidatePath("/admin/dashboard-group/gallery");
     
     return { success: true, message: "Image deleted" };
-  } catch (error) {
+  } catch (error: any) {
+    console.error("Gallery Delete Error:", error); // ✅ Added logging
     return { success: false, message: "Failed to delete" };
   }
 }

@@ -1,14 +1,11 @@
 import dbConnect from "@/lib/db";
 import Event from "@/models/Event";
 import Navbar from "@/components/ui/Navbar";
-import { Calendar, ImageOff } from "lucide-react";
+import { Calendar } from "lucide-react";
 import HoverExpandGallery from "@/components/ui/HoverExpandGallery";
-import GallerySkeleton from "@/components/ui/GallerySkeleton";
-import { Suspense } from "react";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
-
 
 export const metadata: Metadata = {
   title: "Event Gallery",
@@ -16,14 +13,14 @@ export const metadata: Metadata = {
   openGraph: {
     title: "MASTMO Gallery - Our Memories",
     description: "Check out the highlights from the Mathematical & Statistical Modeling Club events.",
-    images: ["/images/team-banner.png"], // Ensure you have a default image here
+    images: ["/images/team-banner.png"], 
   },
 };
 
 export default async function GalleryPage() {
   await dbConnect();
   
-  // Fetch events that actually have photos
+  // Fetch events that actually have photos (non-empty gallery array)
   const events = await Event.find({ gallery: { $exists: true, $not: { $size: 0 } } })
                         .select('title category date gallery') 
                         .sort({ date: -1 })
@@ -44,7 +41,7 @@ export default async function GalleryPage() {
         <div className="space-y-24">
           {events.length > 0 ? (
             events.map((event: any) => (
-              <section key={event._id} className="animate-in fade-in slide-in-from-bottom-8 duration-700">
+              <section key={event._id.toString()} className="animate-in fade-in slide-in-from-bottom-8 duration-700">
                 
                 {/* Header */}
                 <div className="max-w-6xl mx-auto mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/40 pb-4">
@@ -59,15 +56,13 @@ export default async function GalleryPage() {
                   
                   <div className="flex items-center gap-2 text-gray-400 font-mono text-sm">
                     <Calendar size={16} className="text-[#00f0ff]" />
-                    {new Date(event.date).toLocaleDateString()}
+                    {event.date ? new Date(event.date).toLocaleDateString() : "TBA"}
                   </div>
                 </div>
 
-                {/* Gallery Component - NO 'optimize-visibility' here! */}
+                {/* Gallery Component */}
                 <div className="w-full">
-                     <Suspense fallback={<GallerySkeleton />}>
-                        <HoverExpandGallery photos={event.gallery} />
-                     </Suspense>
+                   <HoverExpandGallery photos={event.gallery} />
                 </div>
 
               </section>

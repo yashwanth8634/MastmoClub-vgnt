@@ -2,50 +2,51 @@
 
 import dbConnect from "@/lib/db";
 import Registration from "@/models/Registration";
-import Event from "@/models/Event"; // ✅ Required to check Event Title
 import { revalidatePath } from "next/cache";
 import { sendEmail } from "@/lib/email";
 import { emailTemplates } from "@/lib/emailTemplates";
+import { verifyAdmin } from "@/lib/auth"; // ✅ Protected
 
-// DELETE REGISTRATION
+// 1. DELETE REGISTRATION (Any type)
 export async function deleteRegistration(id: string) {
-  try {
+  try { 
+    await verifyAdmin(); // Security Check
     await dbConnect();
     await Registration.findByIdAndDelete(id);
+    
     revalidatePath("/admin/dashboard-group/registrations");
+    revalidatePath("/admin/dashboard-group/members");
+    
     return { success: true, message: "Deleted successfully" };
   } catch (error) {
     return { success: false, message: "Failed to delete" };
   }
 }
 
-// UPDATE STATUS (Approve/Reject with Resend Email)
+// 2. UPDATE STATUS (Approve/Reject + Email)
 export async function updateStatus(id: string, status: string) {
-  await dbConnect();
-  
-  try {
-    // 1. Update status
+  try { 
+    await verifyAdmin(); // Security Check
+    await dbConnect();
+    
+    // Update DB
     const registration = await Registration.findByIdAndUpdate(
       id, 
       { status },
       { new: true }
     );
 
-    if (!registration) {
-      return { success: false, message: "Registration not found" };
-    }
+    if (!registration) return { success: false, message: "Not found" };
 
-    // ✅ FIX: Fetch the Event details using the ID stored in registration
-    const event = await Event.findById(registration.eventId);
+    // Check if we need to send Membership Emails
+    // Covers both "General Membership" (Students) and "Faculty Membership"
+    const isMembership = 
+      registration.eventName === "General Membership" || 
+      registration.eventName === "Faculty Membership";
 
-    // 3. Check if this is the "General Membership" event
-    // (We check event.title because registration doesn't store the name)
-    if (event && event.title === "General Membership") {
-      
+    if (isMembership) {
       const member = registration.members[0];
-      
       if (member && member.email) {
-        // Prepare email content
         let emailData;
         
         if (status === "approved") {
@@ -54,7 +55,6 @@ export async function updateStatus(id: string, status: string) {
           emailData = emailTemplates.membershipRejected(member.fullName);
         }
 
-        // ✅ SEND EMAIL (Resend handles this automatically)
         if (emailData) {
            await sendEmail(member.email, emailData.subject, emailData.html);
         }
@@ -62,6 +62,8 @@ export async function updateStatus(id: string, status: string) {
     }
 
     revalidatePath("/admin/dashboard-group/registrations");
+    revalidatePath("/admin/dashboard-group/members");
+    
     return { success: true, message: `Registration ${status}` };
     
   } catch (error: any) {
@@ -70,15 +72,16 @@ export async function updateStatus(id: string, status: string) {
   }
 }
 
-// DELETE MEMBER
+// 3. DELETE MEMBER (Specific for Members page)
 export async function deleteMember(id: string) {
-  try {
+  try { 
+    await verifyAdmin(); // Security Check
     await dbConnect();
     await Registration.findByIdAndDelete(id);
+    
     revalidatePath("/admin/dashboard-group/members");
     return { success: true, message: "Member deleted successfully" };
   } catch (error: any) {
-    console.error("Delete member error:", error);
     return { success: false, message: "Failed to delete member" };
   }
 }

@@ -261,6 +261,14 @@ const FooterSection = () => {
                 >
                   Resources
                 </Link>
+                </li>
+                <li>
+                <Link 
+                  href="/resources" 
+                  className="text-gray-300 hover:text-[#00f0ff] transition-colors"
+                >
+                  Documentation
+                </Link>
               </li>
             </ul>
           </div>

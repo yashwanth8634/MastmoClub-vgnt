@@ -12,6 +12,7 @@ import { Analytics } from "@vercel/analytics/react";
 import ChatBot from "@/components/ui/ChatBot";
 import GlobalPopup from "@/components/ui/GlobalPopup"; // ✅ 1. Import Popup
 import { getPopup } from "@/actions/popupActions";     
+import ContentProtection from "@/components/ContentProtection";
 
 
 const spaceGrotesk = MedievalSharp({
@@ -135,6 +136,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
            */
           routerConfig={extractRouterConfig(ourFileRouter)}
         />
+        <ContentProtection />
         <StarField />
         <Navbar />
         {children}

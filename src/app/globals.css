@@ -34,5 +34,37 @@ html {
   -moz-osx-font-smoothing: grayscale;
 }
 
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+body {
+  /* Prevents text/image selection */
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none;    /* Firefox */
+  -ms-user-select: none;     /* IE10+/Edge */
+  user-select: none;         /* Standard */
+}
+
+/* Allow text selection ONLY in input fields and textareas (so forms still work) */
+input, textarea {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Prevent image dragging globally */
+img {
+  -webkit-user-drag: none;
+  user-drag: none;
+  pointer-events: none; /* Disables right-click specifically on images */
+}
+
 
 

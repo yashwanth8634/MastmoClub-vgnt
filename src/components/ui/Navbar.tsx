@@ -32,6 +32,9 @@ export default function Navbar() {
 
         {/* DESKTOP MENU */}
         <div className="hidden md:flex items-center gap-8 bg-black/80 backdrop-blur-md px-8 py-3 rounded-full border border-white/40">
+          <Link href="/" className="text-sm font-bold tracking-widest text-gray-300 hover:text-[#00f0ff] uppercase transition-colors">
+            Home
+          </Link>
           <Link href="/events" className="text-sm font-bold tracking-widest text-gray-300 hover:text-[#00f0ff] uppercase transition-colors">
             Events
           </Link>
@@ -42,8 +45,8 @@ export default function Navbar() {
             Team
           </Link>
           <Link href="/gallery" className="text-sm font-bold tracking-widest text-gray-300 hover:text-[#00f0ff] uppercase transition-colors">
-    Gallery
-  </Link>
+            Gallery
+          </Link>
           <Link 
             href="/join" 
             className="text-sm font-bold tracking-widest text-[#00f0ff] hover:text-white uppercase transition-colors"
