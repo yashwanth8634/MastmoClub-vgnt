@@ -13,7 +13,7 @@ export default function AdminLoginPage() {
   // ✅ Watch for success and redirect
   useEffect(() => {
     if (state?.success) {
-      router.push("/admin/dashboard-group");
+      router.push("/admin/dashboard-group/dashboard");
     }
   }, [state?.success, router]);
 

@@ -48,5 +48,5 @@ export async function logoutAdmin() {
   cookieStore.delete("admin_session");
 
   // Redirect back to login page
-  redirect("/admin/login");
+  redirect("/");
 }
