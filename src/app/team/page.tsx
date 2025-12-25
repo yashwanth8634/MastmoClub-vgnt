@@ -36,9 +36,8 @@ export default async function TeamPage() {
   
   // 1. Find anyone whose ROLE contains "Patron" (case insensitive)
   const patrons = serializedMembers.filter(m => 
-    m.role && m.role.toLowerCase().includes("patron")
-  );
-
+  m.category === "patron" || (m.role && m.role.toLowerCase().includes("patron"))
+);
   // 2. Filter other categories, but EXCLUDE anyone we already identified as a Patron
   // (This prevents them from appearing twice)
   const isPatron = (id: string) => patrons.some(p => p._id === id);

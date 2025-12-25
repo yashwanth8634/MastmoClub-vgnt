@@ -5,24 +5,22 @@ import Link from "next/link";
 import { ArrowLeft, Save, Loader2, Image as ImageIcon, X } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { UploadDropzone } from "@/utils/uploadthing"; // ✅ Import Uploader
+import { UploadDropzone } from "@/utils/uploadthing"; 
 import Image from "next/image";
 
 export default function NewMemberPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [imageUrl, setImageUrl] = useState(""); // ✅ State to store uploaded URL
+  const [imageUrl, setImageUrl] = useState(""); 
   const router = useRouter();
 
   async function handleSubmit(formData: FormData) {
-    if (!imageUrl) {
-        alert("Please upload a profile picture first!");
-        return;
-    }
-    
     setIsSubmitting(true);
     
-    // ✅ Append the UploadThing URL to the form data
-    formData.set("image", imageUrl);
+    // ✅ FIX: Only append image if one was actually uploaded.
+    // If this is empty, the backend will receive null/undefined and handle it safely.
+    if (imageUrl) {
+        formData.set("image", imageUrl);
+    }
 
     const result = await createTeamMember(formData);
     
@@ -67,6 +65,8 @@ export default function NewMemberPage() {
               <option value="faculty">Faculty Board</option>
               <option value="coordinator">Coordinator/Lead</option>
               <option value="support">Supporting Team</option>
+              {/* ✅ ADDED PATRON OPTION */}
+              <option value="patron">Patron / Guest</option>
             </select>
           </div>
           <div className="space-y-2">
@@ -75,16 +75,19 @@ export default function NewMemberPage() {
           </div>
         </div>
 
-        {/* ✅ PHOTO UPLOAD SECTION */}
+        {/* ✅ PHOTO UPLOAD SECTION (Optional) */}
         <div className="space-y-2">
-            <label className="text-xs font-bold uppercase text-gray-400 flex items-center gap-2">
-                <ImageIcon size={14} /> Profile Picture
-            </label>
+            <div className="flex justify-between items-center">
+                <label className="text-xs font-bold uppercase text-gray-400 flex items-center gap-2">
+                    <ImageIcon size={14} /> Profile Picture
+                </label>
+                <span className="text-[10px] uppercase text-gray-500 bg-white/5 px-2 py-1 rounded">Optional</span>
+            </div>
             
             {!imageUrl ? (
                 <div className="bg-white/5 border border-dashed border-white/20 rounded-xl overflow-hidden hover:border-[#00f0ff]/50 transition-colors">
                     <UploadDropzone
-                        endpoint="teamImage" // Uses the route with 2MB limit
+                        endpoint="teamImage" 
                         onClientUploadComplete={(res) => {
                             if (res && res[0]) {
                                 setImageUrl(res[0].url);
