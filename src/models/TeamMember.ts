@@ -1,22 +1,21 @@
-      import mongoose, { Schema, model, models } from "mongoose";
+import mongoose, { Schema, model, models } from "mongoose";
 
 const TeamMemberSchema = new Schema(
   {
     name: { type: String, required: true },
     role: { type: String, required: true },
+    
+    // ✅ FIX: Add "patron" to this list
     category: { 
       type: String, 
       required: true, 
-      enum: ["faculty", "core", "coordinator", "support"] 
+      enum: ["faculty", "core", "coordinator", "support", "patron"] 
     },
-    image: { type: String },
+
+    image: { type: String }, // Optional
     details: { type: String },
     
-    // ✅ ADD THIS SECTION
-    order: { 
-      type: Number, 
-      default: 0,  // Default rank is 0
-    },
+    order: { type: Number, default: 0 },
 
     socials: {
       linkedin: String,
