@@ -98,7 +98,7 @@ export const emailTemplates = {
   // ---------------------------------------------------------------------------
   // 2. EVENT REGISTRATION EMAILS
   // ---------------------------------------------------------------------------
-  eventRegistrationConfirmed: (name: string, eventName: string, teamName?: string) => ({
+ eventRegistrationConfirmed: (name: string, eventName: string, teamName?: string) => ({
     subject: `Event Registration Confirmed - ${eventName}`,
     html: `
       <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: 0 auto; background: #ffffff; color: #333;">
@@ -129,36 +129,7 @@ export const emailTemplates = {
     `,
   }),
 
-  eventRegistrationApproved: (name: string, eventName: string) => ({
-    subject: `Registration Approved - ${eventName}`,
-    html: `
-      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: 0 auto; background: #ffffff; color: #333;">
-        <div style="background: linear-gradient(135deg, #00f0ff 0%, #0099cc 100%); padding: 40px 20px; text-align: center;">
-          <h1 style="color: #ffffff; font-size: 32px; margin: 0; font-weight: 700;">✓ ALL SET!</h1>
-          <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 14px;">${eventName}</p>
-        </div>
-        <div style="padding: 40px 30px;">
-          <p style="font-size: 16px; color: #333; margin: 0 0 20px 0; line-height: 1.6;">Dear <strong>${name}</strong>,</p>
-          <p style="font-size: 15px; color: #555; margin: 0 0 20px 0; line-height: 1.7;">
-            Great news! Your registration for <strong>${eventName}</strong> has been approved and confirmed.
-          </p>
-          <div style="background: #f5f5f5; border-left: 4px solid #00f0ff; padding: 20px; margin: 25px 0; border-radius: 4px;">
-            <p style="margin: 0 0 15px 0; color: #00f0ff; font-weight: 600; font-size: 14px;">YOUR PARTICIPATION IS CONFIRMED</p>
-            <p style="margin: 0; color: #666; font-size: 14px; line-height: 1.6;">
-              You are all set to participate. Please ensure you arrive at least 15 minutes before the scheduled start time.
-            </p>
-          </div>
-          <p style="font-size: 15px; color: #555; margin: 20px 0 0 0; line-height: 1.7;">
-            We look forward to your participation and wish you the best of luck!
-          </p>
-        </div>
-        <div style="background: #f9f9f9; border-top: 1px solid #e0e0e0; padding: 30px; text-align: center;">
-          <p style="font-size: 14px; color: #888; margin: 0 0 10px 0;">MASTMO Club, Vignan Institute of Technology and Science</p>
-          <p style="font-size: 12px; color: #aaa; margin: 0;">© 2025 MASTMO Club. All rights reserved.</p>
-        </div>
-      </div>
-    `,
-  }),
+
 
   // ---------------------------------------------------------------------------
   // 3. NEW EVENT ANNOUNCEMENT (Used when creating events)

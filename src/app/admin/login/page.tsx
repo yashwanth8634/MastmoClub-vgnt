@@ -1,13 +1,13 @@
 "use client";
 
-import { useFormState } from "react-dom";
+import { useActionState } from "react";
 import { loginAdmin } from "@/actions/auth";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import SubmitButton from "@/components/SubmitButton"; // Use the component we made earlier
 
 export default function AdminLoginPage() {
-  const [state, formAction] = useFormState(loginAdmin, { success: false, message: "" });
+  const [state, formAction] = useActionState(loginAdmin, { success: false, message: "" });
   const router = useRouter();
 
   // ✅ Watch for success and redirect

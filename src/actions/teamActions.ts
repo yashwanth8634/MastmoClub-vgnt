@@ -130,3 +130,32 @@ export async function updateTeamMember(id: string, formData: FormData) {
     return { success: false, message: "Update failed: " + error.message };
   }
 }
+
+export async function getTeamMember(id: string) {
+  try {
+    if (!id) throw new Error("No ID provided");
+    
+    await dbConnect();
+
+    // 1. Fetch the member
+    const member = await TeamMember.findById(id).lean();
+
+    if (!member) {
+      console.error(`❌ Team Member with ID ${id} not found.`);
+      return null;
+    }
+
+    // 2. 🛡️ SERIALIZATION FIX: Convert ObjectId & Dates to String
+    // Next.js Client Components cannot accept Date objects or Mongo _id objects.
+    return {
+      ...member,
+      _id: member._id.toString(),
+      createdAt: member.createdAt?.toString(),
+      updatedAt: member.updatedAt?.toString(),
+    };
+
+  } catch (error) {
+    console.error("❌ ERROR Fetching Team Member:", error);
+    return null; // This triggers the "Could not be loaded" screen
+  }
+}

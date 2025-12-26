@@ -34,16 +34,9 @@ export default async function TeamPage() {
   // ✅ FIX: FILTER BY ROLE (Not Category)
   // ---------------------------------------------------------
   
-  // 1. Find anyone whose ROLE contains "Patron" (case insensitive)
-  const patrons = serializedMembers.filter(m => 
-  m.category === "patron" || (m.role && m.role.toLowerCase().includes("patron"))
-);
-  // 2. Filter other categories, but EXCLUDE anyone we already identified as a Patron
-  // (This prevents them from appearing twice)
-  const isPatron = (id: string) => patrons.some(p => p._id === id);
 
   const faculty = serializedMembers.filter(m => 
-    m.category === "faculty" && !isPatron(m._id)
+    m.category === "faculty" || m.role?.toLowerCase() === "faculty"
   );
   
   const core = serializedMembers.filter(m => m.category === "core");
@@ -82,9 +75,7 @@ export default async function TeamPage() {
         )}
 
         {/* 👑 PATRON SECTION (Based on Role) */}
-        {patrons.length > 0 && (
-           <PatronSection patrons={patrons} />
-        )}
+        <PatronSection />
         {/* CORE COUNCIL */}
         {core.length > 0 && (
           <section className="mb-24 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150">

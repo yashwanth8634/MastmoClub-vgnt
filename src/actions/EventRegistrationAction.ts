@@ -6,6 +6,8 @@ import Event from "@/models/Event";
 import Member from "@/models/ClubRegistration"; // Ensure this matches your export
 import { RegistrationSchema, validateRollNo, getBranchCodeFromRoll } from "@/lib/validator"; 
 import { revalidatePath } from "next/cache";
+import { sendEmail } from "@/lib/email";
+import { emailTemplates } from "@/lib/emailTemplates"
 
 export async function registerForEvent(prevState: any, formData: FormData) {
   try {
@@ -15,12 +17,12 @@ export async function registerForEvent(prevState: any, formData: FormData) {
     
     // Construct raw data (Handling nulls for optional fields)
     const rawData = {
-      fullName: formData.get("fullName"),
+      fullName: formData.get("fullName") as string,
       rollNo: formData.get("rollNo"),
       year: formData.get("year"),
       branch: formData.get("branch"),
       section: formData.get("section"),
-      teamName: formData.get("teamName") || undefined, // undefined passes .optional()
+      teamName: formData.get("teamName") as string || undefined, // undefined passes .optional()
       teamMembers: formData.get("teamMembers") 
         ? JSON.parse(formData.get("teamMembers") as string) 
         : [],
@@ -45,10 +47,15 @@ export async function registerForEvent(prevState: any, formData: FormData) {
       return { success: false, message: "Access Denied: You are not a registered Club Member." };
     }
     
+    
+
     // Note: In your schema, section is inside 'member', so we access mainMember.member.section
     // Use optional chaining in case mainMember.member is undefined (though it shouldn't be)
+    const userEmail = mainMember.member?.email;
     const dbMemberData = mainMember.member || {}; 
     const leaderSection = dbMemberData.section || section; 
+
+
 
     // 2. 🛡️ TEAM VALIDATION 🛡️
     if (teamMembers && teamMembers.length > 0) {
@@ -111,6 +118,24 @@ export async function registerForEvent(prevState: any, formData: FormData) {
     await EventRegistration.create({ eventId, ...validatedFields.data });
     await Event.findByIdAndUpdate(eventId, { $inc: { currentRegistrations: 1 } });
 
+
+ if (userEmail) {
+       try {
+           // ✅ Generate the email content using your template
+           const { subject, html } = emailTemplates.eventRegistrationConfirmed(
+               rawData.fullName, 
+               event.title, 
+               rawData.teamName || undefined
+           );
+
+           await sendEmail(userEmail, subject, html);
+           console.log(`✅ Email sent to ${userEmail}`);
+       
+       } catch (emailError) {
+           console.error("Failed to send event confirmation email:", emailError);
+           // We do NOT stop the process here; registration is already successful
+       }
+    }
     revalidatePath(`/events/${eventId}`);
     return { success: true, message: "Registration Successful!" };
 
