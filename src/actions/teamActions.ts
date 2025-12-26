@@ -83,41 +83,41 @@ export async function updateTeamMember(id: string, formData: FormData) {
     const existingMember = await TeamMember.findById(id);
     if (!existingMember) return { success: false, message: "Member not found" };
 
-    // ✅ FIX: Check BOTH names for the new image
+    // ✅ CATEGORY FIX: Ensure we explicitly grab the category from the form
+    // If the form doesn't send it, it will default to the existing value
+    const category = (formData.get("category") as string) || existingMember.category;
+
+    // ✅ ORDER FIX: Convert to Number explicitly
+    const order = formData.get("order") !== null 
+      ? Number(formData.get("order")) 
+      : existingMember.order;
+
     let newImage = (formData.get("image") as string) || (formData.get("imageUrl") as string);
     
-    // 🛡️ SAFETY FALLBACK: 
-    // If the form sent NOTHING (null/empty), it's likely a React state glitch.
-    // In that case, DO NOT wipe the photo. Keep the existing one.
     if (!newImage || newImage.trim() === "") {
         newImage = existingMember.image;
     }
 
-    // 🗑️ SMART DELETION:
-    // Only delete the old photo if we have a valid NEW photo that is DIFFERENT.
+    // Cleanup old images if changed
     const oldImage = existingMember.image;
     if (newImage && oldImage && newImage !== oldImage) {
       const key = getFileKey(oldImage);
-      if (key) {
-        await deleteFilesFromUT(key);
-      }
+      if (key) await deleteFilesFromUT([key]); // Pass as array if your helper expects it
     }
 
-    const socials = {
-      linkedin: formData.get("linkedin") || "",
-      github: formData.get("github") || "",
-      email: formData.get("email") || "",
-      instagram: formData.get("instagram") || "",
-    };
-
     const data = {
-      name: formData.get("name"),
-      role: formData.get("role"),
-      details: formData.get("details"),
-      category: formData.get("category"),
-      image: newImage, // ✅ Uses the safe, resolved URL
-      socials: socials,
-      order: Number(formData.get("order")) || 0,
+      name: formData.get("name") as string,
+      role: formData.get("role") as string,
+      details: formData.get("details") as string,
+      category: category, // ✅ Uses resolved category
+      image: newImage,
+      socials: {
+        linkedin: (formData.get("linkedin") as string) || "",
+        github: (formData.get("github") as string) || "",
+        email: (formData.get("email") as string) || "",
+        instagram: (formData.get("instagram") as string) || "",
+      },
+      order: order, // ✅ Uses resolved order
     };
 
     await TeamMember.findByIdAndUpdate(id, data, { new: true });
