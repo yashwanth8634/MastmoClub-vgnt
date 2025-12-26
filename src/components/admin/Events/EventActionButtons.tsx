@@ -1,6 +1,6 @@
 "use client";
 
-import { toggleEventStatus, toggleEventRegistration } from "@/actions/EventActions";
+import { toggleEventStatus, toggleEventRegistration } from "@/actions/eventActionsventActions";
 import { Loader2, Eye, EyeOff, Lock, Unlock } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";

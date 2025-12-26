@@ -1,5 +1,5 @@
 import EventForm from "@/components/admin/Events/EventForm";
-import { getEventById } from "@/actions/EventActions"; 
+import { getEventById } from "@/actions/eventActions"; 
 
 // 1. Change type to Promise
 interface PageProps {

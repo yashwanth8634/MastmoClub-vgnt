@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createEvent, updateEvent } from "@/actions/EventActions";
+import { createEvent, updateEvent } from "@/actions/eventActions";
 import { useRouter } from "next/navigation";
 import { UploadDropzone } from "@/utils/uploadthing"; 
 import { 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { deleteEvent } from "@/actions/EventActions"; 
+import { deleteEvent } from "@/actions/eventActions"; 
 import { Trash2, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
