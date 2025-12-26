@@ -2,7 +2,7 @@
 
 import { Trash2, Loader2 } from "lucide-react";
 import { useTransition } from "react";
-import { deleteMember } from "@/actions/registrationActions";
+import { deleteMember } from "@/actions/ClubRegistrationAction";
 
 export default function DeleteClubMemberButton({ memberId }: { memberId: string }) {
   const [isPending, startTransition] = useTransition();

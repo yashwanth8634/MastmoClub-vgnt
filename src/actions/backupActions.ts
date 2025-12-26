@@ -2,7 +2,7 @@
 
 import dbConnect from "@/lib/db";
 import Event from "@/models/Event";
-import Registration from "@/models/Registration";
+import Registration from "@/models/ClubRegistration";
 import Popup from "@/models/Popup"; // ✅ Added Popup Model
 // import Gallery from "@/models/Gallery"; // Uncomment if you have a standalone Gallery model
 

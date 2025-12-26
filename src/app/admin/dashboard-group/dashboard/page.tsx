@@ -1,5 +1,5 @@
 import dbConnect from "@/lib/db";
-import Registration from "@/models/Registration";
+import Registration from "@/models/ClubRegistration";
 import { CheckCircle, GraduationCap, ArrowRight, Clock } from "lucide-react";
 import Link from "next/link";
 
@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic"; // Ensure real-time data
 export default async function Dashboard() {
   await dbConnect();
 
-  // 🚀 OPTIMIZATION: Use Promise.all to fetch data in parallel (faster load times)
+  // 🚀 OPTIMIZATION: Use Promise.all to fetch data in parallel
   const [
     studentPending,
     studentApproved,
@@ -16,12 +16,12 @@ export default async function Dashboard() {
     facultyApproved,
     recentPending
   ] = await Promise.all([
-    Registration.countDocuments({ eventName: "General Membership", status: "pending" }),
-    Registration.countDocuments({ eventName: "General Membership", status: "approved" }),
-    Registration.countDocuments({ eventName: "Faculty Membership", status: "pending" }),
-    Registration.countDocuments({ eventName: "Faculty Membership", status: "approved" }),
-    // Fetch top 5 recent pending requests for the "Quick View" table
-    Registration.find({ status: "pending", eventName: { $in: ["General Membership", "Faculty Membership"] } })
+    Registration.countDocuments({ type: "student", status: "pending" }),
+    Registration.countDocuments({ type: "student", status: "approved" }),
+    Registration.countDocuments({ type: "faculty", status: "pending" }),
+    Registration.countDocuments({ type: "faculty", status: "approved" }),
+    // Fetch top 5 recent pending requests
+    Registration.find({ status: "pending" })
       .sort({ createdAt: -1 })
       .limit(5)
       .lean()
@@ -117,22 +117,26 @@ export default async function Dashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {recentPending.map((req: any) => (
-                <tr key={req._id.toString()} className="hover:bg-white/5 transition-colors">
-                  <td className="p-4 font-bold text-white">{req.members[0].fullName}</td>
-                  <td className="p-4">
-                    {req.eventName === "Faculty Membership" ? (
-                      <span className="text-purple-400 text-xs bg-purple-400/10 px-2 py-1 rounded">Faculty</span>
-                    ) : (
-                      <span className="text-blue-400 text-xs bg-blue-400/10 px-2 py-1 rounded">Student</span>
-                    )}
-                  </td>
-                  <td className="p-4 text-gray-300">{req.members[0].branch}</td>
-                  <td className="p-4 text-right text-gray-500">
-                    {new Date(req.createdAt).toLocaleDateString()}
-                  </td>
-                </tr>
-              ))}
+              {recentPending.map((req: any) => {
+                // Safe access to member object
+                const m = req.member; 
+                return (
+                  <tr key={req._id.toString()} className="hover:bg-white/5 transition-colors">
+                    <td className="p-4 font-bold text-white">{m?.fullName || "Unknown"}</td>
+                    <td className="p-4">
+                      {req.type === "faculty" ? (
+                        <span className="text-purple-400 text-xs bg-purple-400/10 px-2 py-1 rounded border border-purple-500/20">Faculty</span>
+                      ) : (
+                        <span className="text-blue-400 text-xs bg-blue-400/10 px-2 py-1 rounded border border-blue-500/20">Student</span>
+                      )}
+                    </td>
+                    <td className="p-4 text-gray-300">{m?.branch || "N/A"}</td>
+                    <td className="p-4 text-right text-gray-500">
+                      {req.createdAt ? new Date(req.createdAt).toLocaleDateString() : "N/A"}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

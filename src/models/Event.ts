@@ -1,32 +1,69 @@
-import mongoose from "mongoose";
+import mongoose, { Schema, Document, Model, models } from "mongoose";
 
-const EventSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  description: { type: String, required: true },
-  date: { type: Date, required: true }, // When the event happens
-  time: { type: String, required: true },
-  location: { type: String, required: true },
-  category: { type: String, default: "Event" },
+// 1. Type Definition
+export interface IEvent extends Document {
+  title: string;
+  description: string;
   
-  // ✅ NEW FIELDS FOR LOGIC
-  deadline: { type: Date }, // Registration closes at this time
-  maxRegistrations: { type: Number, default: 0 }, // 0 = Unlimited
-  currentRegistrations: { type: Number, default: 0 }, // Auto-increases
+  // Display Fields (Strings)
+  date: string;
+  time: string;
+  location: string;
+  
+  // Registration Logic (No deadline)
+  registrationOpen: boolean;
+  maxRegistrations: number; // 0 = Unlimited
+  currentRegistrations: number;
   
   // Team Settings
-  isTeamEvent: { type: Boolean, default: false },
-  minTeamSize: { type: Number, default: 1 },
-  maxTeamSize: { type: Number, default: 1 },
+  isTeamEvent: boolean;
+  minTeamSize: number;
+  maxTeamSize: number;
+  isLive: boolean;
   
-  // Manual Override (Optional)
-  isPast: { type: Boolean, default: false },
-  registrationOpen: { type: Boolean, default: true },
+  // Info & Media (No single 'image' field)
+  rules: string[];
+  gallery: string[];   
+  
+  createdAt: Date;
+  updatedAt: Date;
+}
 
-  // Other fields
-  rules: [String],
-  image: String,
+// 2. Mongoose Schema
+const EventSchema = new Schema<IEvent>(
+  {
+    title: { 
+      type: String, 
+      required: [true, "Event title is required"], 
+      trim: true 
+    },
+    description: { 
+      type: String, 
+      required: [true, "Event description is required"] 
+    },
+    
+    // Display Fields
+    date: { type: String, required: [true, "Date is required"] },
+    time: { type: String, required: [true, "Time is required"] },
+    location: { type: String, required: [true, "Location is required"] },
 
-  gallery: { type: [String], default: [] },
-}, { timestamps: true });
+    // Logic
+    registrationOpen: { type: Boolean, default: true },
+    maxRegistrations: { type: Number, default: 0 },
+    currentRegistrations: { type: Number, default: 0 },
+    isLive: { type: Boolean, default: true },
 
-export default mongoose.models.Event || mongoose.model("Event", EventSchema);
+    // Team
+    isTeamEvent: { type: Boolean, default: false },
+    minTeamSize: { type: Number, default: 1 },
+    maxTeamSize: { type: Number, default: 1 },
+
+    // Media
+    rules: { type: [String], default: [] },
+    gallery: { type: [String], default: [] },
+  },
+  { timestamps: true }
+);
+
+const Event: Model<IEvent> = models.Event || mongoose.model<IEvent>("Event", EventSchema);
+export default Event;

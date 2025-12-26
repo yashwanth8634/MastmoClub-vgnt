@@ -1,26 +1,27 @@
-import dbConnect from "@/lib/db";
-import Event from "@/models/Event";
-import EditEventForm from "@/components/admin/EditEventForm";
-import { notFound } from "next/navigation";
+import EventForm from "@/components/admin/Events/EventForm";
+import { getEventById } from "@/actions/EventActions"; 
 
-// ✅ FIX: Type definition update
-export default async function EditEventPage({ params }: { params: Promise<{ id: string }> }) {
-  // ✅ FIX: Await params
+// 1. Change type to Promise
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default async function EditEventPage({ params }: PageProps) {
+  // 2. Await the params to get the ID
   const resolvedParams = await params;
   const id = resolvedParams.id;
 
-  await dbConnect();
-  
-  const event = await Event.findById(id).lean();
+  const eventData = await getEventById(id);
 
-  if (!event) {
-    return notFound();
+  if (!eventData) {
+    return (
+      <div className="p-10 text-center text-red-500">
+        <h2 className="text-xl font-bold">Event Not Found</h2>
+        {/* Now we use the 'id' variable we extracted safely */}
+        <p>Could not find event with ID: {id}</p> 
+      </div>
+    );
   }
 
-  const serializedEvent = {
-    ...event,
-    _id: event._id.toString(),
-  };
-
-  return <EditEventForm event={serializedEvent} id={id} />;
+  return <EventForm initialData={eventData} />;
 }

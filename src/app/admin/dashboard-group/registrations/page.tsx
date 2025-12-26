@@ -1,5 +1,5 @@
 import dbConnect from "@/lib/db";
-import Registration from "@/models/Registration";
+import Registration from "@/models/ClubRegistration";
 import Event from "@/models/Event";
 import MemberExportButton from "@/components/admin/MemberExportButton";
 

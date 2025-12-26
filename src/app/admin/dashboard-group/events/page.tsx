@@ -2,104 +2,121 @@ import dbConnect from "@/lib/db";
 import Event from "@/models/Event";
 import Link from "next/link";
 import { Plus, Pencil, Users } from "lucide-react";
-import DeleteButton from "@/components/admin/DeleteEventButton"; 
-import ArchiveButton from "@/components/admin/ArchiveButton";
+import DeleteEventButton from "@/components/admin/Events/DeleteEventButton"; 
+import { ToggleStatusButton, ToggleRegButton } from "@/components/admin/Events/EventActionButtons";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminEventsPage() {
   await dbConnect();
-  // Fetch events sorted by date (newest first)
-  const events = await Event.find({}).sort({ date: -1 }).lean();
+  
+  // 1. Fetch Raw Data
+  const rawEvents = await Event.find({}).sort({ createdAt: -1 }).lean();
+
+  // 2. STRICT SERIALIZATION (The Fix)
+  // This converts all Date objects (createdAt, updatedAt) and ObjectIds to simple strings.
+  // This prevents the "Objects are not valid as React child" crash permanently.
+  const events = JSON.parse(JSON.stringify(rawEvents));
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Manage Events</h1>
+        <div>
+            <h1 className="text-3xl font-bold">Manage Events</h1>
+            <p className="text-gray-400 text-sm mt-1">Control event visibility and registrations.</p>
+        </div>
         <Link 
           href="/admin/dashboard-group/events/new" 
-          className="bg-[#00f0ff] text-black px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-white transition-colors"
+          className="bg-[#00f0ff] text-black px-4 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-white transition-colors"
         >
-          <Plus size={20} /> Create New
+          <Plus size={20} /> Create Event
         </Link>
       </div>
 
       {events.length === 0 ? (
-        <div className="text-center py-20 bg-white/5 rounded-xl border border-white/10">
-          <p className="text-gray-400 text-lg">No events found.</p>
-          <p className="text-gray-600 text-sm mt-1">Click "Create New" to get started.</p>
+        <div className="text-center py-24 bg-white/5 rounded-2xl border border-dashed border-white/10">
+          <p className="text-gray-400 text-lg">No events found in the database.</p>
+          <Link href="/admin/dashboard-group/events/new" className="text-[#00f0ff] hover:underline mt-2 inline-block">
+            Create your first event
+          </Link>
         </div>
       ) : (
-        <div className="w-full overflow-x-auto border border-white/10 rounded-xl bg-white/5">
+        <div className="w-full overflow-x-auto border border-white/10 rounded-2xl bg-black">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-black/50 text-gray-400 border-b border-white/10 text-sm uppercase">
-                <th className="p-4">Title</th>
-                <th className="p-4">Date</th>
-                <th className="p-4">Registrations</th>
-                <th className="p-4">Status</th>
-                <th className="p-4 text-right">Actions</th>
+              <tr className="bg-white/5 text-gray-400 border-b border-white/10 text-xs uppercase tracking-wider">
+                <th className="p-5 font-medium">Event Title</th>
+                <th className="p-5 font-medium">Date & Loc</th>
+                <th className="p-5 font-medium">Registrations</th>
+                <th className="p-5 font-medium">Live Status</th>
+                <th className="p-5 font-medium text-right">Controls</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-white/5">
               {events.map((event: any) => {
-                // Check if full
+                const eventId = event._id; // Now safely a string
+                
+                // Check capacity safely
                 const isFull = event.maxRegistrations > 0 && event.currentRegistrations >= event.maxRegistrations;
                 
                 return (
-                  <tr key={event._id.toString()} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                  <tr key={eventId} className="hover:bg-white/5 transition-colors group">
                     
                     {/* TITLE */}
-                    <td className="p-4 font-medium text-white">
-                      {event.title}
-                      {event.isTeamEvent && <span className="ml-2 text-[10px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded">TEAM</span>}
-                    </td>
-
-                    {/* DATE */}
-                    <td className="p-4 text-gray-400 text-sm">
-                      {event.date ? new Date(event.date).toLocaleDateString('en-IN', {
-                        day: 'numeric', month: 'short', year: 'numeric'
-                      }) : 'TBA'}
-                    </td>
-
-                    {/* REGISTRATIONS (New Column) */}
-                    <td className="p-4 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Users size={14} className="text-gray-500" />
-                        <span className={isFull ? "text-red-400 font-bold" : "text-white"}>
-                          {event.currentRegistrations || 0}
-                        </span>
-                        <span className="text-gray-600">/ {event.maxRegistrations > 0 ? event.maxRegistrations : "∞"}</span>
-                        {isFull && <span className="text-[10px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded ml-1">FULL</span>}
+                    <td className="p-5">
+                      <div className="font-bold text-white text-lg">{event.title}</div>
+                      <div className="flex gap-2 mt-1">
+                        {event.isTeamEvent && (
+                            <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded font-mono border border-purple-500/20">
+                                TEAM: {event.minTeamSize}-{event.maxTeamSize}
+                            </span>
+                        )}
                       </div>
                     </td>
 
-                    {/* STATUS */}
-                    <td className="p-4 text-sm">
-                        {event.isPast ? (
-                            <span className="inline-flex items-center px-2 py-1 rounded bg-gray-500/10 text-gray-500 text-xs font-medium">
-                                Closed
-                            </span>
-                        ) : (
-                            <span className="inline-flex items-center px-2 py-1 rounded bg-green-500/10 text-green-400 text-xs font-medium border border-green-500/20">
-                                <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 animate-pulse"></span>
-                                Active
-                            </span>
-                        )}
+                    {/* DATE & LOCATION */}
+                    <td className="p-5 text-gray-400 text-sm">
+                      <div className="text-white font-medium">{event.date}</div>
+                      <div className="text-xs opacity-70">{event.time}</div>
+                      <div className="text-xs opacity-50 mt-1">{event.location}</div>
+                    </td>
+
+                    {/* REGISTRATIONS */}
+                    <td className="p-5 text-sm">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Users size={16} className="text-[#00f0ff]" />
+                        <span className={`font-mono text-lg ${isFull ? "text-red-400" : "text-white"}`}>
+                          {event.currentRegistrations}
+                        </span>
+                        <span className="text-gray-600">/</span>
+                        <span className="text-gray-500">{event.maxRegistrations > 0 ? event.maxRegistrations : "∞"}</span>
+                      </div>
+                      
+                      <ToggleRegButton 
+                        id={eventId} 
+                        isOpen={event.registrationOpen} 
+                        isFull={isFull} 
+                      />
+                    </td>
+
+                    {/* LIVE STATUS */}
+                    <td className="p-5">
+                        <ToggleStatusButton id={eventId} isLive={event.isLive} />
                     </td>
 
                     {/* ACTIONS */}
-                    <td className="p-4 flex justify-end gap-2">
-                      {/* Archive Button (Toggle Active/Past) */}
-                      <ArchiveButton id={event._id.toString()} isPast={event.isPast} />
-                      
-                      {/* Edit Button */}
-                      <Link href={`/admin/dashboard-group/events/${event._id}/edit`} className="p-2 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500 hover:text-white transition-all">
-                        <Pencil size={18} />
-                      </Link>
-                      
-                      {/* Delete Button */}
-                      <DeleteButton id={event._id.toString()} />
+                    <td className="p-5">
+                      <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Link 
+                            href={`/admin/dashboard-group/events/${eventId}/edit`} 
+                            className="p-2 bg-white/5 text-gray-300 rounded-lg hover:bg-[#00f0ff] hover:text-black transition-all border border-white/10"
+                            title="Edit Event"
+                        >
+                            <Pencil size={18} />
+                        </Link>
+                        
+                        <DeleteEventButton id={eventId} />
+                      </div>
                     </td>
                   </tr>
                 );

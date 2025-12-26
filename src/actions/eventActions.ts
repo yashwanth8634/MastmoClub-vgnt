@@ -1,119 +1,190 @@
 "use server";
 
 import dbConnect from "@/lib/db";
-import Event from "@/models/Event";
-import Registration from "@/models/Registration";
+import Event from "@/models/Event"; // Import the model we just created
 import { revalidatePath } from "next/cache";
-import { verifyAdmin } from "@/lib/auth";
-import { emailTemplates } from "@/lib/emailTemplates";
-import { sendEmail } from "@/lib/email";
-import { deleteFilesFromUT } from "@/lib/utapi-server";
+import { verifyAdmin } from "@/lib/auth"; // Assuming you have this
+import { deleteFilesFromUT } from "@/lib/utapi-server"; 
 
-// Helper: Convert date strings to IST Date objects
-function toISTDate(dateString: any) {
-  if (!dateString) return null;
-  return new Date(`${dateString}+05:30`);
-}
-
+// 🛠️ HELPER: Extract Key from UploadThing URL
 const getFileKey = (url: string) => {
-  if (!url || !url.includes("utfs.io")) return null;
-  return url.split("/").pop();
+  if (!url || !url.includes("utfs.io")) return "";
+  return url.split("/").pop() || "";
 };
 
-// ---------------------------------------------------------
-// 🛠️ HELPER: ROBUST GALLERY PARSER
-// ---------------------------------------------------------
-function parseGalleryFromFormData(formData: FormData): string[] {
-  // 1. Check if the frontend used a specific JSON key
-  const jsonRaw = formData.get("galleryJSON");
-  if (jsonRaw) {
-    try { return JSON.parse(jsonRaw as string); } catch (e) { return []; }
-  }
-
-  // 2. Check standard 'gallery' key
-  const galleryEntries = formData.getAll("gallery");
-
-  if (galleryEntries.length === 0) return [];
-
-  // Case: Multiple files appended (formData.append('gallery', url1); formData.append('gallery', url2))
-  if (galleryEntries.length > 1) {
-    return galleryEntries.map(entry => entry.toString()).filter(url => url.includes("utfs.io"));
-  }
-
-  // Case: Single entry (Could be one URL OR a JSON string)
-  const singleEntry = galleryEntries[0].toString();
-  if (singleEntry.startsWith("[")) {
-    try { return JSON.parse(singleEntry); } catch (e) { return []; }
-  }
-  
-  // Case: Just one URL string
-  return [singleEntry];
-}
-
-
+// ==========================================
 // 1. CREATE EVENT
+// ==========================================
 export async function createEvent(formData: FormData) {
-  try { await verifyAdmin(); } catch (e) { return { success: false, message: "Unauthorized" }; }
-  await dbConnect();
-
   try {
-    const title = formData.get("title") as string;
-    const dateStr = formData.get("date") as string;
-    const dateObj = toISTDate(dateStr) || new Date();
+    // 1. Security Check
+    await verifyAdmin();
+    await dbConnect();
 
-    const isActuallyPast = dateObj < new Date();
-    const finalIsPast = isActuallyPast ? true : (formData.get("isPast") === "true");
-    const finalRegOpen = isActuallyPast ? false : (formData.get("registrationOpen") === "true");
+    // 2. Extract & Format Data
+    // We use .getAll() to handle arrays like gallery[] and rules[]
+    const gallery = formData.getAll("gallery") as string[]; 
+    const rules = formData.getAll("rules") as string[];
 
-    // ✅ FIX: Capture Gallery Array Correctly
-    const gallery = parseGalleryFromFormData(formData);
-
-    // Create Event (NO 'image' field)
     const newEvent = await Event.create({
-      title,
-      description: formData.get("description"),
-      location: formData.get("location"),
-      category: formData.get("category"),
-      time: formData.get("time"),
-      // image: ... ❌ REMOVED as per your instruction
-      gallery: gallery, // ✅ Now guaranteed to be an array of strings
-      date: dateObj,
-      deadline: toISTDate(formData.get("deadline")),
-      maxRegistrations: parseInt(formData.get("maxRegistrations") as string) || 0,
-      isTeamEvent: formData.get("isTeamEvent") === "on",
-      minTeamSize: parseInt(formData.get("minTeamSize") as string) || 1,
-      maxTeamSize: parseInt(formData.get("maxTeamSize") as string) || 1,
-      rules: (formData.get("rules") as string)?.split("\n").filter(r => r.trim()) || [],
-      currentRegistrations: 0,
-      isPast: finalIsPast,
-      registrationOpen: finalRegOpen
+      title: formData.get("title") as string,
+      description: formData.get("description") as string,
+      
+      // Strings as requested
+      date: formData.get("date") as string,
+      time: formData.get("time") as string,
+      location: formData.get("location") as string,
+
+      // Logic Defaults
+      registrationOpen: formData.get("registrationOpen") === "true",
+      isLive: formData.get("isLive") === "false" ? false : true,
+      maxRegistrations: Number(formData.get("maxRegistrations")) || 0,
+      
+      // Team Logic
+      isTeamEvent: formData.get("isTeamEvent") === "true",
+      minTeamSize: Number(formData.get("minTeamSize")) || 1,
+      maxTeamSize: Number(formData.get("maxTeamSize")) || 1,
+
+      rules: rules,
+      gallery: gallery,
     });
 
-    // 📧 Email Notification
-    try {
-      const members = await Registration.find({ eventName: "General Membership", status: "approved" }).select("members.email").lean();
-      const emailList = members.map((reg: any) => reg.members?.[0]?.email).filter((email): email is string => !!email && email.includes("@"));
-
-      if (emailList.length > 0) {
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-        const eventLink = `${baseUrl}/events/${newEvent._id}`;
-        const { subject, html } = emailTemplates.newEventAnnouncement(title, dateStr, eventLink);
-        await sendEmail("mastmovgnt@gmail.com", subject, html, emailList);
-      }
-    } catch (emailErr) {
-      console.error("⚠️ Emails failed:", emailErr);
-    }
-
+    // 3. Revalidate Frontend
     revalidatePath("/admin/dashboard-group/events");
     revalidatePath("/events");
-    return { success: true };
+    
+    return { success: true, message: "Event Created Successfully!" };
 
   } catch (error: any) {
-    return { success: false, message: "Failed: " + error.message };
+    console.error("Create Event Error:", error);
+    // Return clear message for developer/UI
+    return { success: false, message: error.message || "Failed to create event" };
   }
 }
 
-// 2. DELETE EVENT (Fixed to only delete Gallery images)
+// ==========================================
+// 2. UPDATE EVENT
+// ==========================================
+export async function updateEvent(id: string, formData: FormData) {
+  try {
+    await verifyAdmin();
+    await dbConnect();
+
+    const existingEvent = await Event.findById(id);
+    if (!existingEvent) {
+      return { success: false, message: "Event not found" };
+    }
+
+    // --- SMART IMAGE CLEANUP LOGIC ---
+    // 1. Get the new list of images from the form
+    const newGallery = formData.getAll("gallery") as string[];
+    
+    // 2. Get the old list from DB
+    const oldGallery = existingEvent.gallery || [];
+
+    // 3. Find images that are in OLD but NOT in NEW (User deleted them)
+    const imagesToDelete = oldGallery.filter((url: string) => !newGallery.includes(url));
+
+    // 4. Delete them from UploadThing to save space
+    if (imagesToDelete.length > 0) {
+      const keys = imagesToDelete.map(getFileKey).filter((k: string) => k !== "");
+      if (keys.length > 0) {
+        await deleteFilesFromUT(keys);
+      }
+    }
+
+    // --- UPDATE DATABASE ---
+    const updateData = {
+      title: formData.get("title"),
+      description: formData.get("description"),
+      date: formData.get("date"),
+      time: formData.get("time"),
+      location: formData.get("location"),
+
+      registrationOpen: formData.get("registrationOpen") === "true",
+      isLive: formData.get("isLive") === "true",
+      maxRegistrations: Number(formData.get("maxRegistrations")) || 0,
+      
+      isTeamEvent: formData.get("isTeamEvent") === "true",
+      minTeamSize: Number(formData.get("minTeamSize")) || 1,
+      maxTeamSize: Number(formData.get("maxTeamSize")) || 1,
+
+      rules: formData.getAll("rules") as string[],
+      gallery: newGallery, // Save the new list
+    };
+
+    await Event.findByIdAndUpdate(id, updateData, { new: true });
+
+    revalidatePath("/admin/dashboard-group/events");
+    revalidatePath(`/events/${id}`);
+    revalidatePath("/events");
+
+    return { success: true, message: "Event Updated Successfully!" };
+
+  } catch (error: any) {
+    console.error("Update Event Error:", error);
+    return { success: false, message: error.message || "Failed to update event" };
+  }
+}
+
+// ==========================================
+// 3. TOGGLE REGISTRATION STATUS
+// ==========================================
+export async function toggleEventRegistration(id: string) {
+  try {
+    await verifyAdmin();
+    await dbConnect();
+    
+    const event = await Event.findById(id);
+    if (!event) return { success: false, message: "Event not found" };
+
+    event.registrationOpen = !event.registrationOpen;
+    await event.save();
+
+    revalidatePath("/admin/dashboard-group/events");
+    revalidatePath(`/events/${id}`);
+    
+    return { 
+      success: true, 
+      message: `Registration is now ${event.registrationOpen ? "OPEN" : "CLOSED"}` 
+    };
+  } catch (error: any) {
+    return { success: false, message: "Failed to toggle registration" };
+  }
+}
+
+// ==========================================
+// 4. ✅ NEW: TOGGLE ALIVE / DEAD STATUS
+// ==========================================
+export async function toggleEventStatus(id: string) {
+  try {
+    await verifyAdmin();
+    await dbConnect();
+    
+    const event = await Event.findById(id);
+    if (!event) return { success: false, message: "Event not found" };
+
+    // Toggle the 'Alive' boolean
+    event.isLive = !event.isLive;
+    await event.save();
+
+    revalidatePath("/admin/dashboard-group/events");
+    revalidatePath(`/events/${id}`);
+    revalidatePath("/events");
+    
+    return { 
+      success: true, 
+      message: `Event is now ${event.isLive ? "ALIVE (Active)" : "DEAD (Past/Hidden)"}` 
+    };
+  } catch (error: any) {
+    console.error("Status Toggle Error:", error);
+    return { success: false, message: "Failed to toggle event status" };
+  }
+}
+
+// ==========================================
+// 5. DELETE EVENT
+// ==========================================
 export async function deleteEvent(id: string) {
   try {
     await verifyAdmin();
@@ -122,115 +193,71 @@ export async function deleteEvent(id: string) {
     const event = await Event.findById(id);
     if (!event) return { success: false, message: "Event not found" };
 
+    // Cleanup Gallery Images
     const keysToDelete: string[] = [];
-
-    // Only check Gallery (No 'image' field)
     if (event.gallery && event.gallery.length > 0) {
-      event.gallery.forEach((img: string) => {
-        const key = getFileKey(img);
+      event.gallery.forEach((imgUrl: string) => {
+        const key = getFileKey(imgUrl);
         if (key) keysToDelete.push(key);
       });
     }
 
-    if (keysToDelete.length > 0) {
-      await deleteFilesFromUT(keysToDelete);
-    }
+    if (keysToDelete.length > 0) await deleteFilesFromUT(keysToDelete);
 
     await Event.findByIdAndDelete(id);
 
     revalidatePath("/admin/dashboard-group/events");
-    revalidatePath("/gallery");
-    
-    return { success: true };
-  } catch (error) {
-    return { success: false, message: "Failed to delete" };
-  }
-}
-
-// 3. TOGGLE STATUS
-export async function toggleEventStatus(id: string, currentStatus: boolean) {
-  try { await verifyAdmin(); } catch (e) { return { success: false, message: "Unauthorized" }; }
-  await dbConnect();
-  try {
-    await Event.findByIdAndUpdate(id, { isPast: !currentStatus });
-    revalidatePath("/admin/dashboard-group/events");
     revalidatePath("/events");
-    return { success: true };
-  } catch (error) {
-    return { success: false, message: "Failed to update status" };
+    
+    return { success: true, message: "Event deleted successfully" };
+
+  } catch (error: any) {
+    return { success: false, message: "Failed to delete event" };
   }
 }
 
-// 4. UPDATE EVENT
-export async function updateEvent(id: string, formData: FormData) {
+
+export async function getEventById(id: string) {
   try {
-    await verifyAdmin();
     await dbConnect();
 
-    const existingEvent = await Event.findById(id);
-    if (!existingEvent) return { success: false, message: "Event not found" };
+    // 1. Find by ID
+    // .lean() converts the Mongoose Document to a plain JS object instantly
+    const event = await Event.findById(id).lean();
 
-    // 1. GET DATA
-    const dateStr = formData.get("date") as string;
-    const dateObj = toISTDate(dateStr) || new Date();
-    
-    // ✅ CAPTURE GALLERY
-    const incomingGallery = parseGalleryFromFormData(formData);
+    if (!event) return null;
 
-    // 2. 🛡️ DATE & STATUS LOGIC
-    const isActuallyPast = dateObj < new Date();
-    const finalIsPast = isActuallyPast ? true : (formData.get("isPast") === "true");
-    const finalRegOpen = isActuallyPast ? false : (formData.get("registrationOpen") === "true");
-
-    // 3. 🛡️ GALLERY MERGE LOGIC
-    let finalGallery = [];
-    if (incomingGallery.length === 0) {
-        finalGallery = existingEvent.gallery || []; // Keep old if form sent nothing
-    } else {
-        const oldGallery = existingEvent.gallery || [];
-        // Merge & Remove Duplicates
-        finalGallery = Array.from(new Set([...oldGallery, ...incomingGallery]));
-    }
-
-    // 4. UPDATE DATABASE (Now includes ALL fields)
-    const data = {
-      title: formData.get("title"),
-      description: formData.get("description"),
-      location: formData.get("location"),
-      category: formData.get("category"),
-      time: formData.get("time"), // ✅ Added
+    // 2. Transform Data for Frontend
+    // We must convert the _id (ObjectId) to a string ("id")
+    return {
+      id: event._id.toString(), // ⚠️ Important: Convert ObjectId to String
+      title: event.title,
+      description: event.description,
       
-      gallery: finalGallery,
+      // Strings
+      date: event.date,
+      time: event.time,
+      location: event.location,
       
-      date: dateObj,
-      deadline: toISTDate(formData.get("deadline")), // ✅ Added
+      // Booleans
+      isLive: event.isLive,
+      registrationOpen: event.registrationOpen,
       
-      maxRegistrations: parseInt(formData.get("maxRegistrations") as string) || 0, // ✅ Added
+      // Numbers
+      maxRegistrations: event.maxRegistrations,
       
-      // Handle Checkbox for Team Event
-      isTeamEvent: formData.get("isTeamEvent") === "on" || formData.get("isTeamEvent") === "true", // ✅ Added
+      // Team Logic
+      isTeamEvent: event.isTeamEvent,
+      minTeamSize: event.minTeamSize,
+      maxTeamSize: event.maxTeamSize,
       
-      minTeamSize: parseInt(formData.get("minTeamSize") as string) || 1, // ✅ Added
-      maxTeamSize: parseInt(formData.get("maxTeamSize") as string) || 1, // ✅ Added
-      
-      // Handle Rules (Split by newline)
-      rules: (formData.get("rules") as string)?.split("\n").filter(r => r.trim()) || [], // ✅ Added
-      
-      registrationLink: formData.get("registrationLink"),
-      
-      isPast: finalIsPast,
-      registrationOpen: finalRegOpen,
+      // Arrays
+      gallery: event.gallery || [],
+      rules: event.rules || [],
     };
 
-    await Event.findByIdAndUpdate(id, data);
-
-    revalidatePath("/admin/dashboard-group/events");
-    revalidatePath(`/events/${id}`);
-    revalidatePath("/gallery");
-    
-    return { success: true };
-  } catch (error: any) {
-    console.error("Update Error:", error);
-    return { success: false, message: "Update failed" };
+  } catch (error) {
+    console.error("Error fetching event:", error);
+    return null;
   }
 }
