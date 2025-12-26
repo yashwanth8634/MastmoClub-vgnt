@@ -4,7 +4,7 @@ import { updateTeamMember } from "@/actions/teamActions";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Save, ArrowLeft, Image as ImageIcon, Trash2, Loader2, ListOrdered } from "lucide-react";
-import { UploadDropzone } from "@/utils/uploadthing";
+import { UploadDropzone } from "@/utils/uploadthing"; 
 import Link from "next/link";
 import Image from "next/image";
 
@@ -26,14 +26,25 @@ interface TeamMemberData {
 
 export default function EditTeamForm({ member }: { member: TeamMemberData }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [imageUrl, setImageUrl] = useState(member.image || ""); 
+  // ✅ IMAGE LOGIC: Initialize state with the existing member image
+  const [imageUrl, setImageUrl] = useState(member?.image || ""); 
   const router = useRouter();
+
+  // ✅ SAFETY CHECK: Prevents the "undefined (reading name)" crash
+  if (!member) {
+    return (
+      <div className="p-20 text-center text-white">
+        <p className="text-red-500 mb-4 font-bold">Member data not found.</p>
+        <Link href="/admin/dashboard-group/team" className="underline text-[#00f0ff]">Return to Manager</Link>
+      </div>
+    );
+  }
 
   async function handleSubmit(formData: FormData) {
     if (isSubmitting) return;
     setIsSubmitting(true);
     
-    // Pass the image URL from state
+    // ✅ IMAGE LOGIC: Explicitly attach the current image URL from state to the form
     formData.set("image", imageUrl);
     
     const result = await updateTeamMember(member._id, formData);
@@ -57,6 +68,7 @@ export default function EditTeamForm({ member }: { member: TeamMemberData }) {
 
       <form action={handleSubmit} className="space-y-6">
         
+        {/* Name & Role */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase text-gray-400">Full Name</label>
@@ -68,27 +80,27 @@ export default function EditTeamForm({ member }: { member: TeamMemberData }) {
           </div>
         </div>
 
-        {/* Rank / Order Section */}
+        {/* ✅ ORDER SECTION: Fixed to prevent resetting */}
         <div className="p-4 bg-[#00f0ff]/5 border border-[#00f0ff]/20 rounded-xl flex items-center gap-4">
             <div className="p-3 bg-[#00f0ff]/10 rounded-lg text-[#00f0ff]">
                 <ListOrdered size={24} />
             </div>
             <div className="flex-1">
                 <label className="text-xs font-bold uppercase text-[#00f0ff] mb-1 block">Display Order (Rank)</label>
-                <p className="text-[10px] text-gray-400 mb-2">Lower number = Shows First (e.g. 1 is President, 2 is Vice President)</p>
                 <input 
                     name="order" 
                     type="number" 
                     defaultValue={member.order || 0} 
-                    className="w-full bg-black border border-white/10 rounded-lg p-3 text-white focus:border-[#00f0ff] outline-none font-mono text-lg" 
+                    className="w-full bg-black border border-white/10 rounded-lg p-3 text-white focus:border-[#00f0ff] outline-none font-mono" 
                 />
             </div>
         </div>
 
+        {/* Category & Details */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase text-gray-400">Category</label>
-            {/* ✅ FIXED: Added 'patron' option to prevent category reset */}
+            {/* ✅ CATEGORY FIX: Added 'patron' and defaultValue to stop resetting to Faculty */}
             <select name="category" defaultValue={member.category} className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-[#00f0ff] outline-none cursor-pointer">
               <option value="faculty">Faculty Board</option>
               <option value="core">Core Council</option>
@@ -103,7 +115,7 @@ export default function EditTeamForm({ member }: { member: TeamMemberData }) {
           </div>
         </div>
 
-        {/* Photo Section */}
+        {/* ✅ IMAGE LOGIC: Photo Upload/Preview Section */}
         <div className="space-y-2">
             <div className="flex justify-between items-center">
                 <label className="text-xs font-bold uppercase text-gray-400 flex items-center gap-2">
@@ -111,7 +123,7 @@ export default function EditTeamForm({ member }: { member: TeamMemberData }) {
                 </label>
                 {imageUrl && (
                     <button type="button" onClick={() => setImageUrl("")} className="text-xs text-red-400 flex items-center gap-1 hover:text-red-300">
-                        <Trash2 size={12} /> Remove Photo
+                        <Trash2 size={12} /> Remove Current Photo
                     </button>
                 )}
             </div>
@@ -122,7 +134,7 @@ export default function EditTeamForm({ member }: { member: TeamMemberData }) {
                         endpoint="teamImage"
                         onClientUploadComplete={(res) => {
                             if (res && res[0]) {
-                                setImageUrl(res[0].url);
+                                setImageUrl(res[0].url); // Update state with new image URL
                             }
                         }}
                         onUploadError={(error: Error) => alert(`Error: ${error.message}`)}
@@ -139,8 +151,8 @@ export default function EditTeamForm({ member }: { member: TeamMemberData }) {
                         <Image src={imageUrl} alt="Current" fill className="object-cover" />
                     </div>
                     <div className="flex-1">
-                        <p className="text-sm font-bold text-white">Current Photo Selected</p>
-                        <p className="text-xs text-gray-500">Click remove above to upload a different one.</p>
+                        <p className="text-sm font-bold text-white">Current Profile Photo</p>
+                        <p className="text-xs text-gray-500">Member has an active photo displayed.</p>
                     </div>
                 </div>
             )}
@@ -162,11 +174,8 @@ export default function EditTeamForm({ member }: { member: TeamMemberData }) {
           disabled={isSubmitting} 
           className="w-full bg-[#00f0ff] text-black font-bold py-4 rounded-xl hover:bg-white transition-colors flex justify-center items-center gap-2"
         >
-          {isSubmitting ? (
-             <><Loader2 className="animate-spin" /> Saving...</>
-          ) : (
-             <><Save size={20} /> Update Member</>
-          )}
+          {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={20} />} 
+          Update Member Details
         </button>
       </form>
     </div>
