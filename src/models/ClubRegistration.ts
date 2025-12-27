@@ -16,6 +16,7 @@ export interface IClubRegistration extends Document {
   type: "student" | "faculty";
   member: IMember;
   status: "pending" | "approved" | "rejected";
+  notificationSent: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -49,6 +50,10 @@ const ClubRegistrationSchema = new Schema<IClubRegistration>({
     type: String, 
     enum: ["pending", "approved", "rejected"], 
     default: "pending" 
+  },
+  notificationSent: {
+    type: Boolean,
+    default: false,
   },
 }, { timestamps: true });
 

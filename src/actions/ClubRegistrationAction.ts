@@ -39,7 +39,8 @@ export async function submitClubRegistration(prevState: any, formData: FormData)
           branch: department, // Storing Department in 'branch' field
           // rollNo, section, year are intentionally undefined/null
         },
-        status: "pending"
+        status: "pending",
+        notificationSent: false,
       });
 
       // Send Email
@@ -89,7 +90,8 @@ export async function submitClubRegistration(prevState: any, formData: FormData)
           section,
           year
         },
-        status: "pending"
+        status: "pending",
+        notificationSent: false,
       });
 
       // Send Email

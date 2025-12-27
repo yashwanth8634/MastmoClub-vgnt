@@ -85,11 +85,11 @@ export default function JoinClubPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase text-gray-500 ml-1">Full Name</label>
-                <input name="fullName" required placeholder="John Doe" className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-[#00f0ff] outline-none" />
+                <input name="fullName" required placeholder="Yashwanth Reddy" className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-[#00f0ff] outline-none" />
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase text-gray-500 ml-1">Email Address</label>
-                <input name="email" type="email" required placeholder="john@example.com" className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-[#00f0ff] outline-none" />
+                <input name="email" type="email" required placeholder="yash@vgnt.in" className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-[#00f0ff] outline-none" />
               </div>
             </div>
 
@@ -103,7 +103,7 @@ export default function JoinClubPage() {
               <>
                 <div className="space-y-2">
                    <label className="text-xs font-bold uppercase text-gray-500 ml-1">Roll Number</label>
-                   <input name="rollNo" required placeholder="22WJ1A05..." className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-[#00f0ff] outline-none font-mono" />
+                   <input name="rollNo" required placeholder="24891A0593" className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-[#00f0ff] outline-none font-mono" />
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
