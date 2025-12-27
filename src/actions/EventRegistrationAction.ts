@@ -114,6 +114,17 @@ export async function registerForEvent(prevState: any, formData: FormData) {
     const existingReg = await EventRegistration.findOne({ eventId, rollNo });
     if (existingReg) return { success: false, message: "You have already registered for this event." };
 
+    if (rawData.teamName) {
+        const existingTeam = await EventRegistration.findOne({ 
+            eventId, 
+            teamName: { $regex: new RegExp(`^${rawData.teamName}$`, "i") } 
+        });
+
+        if (existingTeam) {
+            return { success: false, message: `Team name '${rawData.teamName}' is already taken.` };
+        }
+    }
+
     // 5. Save
     await EventRegistration.create({ eventId, ...validatedFields.data });
     await Event.findByIdAndUpdate(eventId, { $inc: { currentRegistrations: 1 } });
