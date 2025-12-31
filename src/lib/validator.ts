@@ -3,10 +3,10 @@ import { z } from "zod";
 // --- VGNT BRANCH CODES ---
 export const BRANCH_CODES: Record<string, string> = {
   "CSE": "05",
-  "CSM": "66",
-  "CSD": "67",
-  "AIML": "54",
-  "IT": "12",
+  "CSE(AI&ML)": "66",
+  "CSE(DS)": "67",
+  "AI&ML": "54",
+  "CSE(IT)": "12",
   "ECE": "04",
   "EEE": "02",
   "CIVIL": "01",
