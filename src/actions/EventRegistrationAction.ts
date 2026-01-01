@@ -46,12 +46,12 @@ export async function registerForEvent(prevState: any, formData: FormData) {
       return { success: false, message: "Access Denied: You are not a registered Club Member." };
     }
 
-    // ✅ ADDED: Specific Rejection Check for Main User
+    // Specific Rejection Check for Main User
     if (mainMember.status === "rejected") {
       return { success: false, message: "Access Denied: Your club membership application has been rejected." };
     }
 
-    // ✅ ADDED: General Approval Check (covers 'pending')
+    // General Approval Check (covers 'pending')
     if (mainMember.status !== "approved") {
       return { success: false, message: `Access Denied: Your club membership status is '${mainMember.status}'. Please wait for approval.` };
     }
@@ -64,8 +64,21 @@ export async function registerForEvent(prevState: any, formData: FormData) {
     if (teamMembers && teamMembers.length > 0) {
         
         const teamLeadBranchCode = getBranchCodeFromRoll(rollNo); 
+        const processedRolls = new Set(); // ✅ ADDED: To track duplicates in this form
 
         for (const member of teamMembers) {
+            
+            // ✅ ADDED: Self-Add Check (Prevent Lead from adding themselves)
+            if (member.rollNo === rollNo) {
+                return { success: false, message: "Invalid Team: You cannot add yourself as a team member." };
+            }
+
+            // ✅ ADDED: Duplicate Entry Check (Prevent adding same friend twice)
+            if (processedRolls.has(member.rollNo)) {
+                return { success: false, message: `Duplicate Entry: Member '${member.name}' is added twice.` };
+            }
+            processedRolls.add(member.rollNo);
+
             // A. Check Format
             const formatError = validateRollNo(member.rollNo);
             if (formatError) return { success: false, message: `Member '${member.name}' has invalid Roll No.` };
@@ -92,7 +105,7 @@ export async function registerForEvent(prevState: any, formData: FormData) {
             return { success: false, message: `Access Denied: The following members are not in the club: ${missingMembers.map(m => m.name).join(", ")}` };
         }
 
-        // ✅ ADDED: Specific Rejection Check for Team Members
+        // Specific Rejection Check for Team Members
         const rejectedMembers = foundMembers.filter((m: any) => m.status === "rejected");
         if (rejectedMembers.length > 0) {
              return { 
@@ -101,7 +114,7 @@ export async function registerForEvent(prevState: any, formData: FormData) {
              };
         }
 
-        // ✅ ADDED: General Approval Check for Team Members
+        // General Approval Check for Team Members
         const notApprovedMembers = foundMembers.filter((m: any) => m.status !== "approved");
         if (notApprovedMembers.length > 0) {
             return { 
