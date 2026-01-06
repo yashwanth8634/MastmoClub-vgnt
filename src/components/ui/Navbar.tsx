@@ -73,6 +73,13 @@ export default function Navbar() {
         }`}
       >
         <Link 
+          href="/" 
+          onClick={() => setIsOpen(false)} 
+          className="text-2xl font-bold text-white uppercase hover:text-[#00f0ff] transition-colors"
+        >
+          Home
+        </Link>
+        <Link 
           href="/events" 
           onClick={() => setIsOpen(false)} 
           className="text-2xl font-bold text-white uppercase hover:text-[#00f0ff] transition-colors"

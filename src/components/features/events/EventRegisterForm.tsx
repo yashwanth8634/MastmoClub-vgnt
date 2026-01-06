@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { registerForEvent } from "@/actions/EventRegistrationAction"; 
 import { Loader2, Plus, Trash2, AlertCircle, CheckCircle, User, Users } from "lucide-react";
 import { BRANCHES, SECTIONS, YEARS } from "@/lib/constants";
+import MathLoader from "@/components/ui/MathLoader";
 
 interface EventType {
   _id: string;
@@ -77,7 +78,7 @@ export default function EventRegisterForm({ event }: { event: EventType }) {
         <p className="text-gray-400 text-lg">
            Registration confirmed for <span className="text-[#00f0ff] font-bold">{event.title}</span>.
         </p>
-        <button onClick={() => window.location.reload()} className="mt-8 px-8 py-3 bg-white/10 hover:bg-white/20 rounded-xl text-white font-bold transition-all hover:scale-105 border border-white/10">
+        <button onClick={() => window.location.reload()} className="mt-8 px-8 py-3 bg-white/10 hover:bg-white/20 rounded-xl text-white font-bold transition-all hover:scale-105 border border-white/10 cursor-pointer">
           Register Another
         </button>
       </div>
@@ -89,6 +90,16 @@ export default function EventRegisterForm({ event }: { event: EventType }) {
       
       {/* Background Glow Effect */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1 bg-gradient-to-r from-transparent via-[#00f0ff] to-transparent opacity-50 blur-sm"></div>
+
+      {/* FULL PAGE LOADER */}
+      {isSubmitting && (
+        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
+          <MathLoader size="lg" />
+          <p className="text-[#00f0ff] mt-6 font-mono text-lg animate-pulse tracking-widest">
+            REGISTERING FOR EVENT...
+          </p>
+        </div>
+      )}
 
       {/* HEADER */}
       <div className="text-center mb-10">
@@ -204,12 +215,12 @@ export default function EventRegisterForm({ event }: { event: EventType }) {
         {event.isTeamEvent && (
           <div className="flex justify-center gap-4 pt-2">
             {(extraMemberCount + 1) < event.maxTeamSize && (
-              <button type="button" onClick={() => setExtraMemberCount(c => c + 1)} className="flex items-center gap-2 text-[#00f0ff] bg-[#00f0ff]/5 border border-[#00f0ff]/20 px-5 py-2.5 rounded-full hover:bg-[#00f0ff]/10 text-xs font-bold uppercase tracking-wider transition-all">
+              <button type="button" onClick={() => setExtraMemberCount(c => c + 1)} className="flex items-center gap-2 text-[#00f0ff] bg-[#00f0ff]/5 border border-[#00f0ff]/20 px-5 py-2.5 rounded-full hover:bg-[#00f0ff]/10 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer">
                 <Plus size={14} /> Add Member
               </button>
             )}
             {(extraMemberCount + 1) > (event.minTeamSize || 1) && (
-              <button type="button" onClick={() => setExtraMemberCount(c => c - 1)} className="flex items-center gap-2 text-red-400 bg-red-500/5 border border-red-500/20 px-5 py-2.5 rounded-full hover:bg-red-500/10 text-xs font-bold uppercase tracking-wider transition-all">
+              <button type="button" onClick={() => setExtraMemberCount(c => c - 1)} className="flex items-center gap-2 text-red-400 bg-red-500/5 border border-red-500/20 px-5 py-2.5 rounded-full hover:bg-red-500/10 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer">
                 <Trash2 size={14} /> Remove Member
               </button>
             )}
@@ -231,7 +242,7 @@ export default function EventRegisterForm({ event }: { event: EventType }) {
           className={`w-full py-4 font-bold text-lg rounded-xl transition-all flex justify-center items-center gap-2 shadow-lg ${
             isSubmitting 
               ? "bg-gray-800 text-gray-500 cursor-not-allowed border border-white/5" 
-              : "bg-[#00f0ff] text-black hover:bg-white hover:scale-[1.01] hover:shadow-[0_0_20px_rgba(0,240,255,0.4)] border border-[#00f0ff]"
+              : "bg-[#00f0ff] text-black hover:bg-white hover:scale-[1.01] hover:shadow-[0_0_20px_rgba(0,240,255,0.4)] border border-[#00f0ff] cursor-pointer"
           }`}
         >
           {isSubmitting ? (

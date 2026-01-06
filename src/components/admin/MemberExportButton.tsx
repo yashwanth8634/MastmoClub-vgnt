@@ -106,7 +106,7 @@ export default function MemberExportButton({
   return (
     <button
       onClick={generatePDF}
-      className="flex items-center gap-2 bg-[#00f0ff] text-black px-4 py-2 rounded-lg font-bold hover:bg-white hover:scale-105 transition-all text-sm"
+      className="flex items-center gap-2 bg-[#00f0ff] text-black px-4 py-2 rounded-lg font-bold hover:bg-white hover:scale-105 transition-all text-sm cursor-pointer"
     >
       <Download size={16} /> Export PDF
     </button>

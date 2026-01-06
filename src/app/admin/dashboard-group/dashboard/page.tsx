@@ -2,6 +2,12 @@ import dbConnect from "@/lib/db";
 import Registration from "@/models/ClubRegistration";
 import { CheckCircle, GraduationCap, ArrowRight, Clock } from "lucide-react";
 import Link from "next/link";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Admin Dashboard ",
+  description: "Overview of club members, registrations, and key metrics.",
+};
 
 export const dynamic = "force-dynamic"; // Ensure real-time data
 

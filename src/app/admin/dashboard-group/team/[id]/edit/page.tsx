@@ -1,7 +1,24 @@
 import { getTeamMember } from "@/actions/teamActions";
 import EditTeamForm from "@/components/admin/EditTeamForm"; // Verify path
+import { Metadata, ResolvingMetadata } from "next";
 
-export default async function EditTeamPage({ params }: { params: { id: string } }) {
+export async function generateMetadata(
+  { params }: { params: Promise<{ id: string }> },
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  const resolvedParams = await params;
+  const member = await getTeamMember(resolvedParams.id);
+
+  if (!member) {
+    return { title: "Member Not Found" };
+  }
+
+  return {
+    title: `Edit ${member.name} `,
+  };
+}
+
+export default async function EditTeamPage({ params }: { params: Promise<{ id: string }> }) {
 
   const resolvedParams = await params;
   const id = resolvedParams.id;

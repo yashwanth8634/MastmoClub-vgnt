@@ -97,7 +97,7 @@ export default function AdminSidebar() {
       <div className="p-4 border-t border-white/10">
         <button
           onClick={() => logoutAdmin()}
-          className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all font-medium text-sm"
+          className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all font-medium text-sm cursor-pointer"
         >
           <LogOut size={18} /> 
           Sign Out

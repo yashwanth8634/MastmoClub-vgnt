@@ -6,6 +6,7 @@ import { MessageCircle, X, Send, Bot, User, Loader2 } from "lucide-react";
 import { getChatResponse } from "@/actions/chatAction";
 import ReactMarkdown from "react-markdown";
 import { usePathname } from "next/navigation"; // ✅ Import this
+import { getAnonymousUserId } from "@/lib/userIdentifier";
 
 interface Message {
   role: "user" | "assistant";
@@ -20,6 +21,7 @@ export default function ChatBot() {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [userId] = useState(() => getAnonymousUserId());
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -40,7 +42,7 @@ export default function ChatBot() {
     setMessages((prev) => [...prev, { role: "user", content: userMsg }]);
     setIsLoading(true);
 
-    const response = await getChatResponse(messages, userMsg);
+    const response = await getChatResponse(messages, userMsg, userId);
 
     setMessages((prev) => [
       ...prev,
@@ -65,7 +67,7 @@ export default function ChatBot() {
       {/* 2. TOGGLE BUTTON */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-[90] p-4 bg-[#FFD700] hover:bg-white text-black rounded-full shadow-[0_0_20px_rgba(255,215,0,0.4)] transition-all duration-300 hover:scale-110"
+        className="fixed bottom-6 right-6 z-[90] p-4 bg-[#FFD700] hover:bg-white text-black rounded-full shadow-[0_0_20px_rgba(255,215,0,0.4)] transition-all duration-300 hover:scale-110 cursor-pointer"
       >
         {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
       </button>

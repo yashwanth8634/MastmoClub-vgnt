@@ -240,7 +240,7 @@ export default function EventForm({ initialData }: EventFormProps) {
                             <button 
                                 type="button" 
                                 onClick={() => handleRemoveImage(index)}
-                                className="absolute top-2 right-2 bg-black/70 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
+                                className="absolute top-2 right-2 bg-black/70 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 cursor-pointer"
                             >
                                 <Trash2 size={14} />
                             </button>
@@ -290,7 +290,7 @@ export default function EventForm({ initialData }: EventFormProps) {
           className={`w-full font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all ${
             isSubmitting 
               ? "bg-gray-800 text-gray-400 cursor-not-allowed" 
-              : "bg-[#00f0ff] text-black hover:bg-white hover:shadow-[0_0_20px_rgba(0,240,255,0.5)]"
+              : "bg-[#00f0ff] text-black hover:bg-white hover:shadow-[0_0_20px_rgba(0,240,255,0.5)] cursor-pointer"
           }`}
         >
           {isSubmitting ? (

@@ -3,6 +3,12 @@ import dbConnect from "@/lib/db";
 import TeamMember from "@/models/TeamMember";
 import { Plus, Trash2, User, Pencil } from "lucide-react"; // Combined imports
 import DeleteMemberButton from "@/components/admin/DeleteMemberButton";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Manage Team ",
+  description: "Add or edit core team members and faculty.",
+};
 
 export default async function TeamManager() {
   await dbConnect();

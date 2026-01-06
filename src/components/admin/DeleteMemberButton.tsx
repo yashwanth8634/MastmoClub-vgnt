@@ -19,7 +19,7 @@ export default function DeleteMemberButton({ id }: { id: string }) {
     <button 
       onClick={handleDelete}
       disabled={isPending}
-      className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+      className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all cursor-pointer"
     >
       {isPending ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
     </button>

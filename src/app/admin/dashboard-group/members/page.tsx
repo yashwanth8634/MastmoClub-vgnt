@@ -7,6 +7,13 @@ import { emailTemplates } from "@/lib/emailTemplates";
 import DeleteClubMemberButton from "@/components/admin/DeleteClubMemberButton";
 import MemberExportButton from "@/components/admin/MemberExportButton";
 import { verifyAdmin } from "@/lib/auth";
+import { Metadata } from "next";
+import MembershipActionButton from "@/components/admin/MembershipActionButton";
+
+export const metadata: Metadata = {
+  title: "Club Members ",
+  description: "Manage student and faculty memberships.",
+};
 
 // ✅ 1. ROBUST YEAR CALCULATOR (Handles Regular vs Lateral)
 const getYearFromRoll = (rollNo: string) => {
@@ -140,16 +147,18 @@ export default async function MembersPage() {
                        <p className="text-xs text-gray-400">{m?.branch}</p>
                      </div>
                      <div className="flex gap-2">
-                        <form action={handleMembershipAction}>
-                          <input type="hidden" name="id" value={req._id.toString()} />
-                          <input type="hidden" name="status" value="approved" />
-                          <button className="p-2 bg-green-500/10 text-green-400 rounded-lg hover:bg-green-500/20"><Check size={18} /></button>
-                        </form>
-                        <form action={handleMembershipAction}>
-                          <input type="hidden" name="id" value={req._id.toString()} />
-                          <input type="hidden" name="status" value="rejected" />
-                          <button className="p-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20"><X size={18} /></button>
-                        </form>
+                      <div className="flex gap-2">
+                        <MembershipActionButton 
+                          id={req._id.toString()} 
+                          status="approved" 
+                          action={handleMembershipAction} 
+                        />
+                        <MembershipActionButton 
+                          id={req._id.toString()} 
+                          status="rejected" 
+                          action={handleMembershipAction} 
+                        />
+                      </div>
                      </div>
                    </div>
                  );
@@ -212,16 +221,18 @@ export default async function MembersPage() {
                         <p className="text-sm text-gray-400">{m?.rollNo} • {m?.branch}</p>
                       </div>
                       <div className="flex gap-2">
-                         <form action={handleMembershipAction}>
-                           <input type="hidden" name="id" value={req._id.toString()} />
-                           <input type="hidden" name="status" value="approved" />
-                           <button className="p-2 bg-green-500/10 text-green-400 rounded-lg hover:bg-green-500/20"><Check size={20} /></button>
-                         </form>
-                         <form action={handleMembershipAction}>
-                           <input type="hidden" name="id" value={req._id.toString()} />
-                           <input type="hidden" name="status" value="rejected" />
-                           <button className="p-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20"><X size={20} /></button>
-                         </form>
+                       <div className="flex gap-2">
+                         <MembershipActionButton 
+                           id={req._id.toString()} 
+                           status="approved" 
+                           action={handleMembershipAction} 
+                         />
+                         <MembershipActionButton 
+                           id={req._id.toString()} 
+                           status="rejected" 
+                           action={handleMembershipAction} 
+                         />
+                       </div>
                       </div>
                     </div>
                   );

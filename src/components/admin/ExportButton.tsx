@@ -55,7 +55,7 @@ export default function ExportButton({ data, eventTitle }: { data: any[], eventT
   return (
     <button 
       onClick={handleExport}
-      className="text-sm bg-[#00f0ff]/10 text-[#00f0ff] px-4 py-2 rounded-lg hover:bg-[#00f0ff]/20 flex items-center gap-2 transition-all font-bold"
+      className="text-sm bg-[#00f0ff]/10 text-[#00f0ff] px-4 py-2 rounded-lg hover:bg-[#00f0ff]/20 flex items-center gap-2 transition-all font-bold cursor-pointer"
     >
       <Download size={16} /> Export Excel
     </button>

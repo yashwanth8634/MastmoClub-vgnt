@@ -1,9 +1,26 @@
 import EventForm from "@/components/admin/Events/EventForm";
 import { getEventById } from "@/actions/eventActions"; 
+import { Metadata, ResolvingMetadata } from "next";
 
 // 1. Change type to Promise
 interface PageProps {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata(
+  { params }: PageProps,
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  const resolvedParams = await params;
+  const event = await getEventById(resolvedParams.id);
+
+  if (!event) {
+    return { title: "Event Not Found" };
+  }
+
+  return {
+    title: `Edit ${event.title} `,
+  };
 }
 
 export default async function EditEventPage({ params }: PageProps) {

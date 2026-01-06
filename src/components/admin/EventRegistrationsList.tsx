@@ -38,7 +38,7 @@ export default function EventRegistrationsList({ events }: { events: any[] }) {
             {/* HEADER */}
             <button
               onClick={() => toggleEvent(event.id)}
-              className="w-full flex items-center justify-between p-5 text-left hover:bg-white/5 transition-colors"
+              className="w-full flex items-center justify-between p-5 text-left hover:bg-white/5 transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-4">
                 <div className={`p-2 rounded-full transition-transform duration-200 ${isEventOpen ? "bg-[#00f0ff] text-black rotate-90" : "bg-white/10 text-white"}`}>
@@ -121,7 +121,7 @@ export default function EventRegistrationsList({ events }: { events: any[] }) {
                                   {hasMembers ? (
                                     <button 
                                       onClick={() => toggleTeam(uniqueTeamId)}
-                                      className={`p-1 rounded hover:bg-white/20 transition-transform ${isTeamExpanded ? "rotate-180 text-[#00f0ff]" : "text-gray-400"}`}
+                                      className={`p-1 rounded hover:bg-white/20 transition-transform ${isTeamExpanded ? "rotate-180 text-[#00f0ff]" : "text-gray-400"} cursor-pointer`}
                                     >
                                       <ChevronDown size={16} />
                                     </button>

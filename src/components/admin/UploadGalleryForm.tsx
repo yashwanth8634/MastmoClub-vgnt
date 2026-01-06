@@ -92,7 +92,7 @@ export default function UploadGalleryForm() {
                     <Image src={imageUrl} alt="Uploaded" fill className="object-cover" />
                     <button 
                         onClick={() => setImageUrl("")}
-                        className="absolute top-2 right-2 bg-red-600 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-2 right-2 bg-red-600 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                     >
                         <X size={16} />
                     </button>
@@ -105,7 +105,7 @@ export default function UploadGalleryForm() {
             <button 
             onClick={handleFinalSubmit}
             disabled={isSubmitting} 
-            className="w-full py-4 rounded-xl font-bold bg-[#00f0ff] text-black hover:bg-white flex items-center justify-center gap-2"
+            className="w-full py-4 rounded-xl font-bold bg-[#00f0ff] text-black hover:bg-white flex items-center justify-center gap-2 cursor-pointer"
             >
             {isSubmitting ? <Loader2 className="animate-spin" /> : <><ImageIcon size={20} /> Save to Gallery</>}
             </button>

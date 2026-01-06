@@ -4,8 +4,27 @@ import dbConnect from "@/lib/db";
 import Event from "@/models/Event";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { Metadata, ResolvingMetadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ id: string }> },
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  const resolvedParams = await params;
+  await dbConnect();
+  const event = await Event.findById(resolvedParams.id).select("title").lean();
+
+  if (!event) {
+    return { title: "Event Not Found" };
+  }
+
+  return {
+    title: `Register for ${event.title} `,
+    description: `Secure your spot for ${event.title}.`,
+  };
+}
 
 export default async function EventRegistrationPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;

@@ -5,6 +5,13 @@ import { Plus, Pencil, Users } from "lucide-react";
 import DeleteEventButton from "@/components/admin/Events/DeleteEventButton"; 
 import { ToggleStatusButton, ToggleRegButton } from "@/components/admin/Events/EventActionButtons";
 
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Manage Events ",
+  description: "Create, edit, and manage club events.",
+};
+
 export const dynamic = "force-dynamic";
 
 export default async function AdminEventsPage() {

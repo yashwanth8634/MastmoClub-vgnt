@@ -18,7 +18,7 @@ export default function SubmitButton({
       disabled={pending}
       className={`
         w-full py-3 px-4 rounded-lg font-bold text-black transition-all duration-200
-        flex items-center justify-center gap-2
+        flex items-center justify-center gap-2 cursor-pointer
         ${pending 
           ? "bg-gray-600 cursor-not-allowed opacity-70" 
           : "bg-[#00f0ff] hover:bg-white hover:shadow-[0_0_15px_rgba(0,240,255,0.5)]"

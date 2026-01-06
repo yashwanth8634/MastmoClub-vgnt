@@ -3,6 +3,12 @@ import EventRegistration from "@/models/EventRegistration";
 import Member from "@/models/ClubRegistration"; 
 import Event from "@/models/Event";
 import EventRegistrationsList from "@/components/admin/EventRegistrationsList"; 
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Event Registrations ",
+  description: "View and manage event registrations.",
+};
 
 export const dynamic = "force-dynamic";
 
