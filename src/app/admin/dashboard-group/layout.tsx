@@ -1,13 +1,12 @@
-import { cookies } from "next/headers";
+import { verifyAdmin } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import AdminSidebar from "@/components/admin/AdminSidebar"; // Import Client Sidebar
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   // 1. Server-Side Security Check
-  const cookieStore = await cookies();
-  const session = cookieStore.get("admin_session");
-
-  if (!session || session.value !== "true") {
+  try {
+    await verifyAdmin();
+  } catch (error) {
     redirect("/admin/login");
   }
 

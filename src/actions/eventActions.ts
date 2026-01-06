@@ -6,6 +6,26 @@ import { revalidatePath } from "next/cache";
 import { verifyAdmin } from "@/lib/auth"; // Assuming you have this
 import { deleteFilesFromUT } from "@/lib/utapi-server"; 
 
+
+import { z } from "zod";
+
+// Zod Schema for Event
+const EventSchema = z.object({
+  title: z.string().min(3, "Title must be at least 3 characters."),
+  description: z.string().min(1, "Description is required."),
+  date: z.string().min(1, "Date is required."),
+  time: z.string().min(1, "Time is required."),
+  location: z.string().min(1, "Location is required."),
+  registrationOpen: z.boolean(),
+  isLive: z.boolean(),
+  maxRegistrations: z.number().min(0).default(0),
+  isTeamEvent: z.boolean(),
+  minTeamSize: z.number().min(1).default(1),
+  maxTeamSize: z.number().min(1).default(1),
+  rules: z.array(z.string()),
+  gallery: z.array(z.string()),
+});
+
 // 🛠️ HELPER: Extract Key from UploadThing URL
 const getFileKey = (url: string) => {
   if (!url || !url.includes("utfs.io")) return "";
@@ -22,34 +42,28 @@ export async function createEvent(formData: FormData) {
     await dbConnect();
 
     // 2. Extract & Format Data
-    // We use .getAll() to handle arrays like gallery[] and rules[]
-    const gallery = formData.getAll("gallery") as string[]; 
-    const rules = formData.getAll("rules") as string[];
-
-    const newEvent = await Event.create({
-      title: formData.get("title") as string,
-      description: formData.get("description") as string,
-      
-      // Strings as requested
-      date: formData.get("date") as string,
-      time: formData.get("time") as string,
-      location: formData.get("location") as string,
-
-      // Logic Defaults
+    const rawData = {
+      title: formData.get("title"),
+      description: formData.get("description"),
+      date: formData.get("date"),
+      time: formData.get("time"),
+      location: formData.get("location"),
       registrationOpen: formData.get("registrationOpen") === "true",
       isLive: formData.get("isLive") === "false" ? false : true,
       maxRegistrations: Number(formData.get("maxRegistrations")) || 0,
-      
-      // Team Logic
       isTeamEvent: formData.get("isTeamEvent") === "true",
       minTeamSize: Number(formData.get("minTeamSize")) || 1,
       maxTeamSize: Number(formData.get("maxTeamSize")) || 1,
+      rules: formData.getAll("rules"),
+      gallery: formData.getAll("gallery"),
+    };
 
-      rules: rules,
-      gallery: gallery,
-    });
+    // 3. Zod Validation
+    const validatedData = EventSchema.parse(rawData);
 
-    // 3. Revalidate Frontend
+    const newEvent = await Event.create(validatedData);
+
+    // 4. Revalidate Frontend
     revalidatePath("/admin/dashboard-group/events");
     revalidatePath("/events");
     
@@ -57,7 +71,9 @@ export async function createEvent(formData: FormData) {
 
   } catch (error: any) {
     console.error("Create Event Error:", error);
-    // Return clear message for developer/UI
+    if (error instanceof z.ZodError) {
+        return { success: false, message: error.issues[0]?.message || "Validation Error" };
+    }
     return { success: false, message: error.message || "Failed to create event" };
   }
 }
@@ -76,16 +92,10 @@ export async function updateEvent(id: string, formData: FormData) {
     }
 
     // --- SMART IMAGE CLEANUP LOGIC ---
-    // 1. Get the new list of images from the form
     const newGallery = formData.getAll("gallery") as string[];
-    
-    // 2. Get the old list from DB
     const oldGallery = existingEvent.gallery || [];
-
-    // 3. Find images that are in OLD but NOT in NEW (User deleted them)
     const imagesToDelete = oldGallery.filter((url: string) => !newGallery.includes(url));
 
-    // 4. Delete them from UploadThing to save space
     if (imagesToDelete.length > 0) {
       const keys = imagesToDelete.map(getFileKey).filter((k: string) => k !== "");
       if (keys.length > 0) {
@@ -94,26 +104,26 @@ export async function updateEvent(id: string, formData: FormData) {
     }
 
     // --- UPDATE DATABASE ---
-    const updateData = {
+    const rawUpdateData = {
       title: formData.get("title"),
       description: formData.get("description"),
       date: formData.get("date"),
       time: formData.get("time"),
       location: formData.get("location"),
-
       registrationOpen: formData.get("registrationOpen") === "true",
       isLive: formData.get("isLive") === "true",
       maxRegistrations: Number(formData.get("maxRegistrations")) || 0,
-      
       isTeamEvent: formData.get("isTeamEvent") === "true",
       minTeamSize: Number(formData.get("minTeamSize")) || 1,
       maxTeamSize: Number(formData.get("maxTeamSize")) || 1,
-
-      rules: formData.getAll("rules") as string[],
-      gallery: newGallery, // Save the new list
+      rules: formData.getAll("rules"),
+      gallery: newGallery,
     };
 
-    await Event.findByIdAndUpdate(id, updateData, { new: true });
+    // Zod Validation
+    const validatedData = EventSchema.parse(rawUpdateData);
+
+    await Event.findByIdAndUpdate(id, validatedData, { new: true });
 
     revalidatePath("/admin/dashboard-group/events");
     revalidatePath(`/events/${id}`);
@@ -123,6 +133,9 @@ export async function updateEvent(id: string, formData: FormData) {
 
   } catch (error: any) {
     console.error("Update Event Error:", error);
+    if (error instanceof z.ZodError) {
+        return { success: false, message: error.issues[0]?.message || "Validation Error" };
+    }
     return { success: false, message: error.message || "Failed to update event" };
   }
 }

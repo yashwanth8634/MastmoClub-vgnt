@@ -1,30 +1,39 @@
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { UploadThingError } from "uploadthing/server";
+import { verifyAdmin } from "@/lib/auth"; // Import our secure function
 
 const f = createUploadthing();
-const auth = (req: Request) => ({ id: "admin" });
+
+// This function handles the authentication and returns the user ID
+const handleAuth = async () => {
+  try {
+    const admin = await verifyAdmin();
+    // The 'id' from our JWT payload is the user's database ID
+    return { userId: admin.id };
+  } catch (error) {
+    // If verifyAdmin throws, we throw an UploadThingError
+    throw new UploadThingError("Unauthorized");
+  }
+};
 
 export const ourFileRouter = {
-  // Existing Gallery Route
+  // Gallery Route - SECURED
   galleryImage: f({ image: { maxFileSize: "4MB", maxFileCount: 10 } })
-    .middleware(async ({ req }) => {
-      const user = await auth(req);
-      if (!user) throw new UploadThingError("Unauthorized");
-      return { userId: user.id };
-    })
+    .middleware(handleAuth) // Use the secure auth handler
     .onUploadComplete(async ({ metadata, file }) => {
+      // metadata.userId is now the authenticated admin's ID
+      console.log(`Gallery upload complete for userId: ${metadata.userId}`);
+      console.log("file url", file.url);
       return { uploadedBy: metadata.userId };
     }),
 
-  // ✅ NEW ROUTE: Team Member Profile Pic (Strictly 1 Image)
+  // Team Member Profile Pic Route - SECURED
   teamImage: f({ image: { maxFileSize: "2MB", maxFileCount: 1 } })
-    .middleware(async ({ req }) => {
-      const user = await auth(req);
-      if (!user) throw new UploadThingError("Unauthorized");
-      return { userId: user.id };
-    })
+    .middleware(handleAuth) // Use the same secure auth handler
     .onUploadComplete(async ({ metadata, file }) => {
-      console.log("Team photo uploaded:", file.url);
+      // metadata.userId is now the authenticated admin's ID
+      console.log(`Team photo uploaded for userId: ${metadata.userId}`);
+      console.log("file url", file.url);
       return { uploadedBy: metadata.userId };
     }),
 } satisfies FileRouter;

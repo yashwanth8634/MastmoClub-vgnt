@@ -35,28 +35,53 @@ const EventSchema = new Schema<IEvent>(
     title: { 
       type: String, 
       required: [true, "Event title is required"], 
-      trim: true 
+      trim: true,
+      minLength: [3, "Title must be at least 3 characters long"],
+      maxLength: [100, "Title cannot be more than 100 characters long"]
     },
     description: { 
       type: String, 
-      required: [true, "Event description is required"] 
+      required: [true, "Event description is required"],
+      trim: true,
+      maxLength: [2000, "Description cannot be more than 2000 characters long"]
     },
     
     // Display Fields
-    date: { type: String, required: [true, "Date is required"] },
-    time: { type: String, required: [true, "Time is required"] },
-    location: { type: String, required: [true, "Location is required"] },
+    date: { type: String, required: [true, "Date is required"], trim: true },
+    time: { type: String, required: [true, "Time is required"], trim: true },
+    location: { 
+      type: String, 
+      required: [true, "Location is required"],
+      trim: true,
+      maxLength: [200, "Location cannot be more than 200 characters long"]
+    },
 
     // Logic
     registrationOpen: { type: Boolean, default: true },
-    maxRegistrations: { type: Number, default: 0 },
-    currentRegistrations: { type: Number, default: 0 },
+    maxRegistrations: { 
+      type: Number, 
+      default: 0,
+      min: [0, "Maximum registrations cannot be negative"]
+    },
+    currentRegistrations: { 
+      type: Number, 
+      default: 0,
+      min: [0, "Current registrations cannot be negative"]
+    },
     isLive: { type: Boolean, default: true },
 
     // Team
     isTeamEvent: { type: Boolean, default: false },
-    minTeamSize: { type: Number, default: 1 },
-    maxTeamSize: { type: Number, default: 1 },
+    minTeamSize: { 
+      type: Number, 
+      default: 1,
+      min: [1, "Minimum team size must be at least 1"]
+    },
+    maxTeamSize: { 
+      type: Number, 
+      default: 1,
+      min: [1, "Maximum team size must be at least 1"]
+    },
 
     // Media
     rules: { type: [String], default: [] },

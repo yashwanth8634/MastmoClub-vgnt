@@ -4,39 +4,60 @@ import dbConnect from "@/lib/db";
 import EventRegistration from "@/models/EventRegistration";
 import Event from "@/models/Event";
 import Member from "@/models/ClubRegistration"; 
-import { RegistrationSchema, validateRollNo, getBranchCodeFromRoll } from "@/lib/validator"; 
+import { validateRollNo, getBranchCodeFromRoll } from "@/lib/validator"; 
 import { revalidatePath } from "next/cache";
 import { sendEmail } from "@/lib/email";
 import { emailTemplates } from "@/lib/emailTemplates"
+import { rateLimit } from "@/lib/rateLimit";
+
+import { z } from "zod";
+
+// Zod Schema for Registration
+const RegistrationSchema = z.object({
+  eventId: z.string().min(1, "Event ID is required"),
+  fullName: z.string().min(1, "Full Name is required"),
+  rollNo: z.string().min(1, "Roll No is required"),
+  year: z.string().min(1, "Year is required"),
+  branch: z.string().min(1, "Branch is required"),
+  section: z.string().min(1, "Section is required"),
+  teamName: z.string().optional(),
+  teamMembers: z.array(z.object({
+    name: z.string(),
+    rollNo: z.string(),
+    section: z.string(),
+    branch: z.string()
+  })).default([]),
+});
 
 export async function registerForEvent(prevState: any, formData: FormData) {
   try {
     await dbConnect();
 
-    const eventId = formData.get("eventId") as string;
-    
-    // Construct raw data 
+    // 0. Rate Limit Check (10 requests per minute)
+    const isAllowed = await rateLimit(10, 60000);
+    if (!isAllowed) {
+      return { success: false, message: "Too many requests. Please try again later." };
+    }
+
+    // 1. Extract & Parse Data
     const rawData = {
-      fullName: formData.get("fullName") as string,
+      eventId: formData.get("eventId"),
+      fullName: formData.get("fullName"),
       rollNo: formData.get("rollNo"),
       year: formData.get("year"),
       branch: formData.get("branch"),
       section: formData.get("section"),
-      teamName: formData.get("teamName") as string || undefined, 
+      teamName: formData.get("teamName") || undefined,
       teamMembers: formData.get("teamMembers") 
         ? JSON.parse(formData.get("teamMembers") as string) 
         : [],
     };
 
-    const validatedFields = RegistrationSchema.safeParse(rawData);
-    
-    if (!validatedFields.success) {
-      return { success: false, message: "Invalid Input: " + validatedFields.error.issues[0].message };
-    }
-    
-    const { rollNo, branch, section, teamMembers } = validatedFields.data;
+    // Zod Validation
+    const validatedData = RegistrationSchema.parse(rawData);
+    const { eventId, rollNo, teamName, teamMembers, fullName, year, branch, section } = validatedData;
 
-    // 1. Validate Main User
+    // 2. Validate Main User Logic
     const mainUserError = validateRollNo(rollNo, branch);
     if (mainUserError) return { success: false, message: mainUserError };
 
@@ -46,12 +67,10 @@ export async function registerForEvent(prevState: any, formData: FormData) {
       return { success: false, message: "Access Denied: You are not a registered Club Member." };
     }
 
-    // Specific Rejection Check for Main User
     if (mainMember.status === "rejected") {
       return { success: false, message: "Access Denied: Your club membership application has been rejected." };
     }
 
-    // General Approval Check (covers 'pending')
     if (mainMember.status !== "approved") {
       return { success: false, message: `Access Denied: Your club membership status is '${mainMember.status}'. Please wait for approval.` };
     }
@@ -60,30 +79,24 @@ export async function registerForEvent(prevState: any, formData: FormData) {
     const dbMemberData = mainMember.member || {}; 
     const leaderSection = dbMemberData.section || section; 
 
-    // 2. 🛡️ TEAM VALIDATION 🛡️
+    // 3. 🛡️ TEAM VALIDATION 🛡️
     if (teamMembers && teamMembers.length > 0) {
-        
         const teamLeadBranchCode = getBranchCodeFromRoll(rollNo); 
-        const processedRolls = new Set(); // ✅ ADDED: To track duplicates in this form
+        const processedRolls = new Set();
 
         for (const member of teamMembers) {
-            
-            // ✅ ADDED: Self-Add Check (Prevent Lead from adding themselves)
             if (member.rollNo === rollNo) {
                 return { success: false, message: "Invalid Team: You cannot add yourself as a team member." };
             }
 
-            // ✅ ADDED: Duplicate Entry Check (Prevent adding same friend twice)
             if (processedRolls.has(member.rollNo)) {
                 return { success: false, message: `Duplicate Entry: Member '${member.name}' is added twice.` };
             }
             processedRolls.add(member.rollNo);
 
-            // A. Check Format
             const formatError = validateRollNo(member.rollNo);
             if (formatError) return { success: false, message: `Member '${member.name}' has invalid Roll No.` };
 
-            // B. Check Branch Consistency
             const memberBranchCode = getBranchCodeFromRoll(member.rollNo);
             
             if (memberBranchCode !== teamLeadBranchCode) {
@@ -94,7 +107,6 @@ export async function registerForEvent(prevState: any, formData: FormData) {
             }
         }
 
-        // C. Check Membership Consistency
         const teamRollNos = teamMembers.map((m) => m.rollNo);
         const foundMembers = await Member.find({ "member.rollNo": { $in: teamRollNos } });
         
@@ -102,10 +114,9 @@ export async function registerForEvent(prevState: any, formData: FormData) {
         const missingMembers = teamMembers.filter((m) => !foundRollNos.includes(m.rollNo));
 
         if (missingMembers.length > 0) {
-            return { success: false, message: `Access Denied: The following members are not in the club: ${missingMembers.map(m => m.name).join(", ")}` };
+            return { success: false, message: `Access Denied: The following members are not in the club: ${missingMembers.map((m) => m.name).join(", ")}` };
         }
 
-        // Specific Rejection Check for Team Members
         const rejectedMembers = foundMembers.filter((m: any) => m.status === "rejected");
         if (rejectedMembers.length > 0) {
              return { 
@@ -114,7 +125,6 @@ export async function registerForEvent(prevState: any, formData: FormData) {
              };
         }
 
-        // General Approval Check for Team Members
         const notApprovedMembers = foundMembers.filter((m: any) => m.status !== "approved");
         if (notApprovedMembers.length > 0) {
             return { 
@@ -123,9 +133,7 @@ export async function registerForEvent(prevState: any, formData: FormData) {
             };
         }
 
-        // D. Check Section Consistency
         const differentSectionMembers = foundMembers.filter((m: any) => m.member.section !== leaderSection);
-        
         if (differentSectionMembers.length > 0) {
             return { 
                 success: false, 
@@ -134,37 +142,65 @@ export async function registerForEvent(prevState: any, formData: FormData) {
         }
     }
 
-    // 3. Event Checks
+    // 4. Event Checks
     const event = await Event.findById(eventId);
     if (!event) return { success: false, message: "Event not found" };
     if (!event.registrationOpen) return { success: false, message: "Registration is closed." };
     if (event.maxRegistrations > 0 && event.currentRegistrations >= event.maxRegistrations) return { success: false, message: "Event is full." };
 
-    // 4. Duplicate Check
-    const existingReg = await EventRegistration.findOne({ eventId, rollNo });
-    if (existingReg) return { success: false, message: "You have already registered for this event." };
+    // 5. 🛡️ RACE CONDITION & DUPLICATE CHECK 🛡️
+    // Check if ANY of the participants (Lead + Members) are already registered for this event.
+    const allParticipants = [rollNo, ...teamMembers.map(m => m.rollNo)];
+    
+    const existingParticipation = await EventRegistration.findOne({
+        eventId,
+        $or: [
+            { rollNo: { $in: allParticipants } },
+            { "teamMembers.rollNo": { $in: allParticipants } }
+        ]
+    }).select("rollNo teamMembers.rollNo"); // Optimization: Select only needed fields
 
-    if (rawData.teamName) {
+    if (existingParticipation) {
+        // Identify who caused the conflict
+        const conflictRoll = allParticipants.find(r => 
+            r === existingParticipation.rollNo || 
+            existingParticipation.teamMembers?.some((m: any) => m.rollNo === r)
+        );
+        return { success: false, message: `Registration Failed: User '${conflictRoll}' is already registered for this event.` };
+    }
+
+    if (teamName) {
         const existingTeam = await EventRegistration.findOne({ 
             eventId, 
-            teamName: { $regex: new RegExp(`^${rawData.teamName}$`, "i") } 
+            teamName: { $regex: new RegExp(`^${teamName}$`, "i") } 
         });
 
         if (existingTeam) {
-            return { success: false, message: `Team name '${rawData.teamName}' is already taken.` };
+            return { success: false, message: `Team name '${teamName}' is already taken.` };
         }
     }
 
-    // 5. Save
-    await EventRegistration.create({ eventId, ...validatedFields.data });
+    // 6. Save
+    await EventRegistration.create({ 
+        eventId, 
+        fullName, 
+        rollNo, 
+        year, 
+        branch, 
+        section, 
+        teamName, 
+        teamMembers 
+    });
+    
+    // Increment count (Note: this is still slightly racy for maxRegistrations, but acceptable for this use case)
     await Event.findByIdAndUpdate(eventId, { $inc: { currentRegistrations: 1 } });
 
     if (userEmail) {
        try {
            const { subject, html } = emailTemplates.eventRegistrationConfirmed(
-               rawData.fullName, 
+               fullName, 
                event.title, 
-               rawData.teamName || undefined
+               teamName || undefined
            );
 
            await sendEmail(userEmail, subject, html);
@@ -179,6 +215,9 @@ export async function registerForEvent(prevState: any, formData: FormData) {
 
   } catch (error: any) {
     console.error("Registration Error:", error);
+    if (error instanceof z.ZodError) {
+        return { success: false, message: error.issues[0]?.message || "Validation Error" };
+    }
     return { success: false, message: error.message || "Failed to register" };
   }
 }

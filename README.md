@@ -1,78 +1,67 @@
-<div align="center">
+# Mastmo Club WebApp
 
-## 🏫 MASTMO — Club Membership & Event Management Platform
+## Overview
+The Mastmo Club WebApp is a Next.js application designed to manage club events, registrations, and team memberships. It features a secure admin dashboard, event management, and automated email notifications.
 
-A production-ready, full-stack web platform built to manage **club memberships, event registrations, and administrative workflows** at scale.
+## Tech Stack
+- **Framework:** Next.js 16 (App Router)
+- **Database:** MongoDB (Mongoose)
+- **Authentication:** JWT (Jose) + HttpOnly Cookies
+- **Styling:** Tailwind CSS
+- **Validation:** Zod
+- **File Uploads:** UploadThing
+- **Email:** Resend
 
-🔗 **Live System:** https://www.mastmovgnt.in/
+## Key Features
+- **Admin Dashboard:** Secure area for managing events and members.
+- **Event Registration:** Robust registration system with team support and duplicate checks.
+- **Rate Limiting:** MongoDB-based distributed rate limiting for serverless environments.
+- **Security:**
+    - Global Middleware for route protection.
+    - Constant-time secret comparison for internal APIs.
+    - Secure, HttpOnly cookies.
+- **Observability:** Structured JSON logging.
 
-</div>
+## Getting Started
 
----
+### Prerequisites
+- Node.js 18+
+- MongoDB Instance
 
-## ✨ Overview
+### Environment Variables
+Create a `.env.local` file with the following:
+```env
+MONGODB_URI=your_mongodb_uri
+JWT_SECRET=your_jwt_secret
+INTERNAL_N8N_SECRET=your_internal_secret
+UPLOADTHING_SECRET=your_uploadthing_secret
+UPLOADTHING_APP_ID=your_uploadthing_app_id
+RESEND_API_KEY=your_resend_api_key
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
 
-MASTMO is the official digital platform for the Maths & Stats Club, designed to replace manual coordination with a **secure, automated, and scalable system**.  
-The application supports real users, live events, and administrative operations with reliability and monitoring in place.
+### Installation
+```bash
+npm install
+```
 
----
+### Development
+```bash
+npm run dev
+```
 
-## 🚀 Core Capabilities
+### Build
+```bash
+npm run build
+```
 
-- **Membership Management**  
-  End-to-end workflow for member signup, admin approval, and lifecycle management.
+## Architecture Highlights
+- **Server Actions:** Used for all data mutations (`src/actions`).
+- **Middleware:** `src/middleware.ts` handles authentication globally.
+- **Rate Limiting:** `src/lib/rateLimit.ts` uses MongoDB to track request counts.
+- **Logging:** `src/lib/logger.ts` provides structured logs.
 
-- **Event Registration System**  
-  Event creation, controlled registrations, capacity handling, and participant tracking.
-
-- **Admin Dashboard**  
-  Centralized interface to manage members, events, backups, and system health.
-
-- **Automated Email Notifications**  
-  Status updates for registrations, approvals, and event communications.
-
-- **Production Monitoring & Reliability**  
-  Integrated error tracking, database backups, and recovery workflows.
-
----
-
-## 🛠 Tech Stack
-
-- **Frontend:** React, TypeScript, Tailwind CSS  
-- **Backend:** Next.js (Server Components, API Routes)  
-- **Database:** MongoDB, Mongoose  
-- **Email:** Nodemailer (SMTP)  
-- **Monitoring:** Sentry  
-- **CI/CD & Ops:** GitHub Actions, automated backups  
-- **Deployment:** Vercel (Docker-ready)
-
----
-
-## 🧠 Engineering Highlights
-
-- Designed a **role-based admin system** with protected routes and secure cookies.
-- Built **event and member workflows** to handle real-time registrations and approvals.
-- Implemented **automated database backups and restore pipelines** using GitHub Actions.
-- Integrated **production error tracking** to monitor failures and performance issues.
-- Structured the codebase for **maintainability and scaling**, separating core domains cleanly.
-
----
-
-## 📈 Production Readiness
-
-- Live deployment used in real club operations  
-- Automated daily backups  
-- Error and performance monitoring enabled  
-- Secure environment variable handling  
-- Scalable architecture for growing member base
-
----
-
-## 📌 What This Project Demonstrates
-
-- Full ownership of a **production-grade system**
-- Real-world backend, DevOps, and monitoring experience
-- Ability to design software beyond CRUD demos
-- Understanding of reliability, security, and maintainability
-
----
+## Security
+- **Authentication:** Admin routes are protected by `middleware.ts` which verifies JWT tokens.
+- **Input Validation:** All server actions use `Zod` schemas to validate input.
+- **Race Conditions:** Event registration uses a "Check-Then-Act" strategy with comprehensive queries to prevent duplicates.

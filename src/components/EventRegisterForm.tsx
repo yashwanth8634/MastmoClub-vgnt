@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react"; 
+import { useState, useEffect } from "react"; 
 import { registerForEvent } from "@/actions/EventRegistrationAction"; 
 import { Loader2, Plus, Trash2, AlertCircle, CheckCircle, User, Users } from "lucide-react";
+import { BRANCHES, SECTIONS, YEARS } from "@/lib/constants";
 
 interface EventType {
   _id: string;
@@ -14,21 +15,30 @@ interface EventType {
 
 export default function EventRegisterForm({ event }: { event: EventType }) {
   
+  const minSize = event?.minTeamSize || 1;
+  const initialExtraMembers = event?.isTeamEvent ? Math.max(0, minSize - 1) : 0;
+  
+  const [extraMemberCount, setExtraMemberCount] = useState(initialExtraMembers);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [status, setStatus] = useState<{ success: boolean; message: string } | null>(null);
+
+  useEffect(() => {
+    if (event?.isTeamEvent) {
+      const minSize = event.minTeamSize || 1;
+      const targetCount = Math.max(0, minSize - 1);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setExtraMemberCount((prev) => (prev !== targetCount ? targetCount : prev));
+    }
+  }, [event?.isTeamEvent, event?.minTeamSize, event?._id]);
+
   if (!event || !event._id) {
     return (
       <div className="w-full max-w-2xl mx-auto h-64 flex flex-col items-center justify-center text-gray-500 bg-white/5 rounded-3xl border border-white/10 backdrop-blur-md">
-        <Loader2 className="animate-spin mb-2 text-[#00f0ff]" /> 
+        <Loader2 className="animate-spin mb-2 text-math-cyan" /> 
         <span className="text-sm font-mono">Loading event data...</span>
       </div>
     );
   }
-
-  const minSize = event.minTeamSize || 1;
-  const initialExtraMembers = event.isTeamEvent ? Math.max(0, minSize - 1) : 0;
-  
-  const [extraMemberCount, setExtraMemberCount] = useState(initialExtraMembers);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [status, setStatus] = useState<any>(null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -106,7 +116,7 @@ export default function EventRegisterForm({ event }: { event: EventType }) {
             <input 
               name="teamName" 
               required 
-              placeholder="e.g. The Code Warriors" 
+              placeholder="e.g. SSJ-ARMY" 
               className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white focus:border-[#00f0ff] focus:bg-black outline-none transition-all placeholder:text-gray-700 font-medium" 
             />
           </div>
@@ -127,7 +137,7 @@ export default function EventRegisterForm({ event }: { event: EventType }) {
                     </div>
                     <div className="space-y-1">
                         <label className="text-[10px] uppercase text-gray-500 font-bold ml-1">Roll Number</label>
-                        <input name="rollNo" required placeholder="22WJ1A0..." className="w-full bg-black border border-white/10 rounded-lg p-3 text-sm text-white focus:border-[#00f0ff] outline-none transition-colors" />
+                        <input name="rollNo" required placeholder="24891A05.." className="w-full bg-black border border-white/10 rounded-lg p-3 text-sm text-white focus:border-[#00f0ff] outline-none transition-colors" />
                     </div>
                 </div>
 
@@ -136,19 +146,19 @@ export default function EventRegisterForm({ event }: { event: EventType }) {
                     <div className="space-y-1">
                         <label className="text-[10px] uppercase text-gray-500 font-bold ml-1">Year</label>
                         <select name="year" className="w-full bg-black border border-white/10 rounded-lg p-3 text-sm text-white focus:border-[#00f0ff] outline-none appearance-none cursor-pointer">
-                            {["1", "2", "3", "4"].map(y => <option key={y} value={y}>{y}</option>)}
+                            {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
                         </select>
                     </div>
                     <div className="space-y-1">
                         <label className="text-[10px] uppercase text-gray-500 font-bold ml-1">Branch</label>
                         <select name="branch" className="w-full bg-black border border-white/10 rounded-lg p-3 text-sm text-white focus:border-[#00f0ff] outline-none appearance-none cursor-pointer">
-                            {["CSE", "CSE(AI&ML)", "CSE(DS)", "AI&ML", "CSE(IT)", "ECE", "EEE", "CIVIL", "MECH", "AI&DS"].map(b => <option key={b} value={b}>{b}</option>)}
+                            {BRANCHES.map(b => <option key={b} value={b}>{b}</option>)}
                         </select>
                     </div>
                     <div className="space-y-1">
                         <label className="text-[10px] uppercase text-gray-500 font-bold ml-1">Section</label>
                         <select name="section" className="w-full bg-black border border-white/10 rounded-lg p-3 text-sm text-white focus:border-[#00f0ff] outline-none appearance-none cursor-pointer">
-                            {["A", "B", "C", "D"].map(s => <option key={s} value={s}>{s}</option>)}
+                            {SECTIONS.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
                     </div>
                 </div>
@@ -171,6 +181,18 @@ export default function EventRegisterForm({ event }: { event: EventType }) {
                             <div className="space-y-1">
                                 <label className="text-[10px] uppercase text-gray-500 font-bold ml-1">Roll Number</label>
                                 <input name={`member_roll_${index}`} required placeholder="Member Roll No" className="w-full bg-black border border-white/10 rounded-lg p-3 text-sm text-white focus:border-[#00f0ff] outline-none" />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[10px] uppercase text-gray-500 font-bold ml-1">Branch</label>
+                                <select name={`member_branch_${index}`} required className="w-full bg-black border border-white/10 rounded-lg p-3 text-sm text-white focus:border-[#00f0ff] outline-none appearance-none cursor-pointer">
+                                    {BRANCHES.map(b => <option key={b} value={b}>{b}</option>)}
+                                </select>
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[10px] uppercase text-gray-500 font-bold ml-1">Section</label>
+                                <select name={`member_section_${index}`} required className="w-full bg-black border border-white/10 rounded-lg p-3 text-sm text-white focus:border-[#00f0ff] outline-none appearance-none cursor-pointer">
+                                    {SECTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                                </select>
                             </div>
                         </div>
                     </div>

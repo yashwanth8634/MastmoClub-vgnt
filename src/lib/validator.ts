@@ -1,17 +1,4 @@
-import { z } from "zod";
-
-// --- VGNT BRANCH CODES ---
-export const BRANCH_CODES: Record<string, string> = {
-  "CSE": "05",
-  "CSE(AI&ML)": "66",
-  "CSE(DS)": "67",
-  "AI&ML": "54",
-  "CSE(IT)": "12",
-  "ECE": "04",
-  "EEE": "02",
-  "CIVIL": "01",
-  "MECH": "03"
-};
+import { BRANCH_CODES } from "./constants";
 
 // --- HELPER: Extract "05" from "24891A0593" ---
 export function getBranchCodeFromRoll(rollNo: string): string {
@@ -40,22 +27,3 @@ export function validateRollNo(rollNo: string, selectedBranch?: string): string 
 
   return null;
 }
-
-// --- ZOD SCHEMA ---
-export const RegistrationSchema = z.object({
-  fullName: z.string().min(2, "Name is required"),
-  rollNo: z.string().toUpperCase().min(10, "Invalid Roll No"),
-  branch: z.string().min(1, "Branch is required"),
-  section: z.string().min(1, "Section is required"), // 👈 Added Validation
-  year: z.string().min(1, "Year is required"),
- 
-  
-  teamName: z.string().optional().or(z.literal("")).or(z.null()), 
-  
-  teamMembers: z.array(
-    z.object({
-      name: z.string(),
-      rollNo: z.string(),
-    })
-  ).optional().default([]), // Default to empty array
-});

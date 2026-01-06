@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import mongoose from "mongoose";
 
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -8,17 +9,22 @@ if (!MONGODB_URI) {
   );
 }
 
-// Global interface to prevent TypeScript errors on the global object
-interface MongooseCache {
-  conn: mongoose.Connection | null;
-  promise: Promise<mongoose.Connection> | null;
+/**
+ * Global is used here to maintain a cached connection across hot reloads
+ * in development. This prevents connections growing exponentially
+ * during API Route usage.
+ */
+declare global {
+  var mongoose: {
+    conn: mongoose.Mongoose | null;
+    promise: Promise<mongoose.Mongoose> | null;
+  };
 }
 
-// Attach the cache to the global object so it survives hot reloads
-let cached: MongooseCache = (global as any).mongoose;
+let cached = global.mongoose;
 
 if (!cached) {
-  cached = (global as any).mongoose = { conn: null, promise: null };
+  cached = global.mongoose = { conn: null, promise: null };
 }
 
 async function dbConnect() {
@@ -29,11 +35,11 @@ async function dbConnect() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
-      maxPoolSize: 10, // Scalability: Limit connections per lambda
     };
 
     cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {
-      return mongoose.connection;
+      logger.info("✅ MongoDB Connected Successfully");
+      return mongoose;
     });
   }
 
@@ -41,6 +47,7 @@ async function dbConnect() {
     cached.conn = await cached.promise;
   } catch (e) {
     cached.promise = null;
+    logger.error("❌ MongoDB Connection Error", e);
     throw e;
   }
 

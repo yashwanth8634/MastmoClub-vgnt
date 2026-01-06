@@ -6,6 +6,7 @@ import { sendEmail } from "@/lib/email";
 import { emailTemplates } from "@/lib/emailTemplates";
 import DeleteClubMemberButton from "@/components/admin/DeleteClubMemberButton";
 import MemberExportButton from "@/components/admin/MemberExportButton";
+import { verifyAdmin } from "@/lib/auth";
 
 // ✅ 1. ROBUST YEAR CALCULATOR (Handles Regular vs Lateral)
 const getYearFromRoll = (rollNo: string) => {
@@ -53,6 +54,7 @@ const getYearFromRoll = (rollNo: string) => {
 // Server Action to Approve/Reject
 async function handleMembershipAction(formData: FormData) {
   "use server";
+  await verifyAdmin();
   
   const id = formData.get("id") as string;
   const status = formData.get("status") as string;

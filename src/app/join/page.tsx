@@ -4,12 +4,7 @@ import { useState } from "react";
 import Navbar from "@/components/ui/Navbar";
 import { submitClubRegistration } from "@/actions/ClubRegistrationAction";
 import { Loader2, CheckCircle, AlertCircle, School, User, Building2 } from "lucide-react";
-
-// Dropdown Constants
-const BRANCHES = ["CSE", "CSE(AI&ML)", "CSE(DS)", "AI&ML", "CSE(IT)", "ECE", "EEE", "CIVIL", "MECH", "AI&DS"];
-const DEPARTMENTS = ["BS&H","CSE", "CSE(AI&ML)", "CSE(DS)", "AI&ML", "CSE(IT)", "ECE", "EEE", "CIVIL", "MECH", "AI&DS"];
-const SECTIONS = ["A", "B", "C", "D"];
-const YEARS = ["1", "2", "3", "4"];
+import { BRANCHES, DEPARTMENTS, SECTIONS, YEARS } from "@/lib/constants";
 
 export default function JoinClubPage() {
   const [activeTab, setActiveTab] = useState<"student" | "faculty">("student");

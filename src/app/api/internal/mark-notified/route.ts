@@ -5,9 +5,21 @@ import ClubRegistration from "@/models/ClubRegistration";
 export async function POST(request: Request) {
   try {
     // 🔐 1. Verify internal secret
+    // 🔐 1. Verify internal secret with timing-safe comparison
     const secret = request.headers.get("x-internal-secret");
+    const expectedSecret = process.env.INTERNAL_N8N_SECRET;
 
-    if (secret !== process.env.INTERNAL_N8N_SECRET) {
+    if (!secret || !expectedSecret) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Use crypto for constant-time comparison
+    // Note: We use the Node.js 'crypto' module which is available in Next.js Serverless Functions
+    const { timingSafeEqual } = await import("crypto");
+    const secretBuffer = Buffer.from(secret);
+    const expectedBuffer = Buffer.from(expectedSecret);
+    
+    if (secretBuffer.length !== expectedBuffer.length || !timingSafeEqual(secretBuffer, expectedBuffer)) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }

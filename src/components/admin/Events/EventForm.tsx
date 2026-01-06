@@ -133,7 +133,7 @@ export default function EventForm({ initialData }: EventFormProps) {
             <h3 className="text-sm font-bold text-gray-400 uppercase mb-2 border-b border-white/10 pb-2">1. Basic Info</h3>
             <div className="space-y-2">
                 <label className="text-xs font-bold uppercase text-gray-500">Event Title</label>
-                <input name="title" defaultValue={initialData?.title} placeholder="e.g. Code-a-thon 2025" required className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-[#00f0ff] outline-none transition-colors" />
+                <input name="title" defaultValue={initialData?.title} placeholder="e.g. CELISTA 2K25" required className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-[#00f0ff] outline-none transition-colors" />
             </div>
             <div className="space-y-2">
                 <label className="text-xs font-bold uppercase text-gray-500">Description</label>
@@ -149,7 +149,7 @@ export default function EventForm({ initialData }: EventFormProps) {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
                     <label className="text-xs font-bold uppercase text-gray-500">Event Date (String)</label>
-                    <input type="text" name="date" defaultValue={initialData?.date} placeholder="e.g. 12th August 2025" required className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-[#00f0ff] outline-none" />
+                    <input type="text" name="date" defaultValue={initialData?.date} placeholder="e.g. 12th March 2025" required className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-[#00f0ff] outline-none" />
                 </div>
                 <div className="space-y-2">
                     <label className="text-xs font-bold uppercase text-gray-500">Display Time</label>

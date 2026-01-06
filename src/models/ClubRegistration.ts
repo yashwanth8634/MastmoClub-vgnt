@@ -21,19 +21,55 @@ export interface IClubRegistration extends Document {
   updatedAt: Date;
 }
 
+// Regex for basic email validation
+const emailRegex = /^\S+@\S+\.\S+$/;
+// Regex for basic phone number validation (allows for digits, spaces, hyphens, and parentheses)
+const phoneRegex = /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/;
+
+
 // ✅ 2. Define the Sub-Schema (Exported in case you need to reuse it)
 export const MemberSchema = new Schema<IMember>({
-  fullName: { type: String, required: true },
-  email: { type: String, required: true },
-  phone: { type: String, required: true },
+  fullName: { 
+    type: String, 
+    required: true,
+    trim: true 
+  },
+  email: { 
+    type: String, 
+    required: true,
+    trim: true,
+    lowercase: true,
+    match: [emailRegex, "Please enter a valid email address"]
+  },
+  phone: { 
+    type: String, 
+    required: true,
+    trim: true,
+    match: [phoneRegex, "Please enter a valid phone number"]
+  },
   
   // Student Specific
-  rollNo: { type: String }, 
-  section: { type: String },
-  year: { type: String }, 
+  rollNo: { 
+    type: String,
+    trim: true,
+    uppercase: true
+  }, 
+  section: { 
+    type: String,
+    trim: true,
+    uppercase: true
+  }, 
+  year: { 
+    type: String,
+    trim: true 
+  }, 
   
   // Shared
-  branch: { type: String, required: true }, 
+  branch: { 
+    type: String, 
+    required: true,
+    trim: true
+  }, 
 }, { _id: false }); // _id: false prevents creating a separate ID for the nested member object
 
 // ✅ 3. Define the Main Schema
