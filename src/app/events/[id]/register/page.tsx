@@ -1,5 +1,5 @@
 import Navbar from "@/components/ui/Navbar";
-import EventRegisterForm from "@/components/EventRegisterForm"; // 👈 Ensure this path is correct
+import EventRegisterForm from "@/components/features/events/EventRegisterForm"; // 👈 Ensure this path is correct
 import dbConnect from "@/lib/db";
 import Event from "@/models/Event";
 import { notFound } from "next/navigation";

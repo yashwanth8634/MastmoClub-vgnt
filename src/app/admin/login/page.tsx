@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { loginAdmin } from "@/actions/auth";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import SubmitButton from "@/components/SubmitButton"; // Use the component we made earlier
+import SubmitButton from "@/components/ui/SubmitButton"; // Use the component we made earlier
 
 export default function AdminLoginPage() {
   const [state, formAction] = useActionState(loginAdmin, { success: false, message: "" });

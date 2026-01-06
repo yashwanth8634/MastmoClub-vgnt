@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import AboutContent from "@/components/AboutContent"; // Import the client part
+import AboutContent from "@/components/features/about/AboutContent"; // Import the client part
 
 // ✅ Now this works perfectly!
 export const metadata: Metadata = {

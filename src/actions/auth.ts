@@ -75,6 +75,7 @@ export async function loginAdmin(prevState: any, formData: FormData) {
 
 // 2. LOGOUT ACTION
 export async function logoutAdmin() {
+  const cookieStore = await cookies();
   // Delete the new authentication token
   cookieStore.delete("auth_token");
 
