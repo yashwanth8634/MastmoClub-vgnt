@@ -97,6 +97,12 @@ const ClubRegistrationSchema = new Schema<IClubRegistration>({
 ClubRegistrationSchema.index({ "member.email": 1 }, { unique: true });
 ClubRegistrationSchema.index({ "member.rollNo": 1 }, { unique: true, sparse: true });
 
+// Additional indexes for query optimization
+ClubRegistrationSchema.index({ status: 1, createdAt: -1 }); // For filtering by status and sorting
+ClubRegistrationSchema.index({ type: 1 }); // For filtering by student/faculty
+ClubRegistrationSchema.index({ notificationSent: 1, status: 1 }); // For notification workflows
+ClubRegistrationSchema.index({ "member.branch": 1 }); // For filtering by branch
+
 // ✅ 4. Export the Model
 const ClubRegistration = models.ClubRegistration || model<IClubRegistration>("ClubRegistration", ClubRegistrationSchema);
 

@@ -90,5 +90,11 @@ const EventSchema = new Schema<IEvent>(
   { timestamps: true }
 );
 
+// Indexes for optimized queries
+EventSchema.index({ isLive: 1, date: -1 }); // For listing live events by date
+EventSchema.index({ registrationOpen: 1 }); // For finding events with open registration
+EventSchema.index({ createdAt: -1 }); // For sorting by newest
+EventSchema.index({ title: 'text', description: 'text' }); // For text search
+
 const Event: Model<IEvent> = models.Event || mongoose.model<IEvent>("Event", EventSchema);
 export default Event;

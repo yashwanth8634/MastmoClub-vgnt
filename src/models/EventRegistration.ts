@@ -62,6 +62,12 @@ EventRegistrationSchema.index({ eventId: 1, rollNo: 1 }, { unique: true });
 // Index to ensure team names are unique per event. Sparse allows multiple docs without a teamName.
 EventRegistrationSchema.index({ eventId: 1, teamName: 1 }, { unique: true, sparse: true });
 
+// Additional indexes for query optimization
+EventRegistrationSchema.index({ createdAt: -1 }); // For sorting by registration date
+EventRegistrationSchema.index({ branch: 1 }); // For filtering by branch
+EventRegistrationSchema.index({ year: 1 }); // For filtering by year
+EventRegistrationSchema.index({ 'teamMembers.rollNo': 1 }); // For finding team member registrations
+
 
 // Pre-save hook to ensure a student is not on multiple teams for the same event
 EventRegistrationSchema.pre("save", async function (this: any) {
