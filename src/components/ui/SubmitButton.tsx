@@ -1,38 +1,51 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
-import { Loader2 } from "lucide-react"; // Make sure you have lucide-react installed
+import MathLoader from "@/components/ui/MathLoader";
 
 export default function SubmitButton({ 
   text = "Submit Application", 
-  loadingText = "Submitting..." 
+  loadingText = "Submitting...",
+  fullPageLoader = false
 }: { 
   text?: string; 
-  loadingText?: string; 
+  loadingText?: string;
+  fullPageLoader?: boolean;
 }) {
   const { pending } = useFormStatus();
 
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className={`
-        w-full py-3 px-4 rounded-lg font-bold text-black transition-all duration-200
-        flex items-center justify-center gap-2 cursor-pointer
-        ${pending 
-          ? "bg-gray-600 cursor-not-allowed opacity-70" 
-          : "bg-[#00f0ff] hover:bg-white hover:shadow-[0_0_15px_rgba(0,240,255,0.5)]"
-        }
-      `}
-    >
-      {pending ? (
-        <>
-          <Loader2 className="animate-spin" size={20} />
-          {loadingText}
-        </>
-      ) : (
-        text
+    <>
+      {pending && fullPageLoader && (
+        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
+          <MathLoader size="lg" />
+          <p className="text-[#00f0ff] mt-6 font-mono text-lg animate-pulse tracking-widest uppercase">
+            {loadingText}
+          </p>
+        </div>
       )}
-    </button>
+
+      <button
+        type="submit"
+        disabled={pending}
+        className={`
+          w-full py-3 px-4 rounded-lg font-bold text-black transition-all duration-200
+          flex items-center justify-center gap-2 cursor-pointer
+          ${pending 
+            ? "bg-gray-600 cursor-not-allowed opacity-70" 
+            : "bg-[#00f0ff] hover:bg-white hover:shadow-[0_0_15px_rgba(0,240,255,0.5)]"
+          }
+        `}
+      >
+        {pending ? (
+          <>
+            {!fullPageLoader && <MathLoader size="sm" className="text-black" />}
+            <span>{loadingText}</span>
+          </>
+        ) : (
+          text
+        )}
+      </button>
+    </>
   );
 }

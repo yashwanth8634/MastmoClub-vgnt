@@ -2,9 +2,10 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, X, Send, Bot, User, Loader2 } from "lucide-react";
+import { MessageCircle, X, Send, Bot, User } from "lucide-react";
 import { getChatResponse } from "@/actions/chatAction";
 import ReactMarkdown from "react-markdown";
+import MathLoader from "@/components/ui/MathLoader";
 import { usePathname } from "next/navigation"; // ✅ Import this
 import { getAnonymousUserId } from "@/lib/userIdentifier";
 
@@ -116,7 +117,7 @@ export default function ChatBot() {
                 <div className="flex gap-2">
                    <div className="p-2 bg-[#FFD700]/20 text-[#FFD700] rounded-full h-8 w-8 flex items-center justify-center"><Bot size={14}/></div>
                    <div className="bg-[#1f1f1f] p-3 rounded-2xl rounded-tl-none flex items-center gap-2">
-                      <Loader2 size={16} className="animate-spin text-[#FFD700]" />
+                      <MathLoader size="sm" className="text-[#FFD700]" />
                       <span className="text-xs text-gray-400">Thinking...</span>
                    </div>
                 </div>

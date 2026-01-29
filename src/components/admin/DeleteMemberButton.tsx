@@ -1,7 +1,8 @@
 "use client";
 
 import { deleteTeamMember } from "@/actions/teamActions";
-import { Trash2, Loader2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
+import MathLoader from "@/components/ui/MathLoader";
 import { useTransition } from "react";
 
 export default function DeleteMemberButton({ id }: { id: string }) {
@@ -21,7 +22,7 @@ export default function DeleteMemberButton({ id }: { id: string }) {
       disabled={isPending}
       className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all cursor-pointer"
     >
-      {isPending ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
+      {isPending ? <MathLoader size="sm" /> : <Trash2 size={18} />}
     </button>
   );
 }

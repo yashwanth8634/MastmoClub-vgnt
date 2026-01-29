@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { deleteEvent } from "@/actions/eventActions"; 
-import { Trash2, Loader2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
+import MathLoader from "@/components/ui/MathLoader";
 import { useRouter } from "next/navigation";
 
 export default function DeleteButton({ id }: { id: string }) {
@@ -25,7 +26,7 @@ export default function DeleteButton({ id }: { id: string }) {
       className="p-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500 hover:text-white transition-all"
       title="Delete Event"
     >
-      {isDeleting ? <Loader2 className="animate-spin" size={18} /> : <Trash2 size={18} />}
+      {isDeleting ? <MathLoader size="sm" /> : <Trash2 size={18} />}
     </button>
   );
 }

@@ -1,9 +1,10 @@
 "use client";
 
 import { toggleEventStatus, toggleEventRegistration } from "@/actions/eventActions";
-import { Loader2, Eye, EyeOff, Lock, Unlock } from "lucide-react";
+import { Eye, EyeOff, Lock, Unlock } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import MathLoader from "@/components/ui/MathLoader";
 
 // --- 1. LIVE / DEAD TOGGLE ---
 export function ToggleStatusButton({ id, isLive }: { id: string, isLive: boolean }) {
@@ -28,7 +29,7 @@ export function ToggleStatusButton({ id, isLive }: { id: string, isLive: boolean
           : "bg-gray-800 text-gray-400 border-gray-700 hover:border-gray-500"}
       `}
     >
-      {loading ? <Loader2 size={12} className="animate-spin" /> : (isLive ? <Eye size={12} /> : <EyeOff size={12} />)}
+      {loading ? <MathLoader size="sm" /> : (isLive ? <Eye size={12} /> : <EyeOff size={12} />)}
       {isLive ? "LIVE (Active)" : "HIDDEN (Dead)"}
     </button>
   );
@@ -53,7 +54,7 @@ export function ToggleRegButton({ id, isOpen, isFull }: { id: string, isOpen: bo
   if (!isOpen) {
     return (
       <button onClick={handleToggle} disabled={loading} className="text-[10px] flex items-center gap-1 text-red-400 hover:text-red-300 uppercase font-bold tracking-wide cursor-pointer">
-        {loading ? <Loader2 size={10} className="animate-spin" /> : <Lock size={10} />}
+        {loading ? <MathLoader size="sm" /> : <Lock size={10} />}
         Reg Closed
       </button>
     );
@@ -69,7 +70,7 @@ export function ToggleRegButton({ id, isOpen, isFull }: { id: string, isOpen: bo
 
   return (
     <button onClick={handleToggle} disabled={loading} className="text-[10px] flex items-center gap-1 text-[#00f0ff] hover:text-white uppercase font-bold tracking-wide cursor-pointer">
-      {loading ? <Loader2 size={10} className="animate-spin" /> : <Unlock size={10} />}
+      {loading ? <MathLoader size="sm" /> : <Unlock size={10} />}
       Reg Open
     </button>
   );

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Navbar from "@/components/ui/Navbar";
 import { submitClubRegistration } from "@/actions/ClubRegistrationAction";
-import { Loader2, CheckCircle, AlertCircle, School, User, Building2 } from "lucide-react";
+import { CheckCircle, AlertCircle, School, User, Building2 } from "lucide-react";
 import { BRANCHES, DEPARTMENTS, SECTIONS, YEARS } from "@/lib/constants";
 import MathLoader from "@/components/ui/MathLoader";
 
@@ -165,7 +165,7 @@ export default function JoinClubForm() {
                   : "bg-[#00f0ff] text-black hover:bg-white hover:shadow-[0_0_20px_rgba(0,240,255,0.4)]"
               }`}
             >
-              {isSubmitting ? <Loader2 className="animate-spin" /> : "Submit Application"}
+              {isSubmitting ? <MathLoader size="sm" /> : "Submit Application"}
             </button>
           
           </form>

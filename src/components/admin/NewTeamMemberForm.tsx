@@ -2,7 +2,8 @@
 
 import { createTeamMember } from "@/actions/teamActions";
 import Link from "next/link";
-import { ArrowLeft, Save, Loader2, Image as ImageIcon, X } from "lucide-react";
+import { ArrowLeft, Save, Image as ImageIcon, X } from "lucide-react";
+import MathLoader from "@/components/ui/MathLoader";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { UploadDropzone } from "@/utils/uploadthing"; 
@@ -134,7 +135,7 @@ export default function NewTeamMemberForm() {
           className="w-full bg-[#00f0ff] text-black font-bold py-4 rounded-xl hover:bg-white transition-colors flex justify-center gap-2 items-center cursor-pointer"
         >
           {isSubmitting ? (
-             <><Loader2 className="animate-spin" /> Saving...</>
+             <><MathLoader size="sm" /> Saving...</>
           ) : (
              <><Save size={20} /> Save Member</>
           )}

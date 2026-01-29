@@ -9,6 +9,8 @@ export default async function Home() {
   return (
     <main className="relative bg-transparent text-white font-sans selection:bg-[#00f0ff]/30">
       
+
+      
       {/* ✅ 4. Add the Popup Component Here */}
       
 

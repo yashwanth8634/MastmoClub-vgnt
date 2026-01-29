@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { getPopup, updatePopup } from "@/actions/popupActions";
 import { UploadDropzone } from "@/utils/uploadthing";
-import { Save, Loader2, Trash2, Plus } from "lucide-react";
+import { Save, Trash2, Plus } from "lucide-react";
 import Image from "next/image";
+import MathLoader from "@/components/ui/MathLoader";
 
 export default function PopupManager() {
   const [data, setData] = useState<any>(null);
@@ -106,7 +107,7 @@ export default function PopupManager() {
         </div>
 
         <button disabled={isSubmitting} className="w-full bg-[#00f0ff] text-black font-bold py-4 rounded-xl hover:bg-white transition-colors flex justify-center items-center gap-2 cursor-pointer">
-          {isSubmitting ? <><Loader2 className="animate-spin" /> Saving...</> : <><Save size={20} /> Update Popup</>}
+          {isSubmitting ? <><MathLoader size="sm" /> Saving...</> : <><Save size={20} /> Update Popup</>}
         </button>
 
       </form>

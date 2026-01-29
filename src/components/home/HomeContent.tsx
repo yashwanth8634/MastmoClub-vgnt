@@ -28,7 +28,7 @@ const HeroSection = () => {
           transition={{ duration: 0.8, delay: 0.2 }}
           className="text-6xl md:text-8xl lg:text-9xl font-bold tracking-tighter text-white mb-6"
         >
-          MASTMO<span className="text-[#00f0ff]">.</span>
+          MASTMO<span className="text-[#00f0ff]">*</span>
         </motion.h1>
 
         <motion.p

@@ -5,9 +5,10 @@ import { createEvent, updateEvent } from "@/actions/eventActions";
 import { useRouter } from "next/navigation";
 import { UploadDropzone } from "@/utils/uploadthing"; 
 import { 
-  Plus, ArrowLeft, Loader2, CalendarClock, Users, MapPin, Eye, 
+  Plus, ArrowLeft, CalendarClock, Users, MapPin, Eye, 
   Image as ImageIcon, Trash2, Check, Save
 } from "lucide-react";
+import MathLoader from "@/components/ui/MathLoader";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -295,7 +296,7 @@ export default function EventForm({ initialData }: EventFormProps) {
         >
           {isSubmitting ? (
             <>
-              <Loader2 className="animate-spin" size={20} /> 
+              <MathLoader size="sm" /> 
               {isEditMode ? "Updating Event..." : "Creating Event..."}
             </>
           ) : (

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { saveGalleryItem } from "@/actions/galleryActions"; 
 import { UploadDropzone } from "@/utils/uploadthing"; // 👈 Import from YOUR lib file
-import { Loader2, Image as ImageIcon, X } from "lucide-react";
+import { Image as ImageIcon, X } from "lucide-react";
+import MathLoader from "@/components/ui/MathLoader";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -107,7 +108,7 @@ export default function UploadGalleryForm() {
             disabled={isSubmitting} 
             className="w-full py-4 rounded-xl font-bold bg-[#00f0ff] text-black hover:bg-white flex items-center justify-center gap-2 cursor-pointer"
             >
-            {isSubmitting ? <Loader2 className="animate-spin" /> : <><ImageIcon size={20} /> Save to Gallery</>}
+            {isSubmitting ? <MathLoader size="sm" /> : <><ImageIcon size={20} /> Save to Gallery</>}
             </button>
         )}
 

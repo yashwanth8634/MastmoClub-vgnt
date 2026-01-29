@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"; 
 import { registerForEvent } from "@/actions/EventRegistrationAction"; 
-import { Loader2, Plus, Trash2, AlertCircle, CheckCircle, User, Users } from "lucide-react";
+import { Plus, Trash2, AlertCircle, CheckCircle, User, Users } from "lucide-react";
 import { BRANCHES, SECTIONS, YEARS } from "@/lib/constants";
 import MathLoader from "@/components/ui/MathLoader";
 
@@ -35,7 +35,7 @@ export default function EventRegisterForm({ event }: { event: EventType }) {
   if (!event || !event._id) {
     return (
       <div className="w-full max-w-2xl mx-auto h-64 flex flex-col items-center justify-center text-gray-500 bg-white/5 rounded-3xl border border-white/10 backdrop-blur-md">
-        <Loader2 className="animate-spin mb-2 text-math-cyan" /> 
+        <MathLoader size="lg" /> 
         <span className="text-sm font-mono">Loading event data...</span>
       </div>
     );
@@ -247,7 +247,7 @@ export default function EventRegisterForm({ event }: { event: EventType }) {
         >
           {isSubmitting ? (
             <>
-              <Loader2 className="animate-spin" size={20} /> 
+              <MathLoader size="sm" /> 
               <span>Registering...</span>
             </>
           ) : (

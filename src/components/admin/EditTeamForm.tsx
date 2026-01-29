@@ -3,7 +3,8 @@
 import { updateTeamMember } from "@/actions/teamActions";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, ArrowLeft, Image as ImageIcon, Trash2, Loader2, ListOrdered } from "lucide-react";
+import { Save, ArrowLeft, Image as ImageIcon, Trash2, ListOrdered } from "lucide-react";
+import MathLoader from "@/components/ui/MathLoader";
 import { UploadDropzone } from "@/utils/uploadthing"; 
 import Link from "next/link";
 import Image from "next/image";
@@ -174,7 +175,7 @@ export default function EditTeamForm({ member }: { member: TeamMemberData }) {
           disabled={isSubmitting} 
           className="w-full bg-[#00f0ff] text-black font-bold py-4 rounded-xl hover:bg-white transition-colors flex justify-center items-center gap-2"
         >
-          {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={20} />} 
+          {isSubmitting ? <MathLoader size="sm" /> : <Save size={20} />} 
           Update Member Details
         </button>
       </form>

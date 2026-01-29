@@ -8,9 +8,9 @@ import type { Metadata } from "next";
 // --- LEADERSHIP DATA ---
 const VISIONARIES = [
   {
-    name: "Dr. N. Dinesh Kumar",
+    name: "Dr. G. Durga Sukumar",
     role: "Principal, VGNT",
-    desc: "The driving force behind MASTMO. It was his visionary initiative to establish a dedicated club that bridges the gap between raw mathematical theory and modern engineering applications.",
+    desc: "A distinguished academician with a Ph.D. from IIT Roorkee and deep expertise in Power Electronics, he drives the institute's mission forward. As Principal, he fosters a student-centric environment that blends technical excellence with Indian values. His leadership is pivotal in shaping a talent pool of global standards, ensuring holistic growth and professional success for every student.",
   },
   {
     name: "Prof. Dr. G. Y. Sagar",

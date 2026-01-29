@@ -74,3 +74,8 @@ next-env.d.ts
 # yarn.lock
 # pnpm-lock.yaml
 
+__tests__
+TESTING.md
+vitest.config.ts
+vitest.setup.ts
+

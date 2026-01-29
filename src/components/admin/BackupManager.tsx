@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { generateBackup } from "@/actions/backupActions";
-import { Database, Download, ShieldCheck, Loader2, FileJson, AlertTriangle } from "lucide-react";
+import { Database, Download, ShieldCheck, FileJson, AlertTriangle } from "lucide-react";
+import MathLoader from "@/components/ui/MathLoader";
 
 export default function BackupManager() {
   const [isLoading, setIsLoading] = useState(false);
@@ -71,7 +72,7 @@ export default function BackupManager() {
             }`}
           >
             {isLoading ? (
-              <><Loader2 className="animate-spin" /> Generating JSON...</>
+              <><MathLoader size="sm" /> Generating JSON...</>
             ) : (
               <><Download size={20} /> Download Backup Now</>
             )}

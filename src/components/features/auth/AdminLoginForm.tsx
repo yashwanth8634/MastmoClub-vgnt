@@ -60,7 +60,7 @@ export default function AdminLoginForm() {
           </div>
 
           <div className="pt-4">
-            <SubmitButton text="Login" loadingText="Verifying..." />
+            <SubmitButton text="Login" loadingText="Verifying..." fullPageLoader={true} />
           </div>
 
         </form>
