@@ -107,7 +107,7 @@ export default async function RootLayout({
 }) {
   const popupData = await getPopup();
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head suppressHydrationWarning>
         <script
           type="application/ld+json"

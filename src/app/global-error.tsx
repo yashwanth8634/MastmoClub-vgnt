@@ -25,7 +25,7 @@ export default function GlobalError({
             <AlertTriangle size={48} />
           </div>
 
-          <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/10 tracking-tighter mb-4">
+          <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-linear-to-b from-white to-white/10 tracking-tighter mb-4">
             Critical Error
           </h1>
 
@@ -53,7 +53,7 @@ export default function GlobalError({
 
           <button
             onClick={reset}
-            className="px-8 py-3 bg-[#00f0ff] text-black font-bold rounded-full hover:bg-white transition-all inline-flex items-center gap-2"
+            className="px-8 py-3 bg-math-cyan text-black font-bold rounded-full hover:bg-white transition-all inline-flex items-center gap-2"
           >
             <RefreshCw size={20} />
             Reload Application
