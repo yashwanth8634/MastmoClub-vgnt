@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Navbar from "@/components/ui/Navbar";
 import type { Metadata } from "next";
 import { 
   Calendar, 
@@ -15,12 +14,24 @@ import dbConnect from "@/lib/db";
 import Event from "@/models/Event";
 import { notFound } from "next/navigation";
 import { formatEventTime } from "@/lib/utils";
+import { cache } from "react";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 type Props = {
   params: Promise<{ id: string }>;
 };
+
+const getCachedEventById = cache(async (id: string) => {
+  await dbConnect();
+
+  return Event.findById(id)
+    .select(
+      "title description date time location rules isTeamEvent minTeamSize maxTeamSize currentRegistrations maxRegistrations registrationRequired registrationOpen isLive",
+    )
+    .lean()
+    .maxTimeMS(2500);
+});
 
 // ✅ SEO Metadata
 export async function generateMetadata(
@@ -29,8 +40,7 @@ export async function generateMetadata(
   const resolvedParams = await params;
   const id = resolvedParams.id;
 
-  await dbConnect();
-  const event = await Event.findById(id).lean();
+  const event = await getCachedEventById(id);
 
   if (!event) {
     return { title: "Event Not Found | MASTMO" };
@@ -48,9 +58,7 @@ export async function generateMetadata(
 
 export default async function EventDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
-  await dbConnect();
-
-  const event = await Event.findById(resolvedParams.id).lean();
+  const event = await getCachedEventById(resolvedParams.id);
   if (!event) return notFound();
 
   // --- 🧠 LOGIC ENGINE (UPDATED) ---
@@ -85,8 +93,6 @@ export default async function EventDetailsPage({ params }: { params: Promise<{ i
 
   return (
     <main className="min-h-screen bg-black text-white selection:bg-[#00f0ff]/30 font-sans">
-      <Navbar />
-
       <div className="max-w-6xl mx-auto px-6 pt-32 pb-20">
         
         {/* Back Button */}

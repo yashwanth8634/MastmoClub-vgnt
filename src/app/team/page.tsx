@@ -5,8 +5,29 @@ import TeamMember from "@/models/TeamMember";
 import type { ITeamMember } from "@/models/TeamMember";
 import type { Metadata } from "next";
 import type { Types } from "mongoose";
+import { unstable_cache } from "next/cache";
 
-export const dynamic = "force-dynamic";
+const getCachedTeamMembers = unstable_cache(
+  async () => {
+    await dbConnect();
+
+    type LeanTeamMember = ITeamMember & { _id: Types.ObjectId };
+
+    const allMembers = (await TeamMember.find({})
+      .select("name role category image details order socials")
+      .sort({ order: 1 })
+      .lean()) as LeanTeamMember[];
+
+    return allMembers.map((member) => ({
+      ...member,
+      _id: member._id.toString(),
+      socials: member.socials || {},
+      image: member.image || "",
+    }));
+  },
+  ["public-team-members"],
+  { revalidate: 300, tags: ["team"] },
+);
 
 export const metadata: Metadata = {
   title: "Team",
@@ -19,25 +40,7 @@ export const metadata: Metadata = {
 };
 
 export default async function TeamPage() {
-  await dbConnect();
-
-  // 1. FETCH MEMBERS
-  type LeanTeamMember = ITeamMember & { _id: Types.ObjectId };
-
-  const allMembers = (await TeamMember.find({})
-    .select("name role category image details order socials")
-    .sort({ order: 1 })
-    .lean()) as LeanTeamMember[];
-
-  const serialize = (members: LeanTeamMember[]) =>
-    members.map((member) => ({
-      ...member,
-      _id: member._id.toString(),
-      socials: member.socials || {},
-      image: member.image || "",
-    }));
-
-  const serializedMembers = serialize(allMembers);
+  const serializedMembers = await getCachedTeamMembers();
 
   // ---------------------------------------------------------
   // ✅ FIX: FILTER BY ROLE (Not Category)

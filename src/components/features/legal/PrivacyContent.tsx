@@ -177,7 +177,7 @@ export default function PrivacyContent() {
             
             {/* ✅ UPDATED LINK: Redirects to Instagram */}
             <a 
-              href="https://www.instagram.com/mastmo_vgnt" 
+              href="https://instagram.mastmovgnt.in" 
               target="_blank" 
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-8 py-3 bg-[#00f0ff] text-black font-bold rounded-full hover:bg-white hover:scale-105 transition-all shadow-[0_0_15px_rgba(0,240,255,0.4)] cursor-pointer"

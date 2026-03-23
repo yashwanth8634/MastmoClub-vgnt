@@ -5,13 +5,31 @@ import { Calendar } from "lucide-react";
 import HoverExpandGallery from "@/components/ui/HoverExpandGallery";
 import type { Metadata } from "next";
 import type { Types } from "mongoose";
+import { unstable_cache } from "next/cache";
 
-function getSortableEventTimestamp(dateString: string) {
-  const timestamp = Date.parse(dateString);
-  return Number.isNaN(timestamp) ? Number.NEGATIVE_INFINITY : timestamp;
-}
+const getCachedGalleryEvents = unstable_cache(
+  async () => {
+    await dbConnect();
+    type GalleryEvent = Pick<IEvent, "title" | "date" | "gallery"> & {
+      _id: Types.ObjectId;
+      category?: string;
+    };
 
-export const dynamic = "force-dynamic";
+    const events = (await Event.find({
+      gallery: { $exists: true, $not: { $size: 0 } },
+    })
+      .select("title category date gallery")
+      .sort({ date: -1 })
+      .lean()) as GalleryEvent[];
+
+    return events.map((event) => ({
+      ...event,
+      _id: event._id.toString(),
+    }));
+  },
+  ["public-gallery-events"],
+  { revalidate: 300, tags: ["events", "gallery"] },
+);
 
 export const metadata: Metadata = {
   title: "Event Gallery",
@@ -24,18 +42,7 @@ export const metadata: Metadata = {
 };
 
 export default async function GalleryPage() {
-  await dbConnect();
-  type GalleryEvent = Pick<IEvent, "title" | "date" | "gallery"> & {
-    _id: Types.ObjectId;
-    category?: string;
-  };
-  
-  // Fetch events that actually have photos (non-empty gallery array)
-  const events = (await Event.find({ gallery: { $exists: true, $not: { $size: 0 } } })
-                        .select('title category date gallery') 
-                        .lean()) as GalleryEvent[];
-
-  events.sort((a, b) => getSortableEventTimestamp(b.date) - getSortableEventTimestamp(a.date));
+  const events = await getCachedGalleryEvents();
 
   return (
     <main className="min-h-screen bg-black text-white selection:bg-[#00f0ff]/30">
@@ -47,7 +54,7 @@ export default async function GalleryPage() {
         <div className="space-y-24">
           {events.length > 0 ? (
             events.map((event) => (
-              <section key={event._id.toString()} className="animate-in fade-in slide-in-from-bottom-8 duration-700">
+              <section key={event._id} className="animate-in fade-in slide-in-from-bottom-8 duration-700">
                 
                 {/* Header */}
                 <div className="max-w-6xl mx-auto mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/40 pb-4">

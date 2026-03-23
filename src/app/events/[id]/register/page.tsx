@@ -1,19 +1,29 @@
-import Navbar from "@/components/ui/Navbar";
 import EventRegisterForm from "@/components/features/events/EventRegisterForm"; // 👈 Ensure this path is correct
 import dbConnect from "@/lib/db";
 import Event from "@/models/Event";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Metadata } from "next";
+import { cache } from "react";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
+
+const getCachedRegistrationEvent = cache(async (id: string) => {
+  await dbConnect();
+
+  return Event.findById(id)
+    .select(
+      "title isTeamEvent minTeamSize maxTeamSize currentRegistrations maxRegistrations registrationRequired registrationOpen isLive",
+    )
+    .lean()
+    .maxTimeMS(2500);
+});
 
 export async function generateMetadata(
   { params }: { params: Promise<{ id: string }> }
 ): Promise<Metadata> {
   const resolvedParams = await params;
-  await dbConnect();
-  const event = await Event.findById(resolvedParams.id).select("title").lean();
+  const event = await getCachedRegistrationEvent(resolvedParams.id);
 
   if (!event) {
     return { title: "Event Not Found" };
@@ -29,10 +39,7 @@ export default async function EventRegistrationPage({ params }: { params: Promis
   const resolvedParams = await params;
   const eventId = resolvedParams.id;
 
-  await dbConnect();
-
-  // 1. Fetch Event with .lean()
-  const event = await Event.findById(eventId).lean();
+  const event = await getCachedRegistrationEvent(eventId);
 
   if (!event) {
     return notFound();
@@ -51,7 +58,6 @@ export default async function EventRegistrationPage({ params }: { params: Promis
   if (isRegistrationClosed) {
     return (
       <main className="min-h-screen bg-black text-white font-sans flex flex-col items-center justify-center p-4">
-        <Navbar />
         <div className="text-center max-w-md mx-auto p-10 border border-white/10 rounded-3xl bg-white/5 backdrop-blur-md">
           <h1 className="text-3xl font-bold mb-4 text-red-500">
             {isEventEnded ? "Event Ended" : registrationRequired ? "Registration Closed" : "No Registration Needed"}
@@ -84,8 +90,6 @@ export default async function EventRegistrationPage({ params }: { params: Promis
 
   return (
     <main className="min-h-screen bg-black text-white font-sans selection:bg-[#00f0ff]/30">
-      <Navbar />
-      
       {/* Centering Container */}
       <div className="min-h-screen flex items-center justify-center pt-24 pb-10 px-4">
         <EventRegisterForm event={serializedEvent} />

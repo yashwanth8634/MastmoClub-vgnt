@@ -69,9 +69,14 @@ export default function TeamCard({ member }: { member: TeamMemberProps }) {
           </Link>
         )}
         {member.socials?.email && (
-          <Link href={`mailto:${member.socials.email}`} target="_blank" className="hover:text-[#00f0ff] transition-colors">
+          <a
+            href={`mailto:${member.socials.email}`}
+            className="hover:text-[#00f0ff] transition-colors"
+            aria-label={`Email ${member.name}`}
+            title={member.socials.email}
+          >
             <Mail size={16} />
-          </Link>
+          </a>
         )}
         {member.socials?.instagram && (
           <Link href={member.socials.instagram} target="_blank" className="hover:text-[#E1306C] transition-colors">

@@ -281,10 +281,10 @@ const FooterSection = () => {
             <ul className="flex flex-col gap-3 text-sm sm:text-base text-gray-300">
               <li>
                 <a 
-                  href="mailto:mastmo.vgnt@gmail.com" 
+                  href="mailto:support@mastmovgnt.in" 
                   className="hover:text-[#00f0ff] transition-colors break-all"
                 >
-                  mastmo.vgnt@gmail.com
+                  support@mastmovgnt.in
                 </a>
               </li>
               <li className="max-w-xs mx-auto lg:mx-0">
@@ -292,16 +292,17 @@ const FooterSection = () => {
                 Deshmukhi, Telangana
               </li>
               {/* Social Links */}
-              <li className="flex gap-4 justify-center lg:justify-start mt-2">
+                <li className="flex gap-4 justify-center lg:justify-start mt-2">
                 <a 
-                  href="mailto:mastmo.vgnt@gmail.com"
+                  href="mailto:support@mastmovgnt.in"
+                  title="support@mastmovgnt.in"
                   className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-white/40 flex items-center justify-center hover:border-[#00f0ff] hover:bg-[#00f0ff]/10 transition-all group"
                   aria-label="Email"
                 >
                   <Mail size={18} className="text-gray-300 group-hover:text-[#00f0ff] transition-colors" />
                 </a>
                 <a 
-                  href="https://www.instagram.com/mastmo_vgnt/" 
+                  href="https://instagram.mastmovgnt.in" 
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-white/40 flex items-center justify-center hover:border-[#00f0ff] hover:bg-[#00f0ff]/10 transition-all group"
@@ -317,7 +318,7 @@ const FooterSection = () => {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-white/20 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs sm:text-sm text-gray-400">
           <p className="text-center sm:text-left">
-            © 2025 MASTMO. All rights reserved.
+            © 2026 MASTMO. All rights reserved.
           </p>
           <div className="flex gap-4 sm:gap-6">
             <Link href="/privacy" className="hover:text-[#00f0ff] transition-colors">
