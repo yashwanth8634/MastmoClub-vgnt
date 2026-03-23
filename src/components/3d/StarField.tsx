@@ -4,6 +4,7 @@ import { useMemo, useRef, Suspense } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { usePathname } from "next/navigation";
 import { Points, PointMaterial } from "@react-three/drei";
+import type { Points as ThreePoints } from "three";
 
 function generateSpherePoints(count: number, radius: number) {
   const points = new Float32Array(count * 3);
@@ -24,13 +25,13 @@ function generateSpherePoints(count: number, radius: number) {
 }
 
 function Stars() {
-  const ref = useRef<any>(null);
+  const ref = useRef<ThreePoints | null>(null);
 
   // ✅ OPTIMIZATION 1: useMemo ensures this heavy math runs ONLY once.
   // Reduced to 4002 points (divisible by 3) for better mobile FPS.
   const sphere = useMemo(() => generateSpherePoints(4002, 1.2), []);
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     if (ref.current) {
       // ✅ OPTIMIZATION 2: Cap delta time. 
       // If user switches tabs and comes back, this prevents the stars from spinning wildly.

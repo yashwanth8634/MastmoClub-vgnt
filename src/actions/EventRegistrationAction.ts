@@ -9,6 +9,10 @@ import { revalidatePath } from "next/cache";
 import { sendEmail } from "@/lib/email";
 import { emailTemplates } from "@/lib/emailTemplates"
 import { rateLimit } from "@/lib/rateLimit";
+import { failureResult, getErrorMessage, successResult, type ActionResult } from "@/lib/actionState";
+import type { IClubRegistration } from "@/models/ClubRegistration";
+import type { ITeamMember } from "@/models/EventRegistration";
+import { logger } from "@/lib/logger";
 
 import { z } from "zod";
 
@@ -29,14 +33,17 @@ const RegistrationSchema = z.object({
   })).default([]),
 });
 
-export async function registerForEvent(prevState: any, formData: FormData) {
+export async function registerForEvent(
+  _prevState: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
   try {
     await dbConnect();
 
     // 0. Rate Limit Check (10 requests per minute)
     const isAllowed = await rateLimit(10, 60000);
     if (!isAllowed) {
-      return { success: false, message: "Too many requests. Please try again later." };
+      return failureResult("Too many requests. Please try again later.");
     }
 
     // 1. Extract & Parse Data
@@ -59,20 +66,22 @@ export async function registerForEvent(prevState: any, formData: FormData) {
 
     // 2. Validate Main User Logic
     const mainUserError = validateRollNo(rollNo, branch);
-    if (mainUserError) return { success: false, message: mainUserError };
+    if (mainUserError) return failureResult(mainUserError);
 
     const mainMember = await Member.findOne({ "member.rollNo": rollNo });
     
     if (!mainMember) {
-      return { success: false, message: "Access Denied: You are not a registered Club Member." };
+      return failureResult("Access Denied: You are not a registered Club Member.");
     }
 
     if (mainMember.status === "rejected") {
-      return { success: false, message: "Access Denied: Your club membership application has been rejected." };
+      return failureResult("Access Denied: Your club membership application has been rejected.");
     }
 
     if (mainMember.status !== "approved") {
-      return { success: false, message: `Access Denied: Your club membership status is '${mainMember.status}'. Please wait for approval.` };
+      return failureResult(
+        `Access Denied: Your club membership status is '${mainMember.status}'. Please wait for approval.`,
+      );
     }
     
     const userEmail = mainMember.member?.email;
@@ -86,67 +95,76 @@ export async function registerForEvent(prevState: any, formData: FormData) {
 
         for (const member of teamMembers) {
             if (member.rollNo === rollNo) {
-                return { success: false, message: "Invalid Team: You cannot add yourself as a team member." };
+                return failureResult("Invalid Team: You cannot add yourself as a team member.");
             }
 
             if (processedRolls.has(member.rollNo)) {
-                return { success: false, message: `Duplicate Entry: Member '${member.name}' is added twice.` };
+                return failureResult(`Duplicate Entry: Member '${member.name}' is added twice.`);
             }
             processedRolls.add(member.rollNo);
 
             const formatError = validateRollNo(member.rollNo);
-            if (formatError) return { success: false, message: `Member '${member.name}' has invalid Roll No.` };
+            if (formatError) return failureResult(`Member '${member.name}' has invalid Roll No.`);
 
             const memberBranchCode = getBranchCodeFromRoll(member.rollNo);
             
             if (memberBranchCode !== teamLeadBranchCode) {
-                return { 
-                    success: false, 
-                    message: `Branch Mismatch: Member '${member.name}' is not from the same branch as the Team Lead.` 
-                };
+                return failureResult(
+                  `Branch Mismatch: Member '${member.name}' is not from the same branch as the Team Lead.`,
+                );
             }
         }
 
         const teamRollNos = teamMembers.map((m) => m.rollNo);
-        const foundMembers = await Member.find({ "member.rollNo": { $in: teamRollNos } });
+        const foundMembers = await Member.find({
+          "member.rollNo": { $in: teamRollNos },
+        }) as IClubRegistration[];
         
-        const foundRollNos = foundMembers.map((m: any) => m.member.rollNo);
+        const foundRollNos = foundMembers.map((memberRecord) => memberRecord.member.rollNo);
         const missingMembers = teamMembers.filter((m) => !foundRollNos.includes(m.rollNo));
 
         if (missingMembers.length > 0) {
-            return { success: false, message: `Access Denied: The following members are not in the club: ${missingMembers.map((m) => m.name).join(", ")}` };
+            return failureResult(
+              `Access Denied: The following members are not in the club: ${missingMembers.map((m) => m.name).join(", ")}`,
+            );
         }
 
-        const rejectedMembers = foundMembers.filter((m: any) => m.status === "rejected");
+        const rejectedMembers = foundMembers.filter(
+          (memberRecord) => memberRecord.status === "rejected",
+        );
         if (rejectedMembers.length > 0) {
-             return { 
-                 success: false, 
-                 message: `Access Denied: The following members have been rejected from the club: ${rejectedMembers.map((m: any) => m.member.fullName).join(", ")}` 
-             };
+             return failureResult(
+               `Access Denied: The following members have been rejected from the club: ${rejectedMembers.map((memberRecord) => memberRecord.member.fullName).join(", ")}`,
+             );
         }
 
-        const notApprovedMembers = foundMembers.filter((m: any) => m.status !== "approved");
+        const notApprovedMembers = foundMembers.filter(
+          (memberRecord) => memberRecord.status !== "approved",
+        );
         if (notApprovedMembers.length > 0) {
-            return { 
-                success: false, 
-                message: `Access Denied: The following members are not approved yet: ${notApprovedMembers.map((m: any) => m.member.fullName).join(", ")}` 
-            };
+            return failureResult(
+              `Access Denied: The following members are not approved yet: ${notApprovedMembers.map((memberRecord) => memberRecord.member.fullName).join(", ")}`,
+            );
         }
 
-        const differentSectionMembers = foundMembers.filter((m: any) => m.member.section !== leaderSection);
+        const differentSectionMembers = foundMembers.filter(
+          (memberRecord) => memberRecord.member.section !== leaderSection,
+        );
         if (differentSectionMembers.length > 0) {
-            return { 
-                success: false, 
-                message: `Section Mismatch: The following members are not in Section '${leaderSection}': ${differentSectionMembers.map((m: any) => m.member.fullName).join(", ")}` 
-            };
+            return failureResult(
+              `Section Mismatch: The following members are not in Section '${leaderSection}': ${differentSectionMembers.map((memberRecord) => memberRecord.member.fullName).join(", ")}`,
+            );
         }
     }
 
     // 4. Event Checks
     const event = await Event.findById(eventId);
-    if (!event) return { success: false, message: "Event not found" };
-    if (!event.registrationOpen) return { success: false, message: "Registration is closed." };
-    if (event.maxRegistrations > 0 && event.currentRegistrations >= event.maxRegistrations) return { success: false, message: "Event is full." };
+    if (!event) return failureResult("Event not found");
+    if (!event.registrationRequired) return failureResult("This event does not require registration.");
+    if (!event.registrationOpen) return failureResult("Registration is closed.");
+    if (event.maxRegistrations > 0 && event.currentRegistrations >= event.maxRegistrations) {
+      return failureResult("Event is full.");
+    }
 
     // 5. 🛡️ RACE CONDITION & DUPLICATE CHECK 🛡️
     // Check if ANY of the participants (Lead + Members) are already registered for this event.
@@ -164,9 +182,11 @@ export async function registerForEvent(prevState: any, formData: FormData) {
         // Identify who caused the conflict
         const conflictRoll = allParticipants.find(r => 
             r === existingParticipation.rollNo || 
-            existingParticipation.teamMembers?.some((m: any) => m.rollNo === r)
+            existingParticipation.teamMembers?.some((member: ITeamMember) => member.rollNo === r)
         );
-        return { success: false, message: `Registration Failed: User '${conflictRoll}' is already registered for this event.` };
+        return failureResult(
+          `Registration Failed: User '${conflictRoll}' is already registered for this event.`,
+        );
     }
 
     if (teamName) {
@@ -176,7 +196,7 @@ export async function registerForEvent(prevState: any, formData: FormData) {
         });
 
         if (existingTeam) {
-            return { success: false, message: `Team name '${teamName}' is already taken.` };
+            return failureResult(`Team name '${teamName}' is already taken.`);
         }
     }
 
@@ -204,20 +224,23 @@ export async function registerForEvent(prevState: any, formData: FormData) {
            );
 
            await sendEmail(userEmail, subject, html);
-           console.log(`✅ Email sent to ${userEmail}`);
+           logger.info("Event confirmation email sent", {
+             eventId,
+             userEmail,
+           });
        
        } catch (emailError) {
-           console.error("Failed to send event confirmation email:", emailError);
+           logger.error("Failed to send event confirmation email", emailError, {
+             eventId,
+             userEmail,
+           });
        }
     }
     revalidatePath(`/events/${eventId}`);
-    return { success: true, message: "Registration Successful!" };
+    return successResult("Registration Successful!");
 
-  } catch (error: any) {
-    console.error("Registration Error:", error);
-    if (error instanceof z.ZodError) {
-        return { success: false, message: error.issues[0]?.message || "Validation Error" };
-    }
-    return { success: false, message: error.message || "Failed to register" };
+  } catch (error: unknown) {
+    logger.error("Event registration failed", error);
+    return failureResult(getErrorMessage(error, "Failed to register"));
   }
 }

@@ -11,6 +11,7 @@ export interface IEvent extends Document {
   location: string;
   
   // Registration Logic (No deadline)
+  registrationRequired: boolean;
   registrationOpen: boolean;
   maxRegistrations: number; // 0 = Unlimited
   currentRegistrations: number;
@@ -57,6 +58,7 @@ const EventSchema = new Schema<IEvent>(
     },
 
     // Logic
+    registrationRequired: { type: Boolean, default: true },
     registrationOpen: { type: Boolean, default: true },
     maxRegistrations: { 
       type: Number, 

@@ -2,13 +2,23 @@
 
 import dbConnect from "@/lib/db";
 import TeamMember from "@/models/TeamMember";
+import type { ITeamMember } from "@/models/TeamMember";
 import { revalidatePath } from "next/cache";
 import { verifyAdmin } from "@/lib/auth"; 
 import { deleteFilesFromUT } from "@/lib/utapi-server"; 
+import { failureResult, getErrorMessage, successResult } from "@/lib/actionState";
+import { logger } from "@/lib/logger";
+import type { Types } from "mongoose";
 
 const getFileKey = (url: string) => {
   if (!url || !url.includes("utfs.io")) return null;
   return url.split("/").pop();
+};
+
+type LeanTeamMemberRecord = ITeamMember & {
+  _id: Types.ObjectId;
+  createdAt?: Date;
+  updatedAt?: Date;
 };
 
 // 1. CREATE MEMBER
@@ -41,9 +51,10 @@ export async function createTeamMember(formData: FormData) {
     revalidatePath("/admin/dashboard-group/team");
     revalidatePath("/team");
     
-    return { success: true };
-  } catch (error: any) {
-    return { success: false, message: "Failed to add member" };
+    return successResult();
+  } catch (error: unknown) {
+    logger.error("Create team member failed", error);
+    return failureResult("Failed to add member");
   }
 }
 
@@ -54,7 +65,7 @@ export async function deleteTeamMember(id: string) {
     await dbConnect();
 
     const member = await TeamMember.findById(id);
-    if (!member) return { success: false, message: "Member not found" };
+    if (!member) return failureResult("Member not found");
 
     if (member.image) {
       const key = getFileKey(member.image);
@@ -68,9 +79,10 @@ export async function deleteTeamMember(id: string) {
     revalidatePath("/admin/dashboard-group/team"); 
     revalidatePath("/team");
     
-    return { success: true };
-  } catch (error) {
-    return { success: false, message: "Failed to delete" };
+    return successResult();
+  } catch (error: unknown) {
+    logger.error("Delete team member failed", error, { id });
+    return failureResult("Failed to delete");
   }
 } 
 
@@ -81,7 +93,7 @@ export async function updateTeamMember(id: string, formData: FormData) {
     await dbConnect();
 
     const existingMember = await TeamMember.findById(id);
-    if (!existingMember) return { success: false, message: "Member not found" };
+    if (!existingMember) return failureResult("Member not found");
 
     // ✅ CATEGORY FIX: Ensure we explicitly grab the category from the form
     // If the form doesn't send it, it will default to the existing value
@@ -125,9 +137,10 @@ export async function updateTeamMember(id: string, formData: FormData) {
     revalidatePath("/admin/dashboard-group/team"); 
     revalidatePath("/team"); 
 
-    return { success: true, message: "Member updated!" };
-  } catch (error: any) {
-    return { success: false, message: "Update failed: " + error.message };
+    return successResult("Member updated!");
+  } catch (error: unknown) {
+    logger.error("Update team member failed", error, { id });
+    return failureResult(`Update failed: ${getErrorMessage(error, "Unknown error")}`);
   }
 }
 
@@ -138,10 +151,10 @@ export async function getTeamMember(id: string) {
     await dbConnect();
 
     // 1. Fetch the member
-    const member = await TeamMember.findById(id).lean();
+    const member = (await TeamMember.findById(id).lean()) as LeanTeamMemberRecord | null;
 
     if (!member) {
-      console.error(`❌ Team Member with ID ${id} not found.`);
+      logger.warn("Team member not found", { id });
       return null;
     }
 
@@ -154,8 +167,8 @@ export async function getTeamMember(id: string) {
       updatedAt: member.updatedAt?.toString(),
     };
 
-  } catch (error) {
-    console.error("❌ ERROR Fetching Team Member:", error);
+  } catch (error: unknown) {
+    logger.error("Fetching team member failed", error, { id });
     return null; // This triggers the "Could not be loaded" screen
   }
 }

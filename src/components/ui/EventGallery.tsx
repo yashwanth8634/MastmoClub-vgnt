@@ -75,7 +75,8 @@ export default function EventGallery({ images }: { images: GalleryImage[] }) {
                 alt={image.alt}
                 fill
                 className="object-cover"
-                sizes="(max-width: 768px) 100vw, 33vw"
+                quality={60}
+                sizes="(max-width: 768px) 256px, 384px"
               />
             </motion.div>
           ))}

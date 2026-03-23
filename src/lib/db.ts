@@ -18,6 +18,7 @@ declare global {
   var mongoose: {
     conn: mongoose.Mongoose | null;
     promise: Promise<mongoose.Mongoose> | null;
+    hasLoggedConnection?: boolean;
   };
 }
 
@@ -28,18 +29,33 @@ if (!cached) {
 }
 
 async function dbConnect() {
+  const mongoUri = MONGODB_URI;
+
+  if (!mongoUri) {
+    throw new Error("MongoDB URI is not configured.");
+  }
+
   if (cached.conn) {
     return cached.conn;
   }
 
   if (!cached.promise) {
-    const opts = {
+    const opts: mongoose.ConnectOptions = {
       bufferCommands: false,
+      maxPoolSize: 10,
+      minPoolSize: 1,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+      family: 4,
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {
-      logger.info("✅ MongoDB Connected Successfully");
-      return mongoose;
+    cached.promise = mongoose.connect(mongoUri, opts).then((connection) => {
+      if (!cached.hasLoggedConnection) {
+        logger.info("MongoDB connected successfully");
+        cached.hasLoggedConnection = true;
+      }
+
+      return connection;
     });
   }
 

@@ -19,9 +19,11 @@ const nextConfig = {
         hostname: "img.clerk.com", // (Optional) If you use Clerk for Auth
       },
     ],
-    // ✅ FORCE SPEED: Compresses images even more for mobile users
-    minimumCacheTTL: 60,
+    // Cache optimized remote images longer to avoid repeated reprocessing.
+    minimumCacheTTL: 604800,
     formats: ['image/avif', 'image/webp'], 
+    deviceSizes: [640, 750, 828, 1080, 1200],
+    imageSizes: [48, 64, 96, 128, 256, 384, 520],
   },
 
   async redirects() {

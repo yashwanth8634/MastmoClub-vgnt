@@ -1,6 +1,23 @@
 import mongoose, { Schema, model, models } from "mongoose";
 
-const TeamMemberSchema = new Schema(
+export interface TeamMemberSocials {
+  linkedin?: string;
+  github?: string;
+  email?: string;
+  instagram?: string;
+}
+
+export interface ITeamMember {
+  name: string;
+  role: string;
+  category: "faculty" | "core" | "coordinator" | "support" | "patron";
+  image?: string;
+  details?: string;
+  order: number;
+  socials?: TeamMemberSocials;
+}
+
+const TeamMemberSchema = new Schema<ITeamMember>(
   {
     name: { type: String, required: true },
     role: { type: String, required: true },

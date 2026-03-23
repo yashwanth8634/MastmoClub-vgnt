@@ -7,13 +7,16 @@ import Popup from "@/models/Popup"; // ✅ Added Popup Model
 // import Gallery from "@/models/Gallery"; // Uncomment if you have a standalone Gallery model
 
 import { verifyAdmin } from "@/lib/auth";
+import { failureResult, getErrorMessage } from "@/lib/actionState";
+import type { IClubRegistration } from "@/models/ClubRegistration";
+import { logger } from "@/lib/logger";
 
 export async function generateBackup() {
   try {
     // 1. Security Check
     await verifyAdmin();
-  } catch (e) {
-    return { success: false, message: "Unauthorized access" };
+  } catch {
+    return failureResult("Unauthorized access");
   }
 
   await dbConnect();
@@ -22,7 +25,7 @@ export async function generateBackup() {
     // 2. Fetch ALL Data
     // .lean() converts to plain JSON (Faster & saves memory)
     const events = await Event.find({}).lean();
-    const registrations = await Registration.find({}).lean();
+    const registrations = (await Registration.find({}).lean()) as IClubRegistration[];
     const popups = await Popup.find({}).lean(); // ✅ Backup Popup configs too
     
     // 3. Bundle Data
@@ -34,7 +37,7 @@ export async function generateBackup() {
         registrations: registrations.length,
         popups: popups.length,
         // Calculate Faculty count just for info (Faculty have eventName="Faculty Membership")
-        faculty: registrations.filter((r: any) => r.eventName === "Faculty Membership").length
+        faculty: registrations.filter((registration) => registration.type === "faculty").length
       },
       data: {
         events,
@@ -49,8 +52,10 @@ export async function generateBackup() {
       data: JSON.stringify(backupData, null, 2) // Pretty print JSON
     };
 
-  } catch (error: any) {
-    console.error("Backup Error:", error);
-    return { success: false, message: "Backup generation failed: " + error.message };
+  } catch (error: unknown) {
+    logger.error("Backup generation failed", error);
+    return failureResult(
+      `Backup generation failed: ${getErrorMessage(error, "Unknown backup error")}`,
+    );
   }
 }

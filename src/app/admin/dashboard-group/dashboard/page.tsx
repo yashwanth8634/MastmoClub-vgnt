@@ -1,8 +1,17 @@
 import dbConnect from "@/lib/db";
 import Registration from "@/models/ClubRegistration";
-import { CheckCircle, GraduationCap, ArrowRight, Clock } from "lucide-react";
+import type { IClubRegistration } from "@/models/ClubRegistration";
+import Event from "@/models/Event";
+import {
+  CheckCircle,
+  GraduationCap,
+  ArrowRight,
+  Clock,
+  CalendarRange,
+} from "lucide-react";
 import Link from "next/link";
 import { Metadata } from "next";
+import type { Types } from "mongoose";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard ",
@@ -13,6 +22,7 @@ export const dynamic = "force-dynamic"; // Ensure real-time data
 
 export default async function Dashboard() {
   await dbConnect();
+  type LeanRegistration = IClubRegistration & { _id: Types.ObjectId };
 
   // 🚀 OPTIMIZATION: Use Promise.all to fetch data in parallel
   const [
@@ -20,7 +30,8 @@ export default async function Dashboard() {
     studentApproved,
     facultyPending,
     facultyApproved,
-    recentPending
+    recentPending,
+    totalEvents,
   ] = await Promise.all([
     Registration.countDocuments({ type: "student", status: "pending" }),
     Registration.countDocuments({ type: "student", status: "approved" }),
@@ -28,9 +39,11 @@ export default async function Dashboard() {
     Registration.countDocuments({ type: "faculty", status: "approved" }),
     // Fetch top 5 recent pending requests
     Registration.find({ status: "pending" })
+      .select("type member createdAt")
       .sort({ createdAt: -1 })
       .limit(5)
-      .lean()
+      .lean(),
+    Event.countDocuments({}),
   ]);
 
   // Derived Totals
@@ -44,7 +57,7 @@ export default async function Dashboard() {
       {/* ---------------------------------------------------------------------- */}
       {/* 1. KEY METRICS (HERO CARDS) */}
       {/* ---------------------------------------------------------------------- */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mb-12">
         
         {/* Total Members Card */}
         <div className="bg-gradient-to-br from-white/10 to-white/5 border border-white/10 p-8 rounded-3xl flex items-center justify-between relative overflow-hidden group">
@@ -98,6 +111,15 @@ export default async function Dashboard() {
             )}
           </div>
         </div>
+
+        <div className="bg-gradient-to-br from-emerald-500/15 to-white/5 border border-emerald-400/20 p-8 rounded-3xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-8 opacity-10">
+            <CalendarRange size={110} />
+          </div>
+          <p className="text-emerald-300 font-medium mb-2">Events Conducted</p>
+          <h3 className="text-5xl font-bold text-white mb-2">{totalEvents}</h3>
+          <p className="text-sm text-gray-400">Total events created in the admin panel.</p>
+        </div>
       </div>
 
       {/* ---------------------------------------------------------------------- */}
@@ -123,7 +145,7 @@ export default async function Dashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {recentPending.map((req: any) => {
+              {(recentPending as LeanRegistration[]).map((req) => {
                 // Safe access to member object
                 const m = req.member; 
                 return (

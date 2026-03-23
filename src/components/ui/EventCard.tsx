@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Calendar, Clock, MapPin, ArrowRight } from "lucide-react";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatEventTime } from "@/lib/utils";
 
 interface EventProps {
   id: string;
@@ -35,7 +35,7 @@ export default function EventCard({ event }: { event: EventProps }) {
         </div>
         <div className="flex items-center gap-2">
           <Clock size={14} className="text-math-cyan" />
-          {event.time}
+          {formatEventTime(event.time)}
         </div>
         <div className="col-span-2 flex items-center gap-2">
           <MapPin size={14} className="text-math-cyan" />

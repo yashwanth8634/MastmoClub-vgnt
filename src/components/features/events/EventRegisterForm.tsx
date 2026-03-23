@@ -2,9 +2,12 @@
 
 import { useState, useEffect } from "react"; 
 import { registerForEvent } from "@/actions/EventRegistrationAction"; 
+import type { ActionResult } from "@/lib/actionState";
 import { Plus, Trash2, AlertCircle, CheckCircle, User, Users } from "lucide-react";
 import { BRANCHES, SECTIONS, YEARS } from "@/lib/constants";
 import MathLoader from "@/components/ui/MathLoader";
+
+const INITIAL_STATUS: ActionResult = { success: false };
 
 interface EventType {
   _id: string;
@@ -21,7 +24,7 @@ export default function EventRegisterForm({ event }: { event: EventType }) {
   
   const [extraMemberCount, setExtraMemberCount] = useState(initialExtraMembers);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [status, setStatus] = useState<{ success: boolean; message: string } | null>(null);
+  const [status, setStatus] = useState<ActionResult | null>(null);
 
   useEffect(() => {
     if (event?.isTeamEvent) {
@@ -64,7 +67,7 @@ export default function EventRegisterForm({ event }: { event: EventType }) {
         formData.append("teamMembers", JSON.stringify(teamMembersArray));
     }
 
-    const result = await registerForEvent(null, formData);
+    const result = await registerForEvent(INITIAL_STATUS, formData);
     setStatus(result);
     
     if (!result.success) setIsSubmitting(false); 

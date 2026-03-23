@@ -4,13 +4,12 @@ import dbConnect from "@/lib/db";
 import Event from "@/models/Event";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Metadata, ResolvingMetadata } from "next";
+import { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(
-  { params }: { params: Promise<{ id: string }> },
-  parent: ResolvingMetadata
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<Metadata> {
   const resolvedParams = await params;
   await dbConnect();
@@ -42,16 +41,27 @@ export default async function EventRegistrationPage({ params }: { params: Promis
   // 2. Logic: Status Check
   const currentRegs = event.currentRegistrations || 0;
   const isCapacityFull = event.maxRegistrations > 0 && currentRegs >= event.maxRegistrations;
-  const isRegistrationClosed = !event.registrationOpen || isCapacityFull;
+  const noRegistrationRequired =
+    event.registrationRequired === false ||
+    (!event.registrationOpen && event.maxRegistrations === 0 && currentRegs === 0);
+  const registrationRequired = !noRegistrationRequired;
+  const isEventEnded = !event.isLive;
+  const isRegistrationClosed = isEventEnded || !registrationRequired || !event.registrationOpen || isCapacityFull;
 
   if (isRegistrationClosed) {
     return (
       <main className="min-h-screen bg-black text-white font-sans flex flex-col items-center justify-center p-4">
         <Navbar />
         <div className="text-center max-w-md mx-auto p-10 border border-white/10 rounded-3xl bg-white/5 backdrop-blur-md">
-          <h1 className="text-3xl font-bold mb-4 text-red-500">Registration Closed</h1>
+          <h1 className="text-3xl font-bold mb-4 text-red-500">
+            {isEventEnded ? "Event Ended" : registrationRequired ? "Registration Closed" : "No Registration Needed"}
+          </h1>
           <p className="text-gray-400 mb-8">
-            {isCapacityFull
+            {isEventEnded
+              ? "This event has already concluded, so registration is no longer available."
+              : !registrationRequired
+              ? "This event does not require registration. You can check the event details page for attendance instructions."
+              : isCapacityFull
               ? "This event has reached its maximum capacity."
               : "Registration is currently disabled."}
           </p>

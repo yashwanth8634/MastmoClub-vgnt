@@ -8,15 +8,20 @@ import { validateRollNo } from "@/lib/validator";
 import { sendEmail } from "@/lib/email";
 import { emailTemplates } from "@/lib/emailTemplates";
 import { revalidatePath } from "next/cache";
+import { failureResult, getErrorMessage, successResult, type ActionResult } from "@/lib/actionState";
+import { logger } from "@/lib/logger";
 
-export async function submitClubRegistration(prevState: any, formData: FormData) {
+export async function submitClubRegistration(
+  _prevState: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
   try {
     await dbConnect();
 
     // 0. Rate Limit Check (5 requests per minute)
     const isAllowed = await rateLimit(5, 60000);
     if (!isAllowed) {
-      return { success: false, message: "Too many requests. Please try again later." };
+      return failureResult("Too many requests. Please try again later.");
     }
     
     // 1. Extract Data
@@ -31,20 +36,20 @@ export async function submitClubRegistration(prevState: any, formData: FormData)
     const year = formData.get("year") as string;
 
     // 2. Manual Validation
-    if (!fullName || fullName.length < 2) return { success: false, message: "Name is required (min 2 chars)." };
-    if (!email || !email.includes("@")) return { success: false, message: "Invalid email address." };
-    if (!phone || phone.length < 10) return { success: false, message: "Invalid phone number." };
+    if (!fullName || fullName.length < 2) return failureResult("Name is required (min 2 chars).");
+    if (!email || !email.includes("@")) return failureResult("Invalid email address.");
+    if (!phone || phone.length < 10) return failureResult("Invalid phone number.");
 
     // ---------------------------------------------------------
     // A. FACULTY LOGIC
     // ---------------------------------------------------------
     if (type === "faculty") {
-      if (!department) return { success: false, message: "Department is required for Faculty." };
+      if (!department) return failureResult("Department is required for Faculty.");
 
       // Check Duplicate Email
       const existingEmail = await ClubRegistration.findOne({ "member.email": email });
       if (existingEmail) {
-        return { success: false, message: "This email is already registered." };
+        return failureResult("This email is already registered.");
       }
 
       // Create Record
@@ -66,7 +71,7 @@ export async function submitClubRegistration(prevState: any, formData: FormData)
       await sendEmail(email, subject, html);
 
       revalidatePath("/admin/dashboard-group/members");
-      return { success: true, message: "Faculty Application Submitted! Pending Approval." };
+      return successResult("Faculty Application Submitted! Pending Approval.");
     }
 
     // ---------------------------------------------------------
@@ -74,25 +79,25 @@ export async function submitClubRegistration(prevState: any, formData: FormData)
     // ---------------------------------------------------------
     if (type === "student") {
       if (!rollNo || !branch || !section || !year) {
-        return { success: false, message: "All fields (Roll No, Branch, Section, Year) are required." };
+        return failureResult("All fields (Roll No, Branch, Section, Year) are required.");
       }
 
       // 1. Check Duplicate Email
       const existingEmail = await ClubRegistration.findOne({ "member.email": email });
       if (existingEmail) {
-        return { success: false, message: "This email is already registered." };
+        return failureResult("This email is already registered.");
       }
 
       // 2. Check Duplicate Roll No
       const existingRoll = await ClubRegistration.findOne({ "member.rollNo": rollNo });
       if (existingRoll) {
-        return { success: false, message: "This Roll Number is already registered." };
+        return failureResult("This Roll Number is already registered.");
       }
 
       // 3. Validate Roll No Format (Using your lib/validator)
       const rollError = validateRollNo(rollNo, branch);
       if (rollError) {
-        return { success: false, message: rollError };
+        return failureResult(rollError);
       }
 
       // 4. Create Record
@@ -116,14 +121,14 @@ export async function submitClubRegistration(prevState: any, formData: FormData)
       await sendEmail(email, subject, html);
 
       revalidatePath("/admin/dashboard-group/members");
-      return { success: true, message: "Student Membership Submitted! Pending Approval." };
+      return successResult("Student Membership Submitted! Pending Approval.");
     }
 
-    return { success: false, message: "Invalid registration type." };
+    return failureResult("Invalid registration type.");
 
-  } catch (error: any) {
-    console.error("Club Registration Error:", error);
-    return { success: false, message: error.message || "Failed to submit application." };
+  } catch (error: unknown) {
+    logger.error("Club registration submission failed", error);
+    return failureResult(getErrorMessage(error, "Failed to submit application."));
   }
 }
 
@@ -137,16 +142,16 @@ export async function deleteMember(memberId: string) {
     const deletedMember = await ClubRegistration.findByIdAndDelete(memberId);
 
     if (!deletedMember) {
-      return { success: false, message: "Member not found or already deleted." };
+      return failureResult("Member not found or already deleted.");
     }
 
     // 2. Revalidate the dashboard so the table updates immediately
     revalidatePath("/admin/dashboard-group/members");
 
-    return { success: true, message: "Member deleted successfully." };
+    return successResult("Member deleted successfully.");
 
-  } catch (error: any) {
-    console.error("Delete Member Error:", error);
-    return { success: false, message: "Failed to delete member." };
+  } catch (error: unknown) {
+    logger.error("Delete member action failed", error, { memberId });
+    return failureResult("Failed to delete member.");
   }
 }

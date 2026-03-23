@@ -3,14 +3,17 @@
 import { useState } from "react";
 import Navbar from "@/components/ui/Navbar";
 import { submitClubRegistration } from "@/actions/ClubRegistrationAction";
+import type { ActionResult } from "@/lib/actionState";
 import { CheckCircle, AlertCircle, School, User, Building2 } from "lucide-react";
 import { BRANCHES, DEPARTMENTS, SECTIONS, YEARS } from "@/lib/constants";
 import MathLoader from "@/components/ui/MathLoader";
 
+const INITIAL_STATUS: ActionResult = { success: false };
+
 export default function JoinClubForm() {
   const [activeTab, setActiveTab] = useState<"student" | "faculty">("student");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [status, setStatus] = useState<any>(null);
+  const [status, setStatus] = useState<ActionResult | null>(null);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -22,7 +25,7 @@ export default function JoinClubForm() {
     // Append the type based on the active tab
     formData.append("type", activeTab);
 
-    const result = await submitClubRegistration(null, formData);
+    const result = await submitClubRegistration(INITIAL_STATUS, formData);
     setStatus(result);
     setIsSubmitting(false);
   }

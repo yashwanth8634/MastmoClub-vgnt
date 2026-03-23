@@ -1,11 +1,14 @@
 import dbConnect from "@/lib/db";
 import Event from "@/models/Event";
+import type { IEvent } from "@/models/Event";
 import Link from "next/link";
 import { Plus, Pencil, Users } from "lucide-react";
 import DeleteEventButton from "@/components/admin/Events/DeleteEventButton"; 
 import { ToggleStatusButton, ToggleRegButton } from "@/components/admin/Events/EventActionButtons";
+import { formatEventTime } from "@/lib/utils";
 
 import { Metadata } from "next";
+import type { Types } from "mongoose";
 
 export const metadata: Metadata = {
   title: "Manage Events ",
@@ -16,9 +19,15 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminEventsPage() {
   await dbConnect();
+  type LeanAdminEvent = IEvent & { _id: Types.ObjectId };
   
   // 1. Fetch Raw Data
-  const rawEvents = await Event.find({}).sort({ createdAt: -1 }).lean();
+  const rawEvents = (await Event.find({})
+    .select(
+      "title date time location currentRegistrations maxRegistrations registrationOpen isLive isTeamEvent minTeamSize maxTeamSize createdAt",
+    )
+    .sort({ createdAt: -1 })
+    .lean()) as LeanAdminEvent[];
 
   // 2. STRICT SERIALIZATION (The Fix)
   // This converts all Date objects (createdAt, updatedAt) and ObjectIds to simple strings.
@@ -53,15 +62,15 @@ export default async function AdminEventsPage() {
             <thead>
               <tr className="bg-white/5 text-gray-400 border-b border-white/10 text-xs uppercase tracking-wider">
                 <th className="p-5 font-medium">Event Title</th>
-                <th className="p-5 font-medium">Date & Loc</th>
+                <th className="p-5 font-medium">Date &amp; Loc</th>
                 <th className="p-5 font-medium">Registrations</th>
                 <th className="p-5 font-medium">Live Status</th>
                 <th className="p-5 font-medium text-right">Controls</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {events.map((event: any) => {
-                const eventId = event._id; // Now safely a string
+              {events.map((event: LeanAdminEvent) => {
+                const eventId = event._id.toString();
                 
                 // Check capacity safely
                 const isFull = event.maxRegistrations > 0 && event.currentRegistrations >= event.maxRegistrations;
@@ -84,12 +93,15 @@ export default async function AdminEventsPage() {
                     {/* DATE & LOCATION */}
                     <td className="p-5 text-gray-400 text-sm">
                       <div className="text-white font-medium">{event.date}</div>
-                      <div className="text-xs opacity-70">{event.time}</div>
+                      <div className="text-xs opacity-70">{formatEventTime(event.time)}</div>
                       <div className="text-xs opacity-50 mt-1">{event.location}</div>
                     </td>
 
                     {/* REGISTRATIONS */}
                     <td className="p-5 text-sm">
+                      <div className="text-[10px] uppercase tracking-wide text-gray-500 mb-1">
+                        {event.isTeamEvent ? "Teams" : "Participants"}
+                      </div>
                       <div className="flex items-center gap-2 mb-1">
                         <Users size={16} className="text-[#00f0ff]" />
                         <span className={`font-mono text-lg ${isFull ? "text-red-400" : "text-white"}`}>
@@ -101,6 +113,7 @@ export default async function AdminEventsPage() {
                       
                       <ToggleRegButton 
                         id={eventId} 
+                        isRequired={event.registrationRequired ?? true}
                         isOpen={event.registrationOpen} 
                         isFull={isFull} 
                       />

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Navbar from "@/components/ui/Navbar";
-import type { Metadata, ResolvingMetadata } from "next";
+import type { Metadata } from "next";
 import { 
   Calendar, 
   Clock, 
@@ -14,6 +14,7 @@ import {
 import dbConnect from "@/lib/db";
 import Event from "@/models/Event";
 import { notFound } from "next/navigation";
+import { formatEventTime } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -23,8 +24,7 @@ type Props = {
 
 // ✅ SEO Metadata
 export async function generateMetadata(
-  { params }: Props,
-  parent: ResolvingMetadata
+  { params }: Props
 ): Promise<Metadata> {
   const resolvedParams = await params;
   const id = resolvedParams.id;
@@ -58,9 +58,13 @@ export default async function EventDetailsPage({ params }: { params: Promise<{ i
   // 1. Capacity Check
   const currentRegs = event.currentRegistrations || 0;
   const isFull = event.maxRegistrations > 0 && currentRegs >= event.maxRegistrations;
+  const noRegistrationRequired =
+    event.registrationRequired === false ||
+    (!event.registrationOpen && event.maxRegistrations === 0 && currentRegs === 0);
+  const registrationRequired = !noRegistrationRequired;
 
   // 2. Status Check
-  const isRegOpen = event.registrationOpen; 
+  const isRegOpen = registrationRequired && event.registrationOpen; 
 
   // 3. Visual "Event Ended" Badge
   const isEventEnded = !event.isLive;
@@ -101,12 +105,18 @@ export default async function EventDetailsPage({ params }: { params: Promise<{ i
             )}
             
             {isEventEnded && <span className="px-3 py-1 rounded-full bg-gray-800 text-gray-400 text-xs font-bold uppercase border border-gray-700">Event Ended</span>}
+
+            {!isEventEnded && !registrationRequired && (
+              <span className="px-3 py-1 rounded-full bg-blue-900/30 text-blue-300 text-xs font-bold uppercase border border-blue-500/30">
+                No Registration Required
+              </span>
+            )}
             
             {!isEventEnded && isFull && <span className="px-3 py-1 rounded-full bg-red-900/30 text-red-400 text-xs font-bold uppercase border border-red-500/30">Sold Out</span>}
             
-            {!isEventEnded && !isFull && !isRegOpen && <span className="px-3 py-1 rounded-full bg-yellow-900/30 text-yellow-400 text-xs font-bold uppercase border border-yellow-500/30">Reg Closed</span>}
+            {!isEventEnded && registrationRequired && !isFull && !isRegOpen && <span className="px-3 py-1 rounded-full bg-yellow-900/30 text-yellow-400 text-xs font-bold uppercase border border-yellow-500/30">Reg Closed</span>}
             
-            {!isEventEnded && !isFull && isRegOpen && <span className="px-3 py-1 rounded-full bg-green-900/30 text-green-400 text-xs font-bold uppercase border border-green-500/30">Open</span>}
+            {!isEventEnded && registrationRequired && !isFull && isRegOpen && <span className="px-3 py-1 rounded-full bg-green-900/30 text-green-400 text-xs font-bold uppercase border border-green-500/30">Open</span>}
           </div>
           
           <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight text-white">{event.title}</h1>
@@ -120,7 +130,7 @@ export default async function EventDetailsPage({ params }: { params: Promise<{ i
             </div>
             <div className="flex items-center gap-2">
               <Clock className="text-[#00f0ff]" size={20} />
-              <span>{event.time || 'TBA'}</span>
+              <span>{formatEventTime(event.time)}</span>
             </div>
             <div className="flex items-center gap-2">
               <MapPin className="text-[#00f0ff]" size={20} />
@@ -185,16 +195,39 @@ export default async function EventDetailsPage({ params }: { params: Promise<{ i
           <div className="lg:col-span-1">
             <div className="sticky top-32 p-8 rounded-3xl bg-[#050505] border border-white/20 shadow-[0_0_50px_rgba(0,0,0,0.5)] z-10">
               <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                Registration Details
+                {isEventEnded
+                  ? "Event Status"
+                  : registrationRequired
+                    ? "Registration Details"
+                    : "Event Access"}
               </h3>
               
               <div className="space-y-6 mb-8">
                 {/* Spots Left */}
-                {event.maxRegistrations > 0 ? (
+                {isEventEnded ? (
+                  <div className="flex justify-between items-center pb-4 border-b border-white/10">
+                    <span className="text-gray-400 text-sm flex items-center gap-2">
+                      <AlertTriangle size={16} /> Current Status
+                    </span>
+                    <span className="text-gray-300 font-bold text-sm">Event Ended</span>
+                  </div>
+                ) : !registrationRequired ? (
+                  <div className="space-y-4 border-b border-white/10 pb-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400 text-sm flex items-center gap-2">
+                        <Users size={16} /> Entry
+                      </span>
+                      <span className="text-blue-300 font-bold text-sm">No prior registration</span>
+                    </div>
+                    <div className="rounded-2xl border border-blue-500/20 bg-blue-500/10 p-4 text-sm text-blue-200">
+                      This event does not require registration. You can attend directly at the venue.
+                    </div>
+                  </div>
+                ) : event.maxRegistrations > 0 ? (
                   <div className="space-y-2 pb-4 border-b border-white/10">
                     <div className="flex justify-between items-center">
                       <span className="text-gray-400 text-sm flex items-center gap-2">
-                        <Users size={16} /> Spots Filled
+                        <Users size={16} /> {event.isTeamEvent ? "Teams Registered" : "Spots Filled"}
                       </span>
                       <span className={`font-mono text-sm font-bold ${isFull ? "text-red-400" : "text-[#00f0ff]"}`}>
                         {currentRegs} / {event.maxRegistrations}
@@ -213,13 +246,28 @@ export default async function EventDetailsPage({ params }: { params: Promise<{ i
                     <span className="text-gray-400 text-sm flex items-center gap-2">
                       <Users size={16} /> Capacity
                     </span>
-                    <span className="text-[#00f0ff] font-bold text-sm">Unlimited</span>
+                    <span className="text-[#00f0ff] font-bold text-sm">
+                      Unlimited {event.isTeamEvent ? "Teams" : "Participants"}
+                    </span>
                   </div>
                 )}
               </div>
 
               {/* --- ACTION BUTTON LOGIC --- */}
-              {isFull ? (
+              {isEventEnded ? (
+                <button disabled className="w-full py-4 bg-gray-800/70 text-gray-300 border border-gray-700 font-bold rounded-xl cursor-not-allowed flex items-center justify-center gap-2">
+                  <AlertTriangle size={18} /> Event Ended
+                </button>
+              ) : !registrationRequired ? (
+                <div className="space-y-3">
+                  <div className="w-full py-4 bg-blue-900/20 text-blue-300 border border-blue-900/50 font-bold rounded-xl text-center">
+                    No Registration Required
+                  </div>
+                  <p className="text-center text-xs text-gray-500">
+                    Walk in at the scheduled time and venue.
+                  </p>
+                </div>
+              ) : isFull ? (
                 <button disabled className="w-full py-4 bg-red-900/20 text-red-400 border border-red-900/50 font-bold rounded-xl cursor-not-allowed flex items-center justify-center gap-2">
                   <AlertTriangle size={18} /> Sold Out
                 </button>
@@ -236,9 +284,15 @@ export default async function EventDetailsPage({ params }: { params: Promise<{ i
                 </Link>
               )}
               
-              {!isFull && isRegOpen && (
+              {registrationRequired && !isFull && isRegOpen && (
                 <p className="text-center text-xs text-gray-500 mt-4">
                   *Limited seats available on first come basis.
+                </p>
+              )}
+
+              {isEventEnded && (
+                <p className="text-center text-xs text-gray-500 mt-4">
+                  This event has already concluded. Check the events page for upcoming sessions.
                 </p>
               )}
             </div>

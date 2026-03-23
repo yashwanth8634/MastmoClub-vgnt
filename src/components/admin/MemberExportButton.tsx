@@ -3,8 +3,9 @@
 import { Download } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import type { CellDef, RowInput } from "jspdf-autotable";
 
-interface Member {
+export interface ExportMember {
   name: string;
   rollNumber: string;
   email: string;
@@ -15,7 +16,7 @@ interface Member {
 }
 
 interface ExportProps {
-  members: Member[];
+  members: ExportMember[];
   title?: string;
   fileName?: string;
 }
@@ -38,7 +39,7 @@ export default function MemberExportButton({
     });
 
     // 2. Prepare Table Data with Group Headers
-    const tableBody: any[] = [];
+    const tableBody: RowInput[] = [];
     let lastGroup = "";
     let serialNo = 1;
 
@@ -48,19 +49,18 @@ export default function MemberExportButton({
 
       // If group changes, insert a Header Row
       if (currentGroup !== lastGroup) {
-        tableBody.push([
-          { 
+        const groupHeader: CellDef = {
             content: currentGroup.toUpperCase(), // e.g., "1ST YEAR CSE A"
             colSpan: 6, 
             styles: { 
-              fillColor: [200, 200, 200], // Light Gray background
-              textColor: [0, 0, 0],       // Black Text
+              fillColor: [200, 200, 200] as [number, number, number], // Light Gray background
+              textColor: [0, 0, 0] as [number, number, number], // Black Text
               fontStyle: "bold",
               halign: "left",
               fontSize: 10
             } 
-          }
-        ]);
+          };
+        tableBody.push([groupHeader]);
         lastGroup = currentGroup;
       }
 

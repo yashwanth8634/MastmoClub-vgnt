@@ -25,13 +25,8 @@ export default function ChatBot() {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [userId, setUserId] = useState<string>("");
+  const [userId] = useState<string>(() => getAnonymousUserId());
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  // Initialize user ID only on client side to avoid hydration mismatch
-  useEffect(() => {
-    setUserId(getAnonymousUserId());
-  }, []);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -47,20 +42,24 @@ export default function ChatBot() {
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
     const userMsg = input.trim();
+    const nextMessages = [...messages, { role: "user" as const, content: userMsg }];
     setInput("");
-    setMessages((prev) => [...prev, { role: "user", content: userMsg }]);
+    setMessages(nextMessages);
     setIsLoading(true);
 
-    const response = await getChatResponse(messages, userMsg, userId);
+    try {
+      const response = await getChatResponse(nextMessages, userMsg, userId);
 
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "assistant",
-        content: response.message || "Error connecting to AI.",
-      },
-    ]);
-    setIsLoading(false);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: response.message || "Error connecting to AI.",
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

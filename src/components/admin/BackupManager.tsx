@@ -14,7 +14,7 @@ export default function BackupManager() {
     try {
       const result = await generateBackup();
 
-      if (result.success && result.data) {
+      if (result.success && "data" in result) {
         // 1. Create a Blob from the JSON string
         const blob = new Blob([result.data], { type: "application/json" });
         
@@ -33,9 +33,10 @@ export default function BackupManager() {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       } else {
-        alert("Failed to generate backup: " + result.message);
+        const errorMessage = "message" in result ? result.message : "Unknown error";
+        alert("Failed to generate backup: " + errorMessage);
       }
-    } catch (error) {
+    } catch {
       alert("An unexpected error occurred.");
     } finally {
       setIsLoading(false);

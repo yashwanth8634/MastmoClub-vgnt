@@ -6,14 +6,26 @@ import { SignJWT } from "jose";
 import bcrypt from "bcrypt";
 import connectToDatabase from "@/lib/db";
 import Admin from "@/models/Admin";
+import { failureResult, successResult, type ActionResult } from "@/lib/actionState";
+import { logger } from "@/lib/logger";
 
 const JWT_SECRET = process.env.JWT_SECRET;
+type AdminDocumentLike = {
+  _id: string;
+  role: string;
+  email: string;
+  passwordHash?: string;
+  toObject(): { passwordHash?: string };
+};
 
 // 1. LOGIN ACTION
-export async function loginAdmin(prevState: any, formData: FormData) {
+export async function loginAdmin(
+  _prevState: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
   if (!JWT_SECRET) {
-    console.error("JWT_SECRET is not defined in environment variables.");
-    return { success: false, message: "Server Configuration Error" };
+    logger.error("JWT_SECRET is not defined in environment variables.");
+    return failureResult("Server Configuration Error");
   }
 
   // The form uses 'username' for the email field
@@ -21,31 +33,31 @@ export async function loginAdmin(prevState: any, formData: FormData) {
   const password = formData.get("password") as string;
 
   if (!email || !password) {
-    return { success: false, message: "Email and password are required." };
+    return failureResult("Email and password are required.");
   }
 
   try {
     await connectToDatabase();
 
-    const admin = await Admin.findOne({ email });
+    const admin = (await Admin.findOne({ email })) as AdminDocumentLike | null;
     if (!admin) {
       // Use a generic message to prevent email enumeration attacks
-      return { success: false, message: "Invalid credentials." };
+      return failureResult("Invalid credentials.");
     }
 
     // Robustly retrieve password hash (handles Mongoose schema caching issues in dev)
     // If the schema is stale (lowercase 'passwordhash'), admin.passwordHash might be undefined
     // even if the DB document has it. admin.toObject() gives us the raw data.
-    const hash = admin.passwordHash || (admin.toObject() as any).passwordHash;
+    const hash = admin.passwordHash || admin.toObject().passwordHash;
 
     if (!hash) {
-        console.error(`❌ Admin found (${email}) but password hash is missing.`);
-        return { success: false, message: "Account configuration error." };
+        logger.error("Admin password hash is missing", undefined, { email });
+        return failureResult("Account configuration error.");
     }
 
     const isPasswordValid = await bcrypt.compare(password, hash);
     if (!isPasswordValid) {
-      return { success: false, message: "Invalid credentials." };
+      return failureResult("Invalid credentials.");
     }
 
     // Credentials are valid, create JWT
@@ -66,10 +78,10 @@ export async function loginAdmin(prevState: any, formData: FormData) {
       maxAge: 60 * 60 * 24, // 1 day
     });
 
-    return { success: true };
-  } catch (error) {
-    console.error("Login Error:", error);
-    return { success: false, message: "An internal server error occurred." };
+    return successResult();
+  } catch (error: unknown) {
+    logger.error("Login action failed", error, { email });
+    return failureResult("An internal server error occurred.");
   }
 }
 

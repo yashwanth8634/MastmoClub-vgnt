@@ -1,9 +1,15 @@
 import dbConnect from "@/lib/db";
 import Event from "@/models/Event";
-import Navbar from "@/components/ui/Navbar";
+import type { IEvent } from "@/models/Event";
 import { Calendar } from "lucide-react";
 import HoverExpandGallery from "@/components/ui/HoverExpandGallery";
 import type { Metadata } from "next";
+import type { Types } from "mongoose";
+
+function getSortableEventTimestamp(dateString: string) {
+  const timestamp = Date.parse(dateString);
+  return Number.isNaN(timestamp) ? Number.NEGATIVE_INFINITY : timestamp;
+}
 
 export const dynamic = "force-dynamic";
 
@@ -19,17 +25,20 @@ export const metadata: Metadata = {
 
 export default async function GalleryPage() {
   await dbConnect();
+  type GalleryEvent = Pick<IEvent, "title" | "date" | "gallery"> & {
+    _id: Types.ObjectId;
+    category?: string;
+  };
   
   // Fetch events that actually have photos (non-empty gallery array)
-  const events = await Event.find({ gallery: { $exists: true, $not: { $size: 0 } } })
+  const events = (await Event.find({ gallery: { $exists: true, $not: { $size: 0 } } })
                         .select('title category date gallery') 
-                        .sort({ date: -1 })
-                        .lean();
+                        .lean()) as GalleryEvent[];
+
+  events.sort((a, b) => getSortableEventTimestamp(b.date) - getSortableEventTimestamp(a.date));
 
   return (
     <main className="min-h-screen bg-black text-white selection:bg-[#00f0ff]/30">
-      <Navbar />
-
       <div className="max-w-7xl mx-auto px-4 md:px-6 pt-32 pb-20">
         <h1 className="text-4xl md:text-6xl font-bold text-center mb-4">
           Event <span className="text-[#00f0ff]">Gallery</span>
@@ -37,7 +46,7 @@ export default async function GalleryPage() {
 
         <div className="space-y-24">
           {events.length > 0 ? (
-            events.map((event: any) => (
+            events.map((event) => (
               <section key={event._id.toString()} className="animate-in fade-in slide-in-from-bottom-8 duration-700">
                 
                 {/* Header */}

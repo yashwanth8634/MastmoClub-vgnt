@@ -1,9 +1,14 @@
 import dbConnect from "@/lib/db";
 import EventRegistration from "@/models/EventRegistration";
+import type { IEventRegistration, ITeamMember } from "@/models/EventRegistration";
 import Member from "@/models/ClubRegistration"; 
+import type { IClubRegistration } from "@/models/ClubRegistration";
 import Event from "@/models/Event";
+import type { IEvent } from "@/models/Event";
 import EventRegistrationsList from "@/components/admin/EventRegistrationsList"; 
+import type { ExportMember } from "@/components/admin/MemberExportButton";
 import { Metadata } from "next";
+import type { Types } from "mongoose";
 
 export const metadata: Metadata = {
   title: "Event Registrations ",
@@ -58,52 +63,100 @@ const getBranchFromRoll = (rollNo: string) => {
 
 export default async function RegistrationsPage() {
   await dbConnect();
+  type LeanEvent = IEvent & { _id: Types.ObjectId };
+  type LeanRegistration = IEventRegistration & { _id: Types.ObjectId };
+  type ContactInfo = { email: string; phone: string };
+  type ProcessedPerson = {
+    rawName: string;
+    rawRoll: string;
+    rawPhone: string;
+    rawEmail: string;
+    realYear: string;
+    realBranch: string;
+    realSection: string;
+    teamName: string;
+  };
+  type SerializedRegistration = {
+    _id: string;
+    teamName?: string;
+    fullName: string;
+    rollNo: string;
+    section?: string;
+    teamMembers: Array<{
+      name: string;
+      rollNo: string;
+      section: string;
+      branch: string;
+    }>;
+  };
   
-  const events = await Event.find({}).sort({ createdAt: -1 }).limit(30).lean();
+  const events = (await Event.find({})
+    .select("title registrationOpen registrationRequired isTeamEvent date location createdAt")
+    .sort({ createdAt: -1 })
+    .limit(30)
+    .lean()) as LeanEvent[];
 
   const processedEvents = await Promise.all(
-    events.map(async (event: any) => {
-      const regs = await EventRegistration.find({ eventId: event._id }).lean();
-      const safeRegs = JSON.parse(JSON.stringify(regs));
+    events.map(async (event) => {
+      const regs = (await EventRegistration.find({
+        eventId: event._id,
+      })
+        .select("teamName fullName rollNo section teamMembers")
+        .lean()) as LeanRegistration[];
+      const safeRegs: SerializedRegistration[] = regs.map((registration) => ({
+        _id: registration._id.toString(),
+        teamName: registration.teamName,
+        fullName: registration.fullName,
+        rollNo: registration.rollNo,
+        section: registration.section,
+        teamMembers: (registration.teamMembers || []).map((member) => ({
+          name: member.name,
+          rollNo: member.rollNo,
+          section: member.section,
+          branch: member.branch,
+        })),
+      }));
 
       // 1. Fetch Contact Info
-      const allRollNos = safeRegs.flatMap((r: any) => {
-         const rolls = [r.rollNo];
-         if (r.teamMembers) {
-            r.teamMembers.forEach((m: any) => rolls.push(m.rollNo));
+      const allRollNos = safeRegs.flatMap((registration) => {
+         const rolls = [registration.rollNo];
+         if (registration.teamMembers) {
+            registration.teamMembers.forEach((member) => rolls.push(member.rollNo));
          }
          return rolls;
       });
 
-      const clubMembers = await Member.find({ "member.rollNo": { $in: allRollNos } })
-                                      .select("member.rollNo member.email member.phone member.mobile")
-                                      .lean();
+      const clubMembers = (await Member.find({ "member.rollNo": { $in: allRollNos } })
+                                      .select("member.rollNo member.email member.phone")
+                                      .lean()) as IClubRegistration[];
 
-      const contactMap = new Map();
-      clubMembers.forEach((m: any) => {
-         if (m.member?.rollNo) {
-             contactMap.set(m.member.rollNo, {
-                 email: m.member.email || "N/A",
-                 phone: m.member.phone || m.member.mobile || "N/A"
+      const contactMap = new Map<string, ContactInfo>();
+      clubMembers.forEach((memberRecord) => {
+         if (memberRecord.member?.rollNo) {
+             contactMap.set(memberRecord.member.rollNo, {
+                 email: memberRecord.member.email || "N/A",
+                 phone: memberRecord.member.phone || "N/A"
              });
          }
       });
 
       // 2. Process Data
-      const allPeople = safeRegs.flatMap((reg: any) => {
-          const teamName = reg.teamName || "Individual";
+      const allPeople = safeRegs.flatMap((registration) => {
+          const teamName = registration.teamName || "Individual";
           
           // ✅ USE NEW HELPER HERE
-          const inheritedYear = getYearFromRoll(reg.rollNo);
-          const inheritedBranch = getBranchFromRoll(reg.rollNo); 
-          const inheritedSection = reg.section || "N/A";
+          const inheritedYear = getYearFromRoll(registration.rollNo);
+          const inheritedBranch = getBranchFromRoll(registration.rollNo); 
+          const inheritedSection = registration.section || "N/A";
 
-          const createPerson = (p: any) => {
-             const roll = p.rollNo || p.rollNumber || "N/A";
-             const contact = contactMap.get(roll) || { email: p.email || "N/A", phone: p.phone || "N/A" };
+          const createPerson = (
+            person: Pick<LeanRegistration, "fullName" | "rollNo"> | ITeamMember,
+          ): ProcessedPerson => {
+             const roll = person.rollNo || "N/A";
+             const contact = contactMap.get(roll) || { email: "N/A", phone: "N/A" };
 
              return {
-                 rawName: p.name || p.fullName || "Unknown",
+                 rawName: "name" in person ? person.name : person.fullName,
                  rawRoll: roll,
                  rawPhone: contact.phone,
                  rawEmail: contact.email,
@@ -114,39 +167,43 @@ export default async function RegistrationsPage() {
              };
           };
 
-          const list = [createPerson(reg)];
-          if (reg.teamMembers && Array.isArray(reg.teamMembers)) {
-             reg.teamMembers.forEach((m: any) => list.push(createPerson(m)));
+          const list = [createPerson(registration)];
+          if (registration.teamMembers && Array.isArray(registration.teamMembers)) {
+             registration.teamMembers.forEach((member) => list.push(createPerson(member)));
           }
           return list;
       });
 
       // 3. Class Report
-      const classReportData = allPeople.map((p: any) => ({
-         name: p.rawName,
-         rollNumber: p.rawRoll,
-         email: p.rawEmail,
-         phone: p.rawPhone,
-         year: p.realYear,
-         branch: p.realBranch,
-         section: p.realSection 
+      const classReportData = allPeople.map((person): ExportMember => ({
+         name: person.rawName,
+         rollNumber: person.rawRoll,
+         email: person.rawEmail,
+         phone: person.rawPhone,
+         year: person.realYear,
+         branch: person.realBranch,
+         section: person.realSection 
       }));
 
       // 4. Team Report
-      const teamReportData = allPeople.map((p: any) => ({
-          name: p.rawName,
-          rollNumber: p.rawRoll,
-          email: p.rawEmail,
-          phone: p.rawPhone,
-          year: p.realYear,       
-          branch: p.realBranch,   
-          section: `${p.realSection}           TEAM: ${p.teamName.toUpperCase()}`
+      const teamReportData = allPeople.map((person): ExportMember => ({
+          name: person.rawName,
+          rollNumber: person.rawRoll,
+          email: person.rawEmail,
+          phone: person.rawPhone,
+          year: person.realYear,       
+          branch: person.realBranch,   
+          section: `${person.realSection}           TEAM: ${person.teamName.toUpperCase()}`
       }));
 
       return {
         id: event._id.toString(),
         title: event.title,
         isOpen: event.registrationOpen,
+        registrationRequired: event.registrationRequired,
+        isTeamEvent: event.isTeamEvent,
+        eventDate: event.date,
+        location: event.location,
         teamCount: safeRegs.length,
         studentCount: allPeople.length,
         registrations: safeRegs, 

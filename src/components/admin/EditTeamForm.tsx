@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Save, ArrowLeft, Image as ImageIcon, Trash2, ListOrdered } from "lucide-react";
 import MathLoader from "@/components/ui/MathLoader";
-import { UploadDropzone } from "@/utils/uploadthing"; 
+import { UploadDropzone, getCompressedUploadFiles } from "@/utils/uploadthing"; 
 import Link from "next/link";
 import Image from "next/image";
 
@@ -25,13 +25,15 @@ interface TeamMemberData {
   };
 }
 
-export default function EditTeamForm({ member }: { member: TeamMemberData }) {
+export default function EditTeamForm({
+  member,
+}: {
+  member: TeamMemberData | null;
+}) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // ✅ IMAGE LOGIC: Initialize state with the existing member image
-  const [imageUrl, setImageUrl] = useState(member?.image || ""); 
+  const [imageUrl, setImageUrl] = useState(member?.image || "");
   const router = useRouter();
 
-  // ✅ SAFETY CHECK: Prevents the "undefined (reading name)" crash
   if (!member) {
     return (
       <div className="p-20 text-center text-white">
@@ -41,6 +43,8 @@ export default function EditTeamForm({ member }: { member: TeamMemberData }) {
     );
   }
 
+  const memberId = member._id;
+
   async function handleSubmit(formData: FormData) {
     if (isSubmitting) return;
     setIsSubmitting(true);
@@ -48,7 +52,7 @@ export default function EditTeamForm({ member }: { member: TeamMemberData }) {
     // ✅ IMAGE LOGIC: Explicitly attach the current image URL from state to the form
     formData.set("image", imageUrl);
     
-    const result = await updateTeamMember(member._id, formData);
+    const result = await updateTeamMember(memberId, formData);
     
     if (result && !result.success) {
       alert(result.message);
@@ -133,6 +137,7 @@ export default function EditTeamForm({ member }: { member: TeamMemberData }) {
                 <div className="bg-white/5 border border-dashed border-white/20 rounded-xl overflow-hidden hover:border-[#00f0ff]/50 transition-colors">
                     <UploadDropzone
                         endpoint="teamImage"
+                        onBeforeUploadBegin={getCompressedUploadFiles("teamImage")}
                         onClientUploadComplete={(res) => {
                             if (res && res[0]) {
                                 setImageUrl(res[0].url); // Update state with new image URL

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { saveGalleryItem } from "@/actions/galleryActions"; 
-import { UploadDropzone } from "@/utils/uploadthing"; // 👈 Import from YOUR lib file
+import { UploadDropzone, getCompressedUploadFiles } from "@/utils/uploadthing"; // 👈 Import from YOUR lib file
 import { Image as ImageIcon, X } from "lucide-react";
 import MathLoader from "@/components/ui/MathLoader";
 import Image from "next/image";
@@ -68,6 +68,7 @@ export default function UploadGalleryForm() {
             {!imageUrl ? (
                 <UploadDropzone
                     endpoint="galleryImage"
+                    onBeforeUploadBegin={getCompressedUploadFiles("galleryImage")}
                     onClientUploadComplete={(res) => {
                         if (res && res[0]) {
                             setImageUrl(res[0].url);

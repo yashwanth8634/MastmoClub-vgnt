@@ -36,7 +36,17 @@ export function ToggleStatusButton({ id, isLive }: { id: string, isLive: boolean
 }
 
 // --- 2. REGISTRATION TOGGLE ---
-export function ToggleRegButton({ id, isOpen, isFull }: { id: string, isOpen: boolean, isFull: boolean }) {
+export function ToggleRegButton({
+  id,
+  isRequired,
+  isOpen,
+  isFull,
+}: {
+  id: string,
+  isRequired: boolean,
+  isOpen: boolean,
+  isFull: boolean,
+}) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -50,6 +60,15 @@ export function ToggleRegButton({ id, isOpen, isFull }: { id: string, isOpen: bo
   // Logic: If manually CLOSED, show Red Closed.
   // If OPEN but FULL, show Orange Warning.
   // If OPEN and Space Available, show Blue Open.
+
+  if (!isRequired) {
+    return (
+      <div className="text-[10px] flex items-center gap-1 text-gray-500 uppercase font-bold tracking-wide">
+        <Lock size={10} />
+        No Registration
+      </div>
+    );
+  }
 
   if (!isOpen) {
     return (

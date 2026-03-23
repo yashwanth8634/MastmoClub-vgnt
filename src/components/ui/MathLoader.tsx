@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 
 const symbols = ["∞", "π", "∑", "∫", "√", "≠", "≈", "∆"];
 
@@ -13,14 +13,8 @@ export default function MathLoader({
   className?: string;
 }) {
   const [index, setIndex] = useState(0);
-  const isFirstRender = useRef(true);
 
   useEffect(() => {
-    // After first render, set ref to false so subsequent symbols animate in
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-    }
-
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % symbols.length);
     }, 600);
@@ -40,11 +34,7 @@ export default function MathLoader({
       <AnimatePresence>
         <motion.div
           key={index}
-          initial={
-            isFirstRender.current
-              ? { opacity: 1, scale: 0.5 }
-              : { opacity: 0, scale: 0.5 }
-          }
+          initial={{ opacity: index === 0 ? 1 : 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 1.5 }}
           transition={{ duration: 0.4, ease: "easeInOut" }}

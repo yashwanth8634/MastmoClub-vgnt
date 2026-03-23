@@ -3,14 +3,50 @@
 import { useState } from "react";
 import { createEvent, updateEvent } from "@/actions/eventActions";
 import { useRouter } from "next/navigation";
-import { UploadDropzone } from "@/utils/uploadthing"; 
+import { UploadDropzone, getCompressedUploadFiles } from "@/utils/uploadthing"; 
 import { 
   Plus, ArrowLeft, CalendarClock, Users, MapPin, Eye, 
-  Image as ImageIcon, Trash2, Check, Save
+  Image as ImageIcon, Trash2, Save
 } from "lucide-react";
 import MathLoader from "@/components/ui/MathLoader";
 import Link from "next/link";
 import Image from "next/image";
+import { formatEventTime } from "@/lib/utils";
+
+type CapacityMode = "limited" | "unlimited";
+
+function isIsoDateString(value?: string) {
+  return !!value && /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+function is24HourTime(value?: string) {
+  return !!value && /^([01]\d|2[0-3]):([0-5]\d)$/.test(value);
+}
+
+function convert12HourTo24Hour(value?: string) {
+  if (!value) return "";
+
+  const match = value.match(/^(\d{1,2}):(\d{2})\s*([AP]M)$/i);
+  if (!match) return "";
+
+  const [, rawHour, minute, period] = match;
+  const hour = Number(rawHour) % 12;
+  const normalizedHour = period.toUpperCase() === "PM" ? hour + 12 : hour;
+
+  return `${String(normalizedHour).padStart(2, "0")}:${minute}`;
+}
+
+function getTodayIsoDate() {
+  return new Date().toISOString().split("T")[0];
+}
+
+function getBoundedDateRange() {
+  const currentYear = new Date().getFullYear();
+  return {
+    min: `${currentYear - 1}-01-01`,
+    max: `${currentYear + 5}-12-31`,
+  };
+}
 
 // Define Data Shape
 interface EventData {
@@ -21,6 +57,7 @@ interface EventData {
   time: string;
   location: string;
   isLive: boolean;
+  registrationRequired: boolean;
   registrationOpen: boolean;
   maxRegistrations: number;
   isTeamEvent: boolean;
@@ -38,14 +75,29 @@ export default function EventForm({ initialData }: EventFormProps) {
   const router = useRouter();
   const isEditMode = !!initialData;
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   // --- 1. State Initialization ---
   const [isTeamEvent, setIsTeamEvent] = useState(initialData?.isTeamEvent || false);
   const [isLive, setIsLive] = useState(initialData ? initialData.isLive : true);
-  const [isRegOpen, setIsRegOpen] = useState(initialData ? initialData.registrationOpen : true);
+  const [registrationRequired, setRegistrationRequired] = useState(
+    initialData?.registrationRequired ?? true,
+  );
+  const [registrationOpen, setRegistrationOpen] = useState(
+    initialData?.registrationRequired === false ? false : (initialData?.registrationOpen ?? true),
+  );
+  const [capacityMode, setCapacityMode] = useState<CapacityMode>(
+    initialData && initialData.maxRegistrations > 0 ? "limited" : "unlimited",
+  );
   
   // Gallery State (Holds URL strings only)
   const [galleryUrls, setGalleryUrls] = useState<string[]>(initialData?.gallery || []);
+  const initialTime = initialData?.time;
+
+  const initialPickerTime = is24HourTime(initialTime)
+    ? initialTime
+    : convert12HourTo24Hour(initialTime);
+  const allowedDateRange = getBoundedDateRange();
 
   // --- 2. Handlers ---
   const handleRemoveImage = (indexToRemove: number) => {
@@ -58,15 +110,60 @@ export default function EventForm({ initialData }: EventFormProps) {
 
     const form = event.currentTarget;
     const formData = new FormData(form);
+    const date = String(formData.get("date") || "");
+    const time = String(formData.get("time") || "");
+    const location = String(formData.get("location") || "").trim();
+    const maxRegistrations = Number(formData.get("maxRegistrations")) || 0;
+    setFormError(null);
 
     // Validation
     if (isTeamEvent) {
       const min = parseInt(formData.get("minTeamSize") as string);
       const max = parseInt(formData.get("maxTeamSize") as string);
       if (min > max) {
-        alert("Error: Minimum team size cannot be greater than maximum team size.");
+        setFormError("Minimum team size cannot be greater than maximum team size.");
         return;
       }
+    }
+
+    if (!isIsoDateString(date)) {
+      setFormError("Choose a valid event date from the calendar.");
+      return;
+    }
+
+    if (date < allowedDateRange.min || date > allowedDateRange.max) {
+      setFormError(`Event date must be between ${allowedDateRange.min} and ${allowedDateRange.max}.`);
+      return;
+    }
+
+    if (!is24HourTime(time)) {
+      setFormError("Choose a valid event time.");
+      return;
+    }
+
+    if (location.length < 3) {
+      setFormError("Location should be at least 3 characters long.");
+      return;
+    }
+
+    if (isLive && date < getTodayIsoDate()) {
+      setFormError("A live event cannot use a past date. Hide the event instead if it already ended.");
+      return;
+    }
+
+    if (registrationOpen && !registrationRequired) {
+      setFormError("Registration cannot be open when registration is not required.");
+      return;
+    }
+
+    if (registrationOpen && !isLive) {
+      setFormError("Hidden or past events must keep registration closed.");
+      return;
+    }
+
+    if (registrationRequired && capacityMode === "limited" && maxRegistrations < 1) {
+      setFormError("Limited-capacity events need at least 1 registration slot.");
+      return;
     }
 
     setIsSubmitting(true);
@@ -75,7 +172,12 @@ export default function EventForm({ initialData }: EventFormProps) {
         // Prepare Data
         formData.set("isTeamEvent", isTeamEvent ? "true" : "false");
         formData.set("isLive", isLive ? "true" : "false");
-        formData.set("registrationOpen", isRegOpen ? "true" : "false");
+        formData.set("registrationRequired", registrationRequired ? "true" : "false");
+        formData.set("registrationOpen", registrationOpen ? "true" : "false");
+        formData.set("time", formatEventTime((formData.get("time") as string) || ""));
+        if (!registrationRequired || capacityMode === "unlimited") {
+          formData.set("maxRegistrations", "0");
+        }
 
         // Inject Gallery URLs
         formData.delete("gallery");
@@ -149,12 +251,35 @@ export default function EventForm({ initialData }: EventFormProps) {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase text-gray-500">Event Date (String)</label>
-                    <input type="text" name="date" defaultValue={initialData?.date} placeholder="e.g. 12th March 2025" required className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-[#00f0ff] outline-none" />
+                    <label className="text-xs font-bold uppercase text-gray-500">Event Date</label>
+                    <input
+                      type="date"
+                      name="date"
+                      defaultValue={isIsoDateString(initialData?.date) ? initialData?.date : ""}
+                      min={allowedDateRange.min}
+                      max={allowedDateRange.max}
+                      required
+                      className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-[#00f0ff] outline-none"
+                    />
+                    {!isIsoDateString(initialData?.date) && initialData?.date && (
+                      <p className="text-[11px] text-yellow-400">Previous saved date was custom text: {initialData.date}</p>
+                    )}
+                    <p className="text-[11px] text-gray-500">
+                      Allowed range: {allowedDateRange.min} to {allowedDateRange.max}.
+                    </p>
                 </div>
                 <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase text-gray-500">Display Time</label>
-                    <input name="time" defaultValue={initialData?.time} placeholder="e.g. 10:00 AM" required className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-[#00f0ff] outline-none" />
+                    <label className="text-xs font-bold uppercase text-gray-500">Event Time</label>
+                    <input
+                      type="time"
+                      name="time"
+                      defaultValue={initialPickerTime}
+                      required
+                      className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-[#00f0ff] outline-none"
+                    />
+                    <p className="text-[11px] text-gray-500">
+                      Saved and shown as 12-hour time like {formatEventTime(initialPickerTime || "14:00")}.
+                    </p>
                 </div>
                 <div className="space-y-2">
                     <label className="text-xs font-bold uppercase text-gray-500">Location</label>
@@ -172,29 +297,96 @@ export default function EventForm({ initialData }: EventFormProps) {
                 <Eye size={16} /> 3. Status & Capacity
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div onClick={() => setIsLive(!isLive)} className="cursor-pointer bg-black border border-white/10 rounded-xl p-4 flex items-center gap-4 hover:border-green-500/50 transition-colors select-none">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${isLive ? 'bg-green-500 text-black' : 'bg-white/10 text-gray-500'}`}>
-                       <Check size={24} strokeWidth={3} />
-                    </div>
-                    <div>
-                        <p className="font-bold text-white text-lg">Event Live?</p>
-                        <p className="text-xs text-gray-500">Uncheck to hide</p>
-                    </div>
+                <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase text-gray-500">Event Status</label>
+                    <select
+                      value={isLive ? "live" : "hidden"}
+                      onChange={(e) => {
+                        const nextIsLive = e.target.value === "live";
+                        setIsLive(nextIsLive);
+                        if (!nextIsLive) {
+                          setRegistrationOpen(false);
+                        }
+                      }}
+                      className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-yellow-500 outline-none"
+                    >
+                      <option value="live">Live on events page</option>
+                      <option value="hidden">Hidden / past event</option>
+                    </select>
                 </div>
-                <div onClick={() => setIsRegOpen(!isRegOpen)} className="cursor-pointer bg-black border border-white/10 rounded-xl p-4 flex items-center gap-4 hover:border-cyan-500/50 transition-colors select-none">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${isRegOpen ? 'bg-cyan-400 text-black' : 'bg-white/10 text-gray-500'}`}>
-                       <Check size={24} strokeWidth={3} />
-                    </div>
-                    <div>
-                        <p className="font-bold text-white text-lg">Reg Open?</p>
-                        <p className="text-xs text-gray-500">Accepting entries</p>
-                    </div>
+                <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase text-gray-500">Registration Required</label>
+                    <select
+                      value={registrationRequired ? "yes" : "no"}
+                      onChange={(e) => {
+                        const isRequired = e.target.value === "yes";
+                        setRegistrationRequired(isRequired);
+                        if (!isRequired) {
+                          setRegistrationOpen(false);
+                          setCapacityMode("unlimited");
+                        }
+                      }}
+                      className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-yellow-500 outline-none"
+                    >
+                      <option value="yes">Yes</option>
+                      <option value="no">No</option>
+                    </select>
+                    <p className="text-[11px] text-gray-500">
+                      Set this to no for walk-in events.
+                    </p>
                 </div>
                 <div className="space-y-1">
-                    <label className="text-xs font-bold uppercase text-gray-500 ml-1">Max Participants</label>
-                    <input type="number" name="maxRegistrations" defaultValue={initialData?.maxRegistrations || 100} min="0" className="w-full bg-black border border-white/10 rounded-xl h-[76px] px-6 text-2xl font-bold text-white focus:border-yellow-500 outline-none" />
+                    <label className="text-xs font-bold uppercase text-gray-500 ml-1">Capacity</label>
+                    <div className="space-y-3">
+                      <select
+                        value={!registrationRequired ? "unlimited" : capacityMode}
+                        onChange={(e) => setCapacityMode(e.target.value as CapacityMode)}
+                        disabled={!registrationRequired}
+                        className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-yellow-500 outline-none disabled:opacity-50"
+                      >
+                        <option value="unlimited">Unlimited</option>
+                        <option value="limited">Limited seats</option>
+                      </select>
+                      <input
+                        type="number"
+                        name="maxRegistrations"
+                        defaultValue={initialData?.maxRegistrations && initialData.maxRegistrations > 0 ? initialData.maxRegistrations : 100}
+                        min="1"
+                        disabled={!registrationRequired || capacityMode !== "limited"}
+                        className="w-full bg-black border border-white/10 rounded-xl h-[56px] px-6 text-xl font-bold text-white focus:border-yellow-500 outline-none disabled:opacity-50"
+                      />
+                    </div>
+                    <p className="text-[11px] text-gray-500 ml-1">
+                      {isTeamEvent
+                        ? "Capacity counts number of teams, not individual participants."
+                        : "Capacity counts number of individual participants."}
+                    </p>
                 </div>
             </div>
+            {registrationRequired && (
+              <div className="max-w-md space-y-2">
+                <label className="text-xs font-bold uppercase text-gray-500">Registration Status</label>
+                <select
+                  value={registrationOpen ? "open" : "closed"}
+                  onChange={(e) => setRegistrationOpen(e.target.value === "open")}
+                  disabled={!isLive}
+                  className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-yellow-500 outline-none"
+                >
+                  <option value="open">Open</option>
+                  <option value="closed">Closed</option>
+                </select>
+                {!isLive && (
+                  <p className="text-[11px] text-gray-500">
+                    Registration is forced closed while the event is hidden.
+                  </p>
+                )}
+              </div>
+            )}
+            {!registrationRequired && (
+              <div className="rounded-xl border border-blue-500/20 bg-blue-500/10 p-4 text-sm text-blue-200">
+                This event will not accept form registrations. Capacity limits and registration toggles are disabled automatically.
+              </div>
+            )}
         </div>
 
         {/* SECTION 4: TEAM CONFIGURATION */}
@@ -254,6 +446,7 @@ export default function EventForm({ initialData }: EventFormProps) {
             <div className="border border-white/10 rounded-2xl overflow-hidden">
                 <UploadDropzone
                     endpoint="galleryImage"
+                    onBeforeUploadBegin={getCompressedUploadFiles("galleryImage")}
                     onClientUploadComplete={(res) => {
                         if (res) {
                             const newUrls = res.map((file) => file.url);
@@ -306,6 +499,12 @@ export default function EventForm({ initialData }: EventFormProps) {
             </>
           )}
         </button>
+
+        {formError && (
+          <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            {formError}
+          </div>
+        )}
 
       </form>
     </div>

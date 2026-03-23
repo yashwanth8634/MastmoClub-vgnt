@@ -2,7 +2,18 @@
 
 import React, { useState, useEffect, useRef } from "react";
 
-export default function HoverExpandGallery({ photos }: { photos: any[] }) {
+type GalleryPhotoInput =
+  | string
+  | {
+      src?: string;
+      imageUrl?: string;
+    };
+
+export default function HoverExpandGallery({
+  photos,
+}: {
+  photos: GalleryPhotoInput[];
+}) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
 
@@ -19,7 +30,7 @@ export default function HoverExpandGallery({ photos }: { photos: any[] }) {
     if (!container || processedImages.length === 0) return;
 
     let animationFrameId: number;
-    let scrollSpeed = 2; // Adjust Speed: 0.5 is slow, 2 is fast
+    const scrollSpeed = 2; // Adjust Speed: 0.5 is slow, 2 is fast
 
     const animateScroll = () => {
       if (!isPaused && container) {
@@ -44,6 +55,8 @@ export default function HoverExpandGallery({ photos }: { photos: any[] }) {
 
   if (processedImages.length === 0) return null;
 
+  const marqueeImages = [...processedImages, ...processedImages];
+
   return (
     <div className="w-full bg-black py-6 md:py-8 border-y border-white/10">
       
@@ -64,20 +77,28 @@ export default function HoverExpandGallery({ photos }: { photos: any[] }) {
       >
         
         {/* Render Double List for Infinite Loop Effect */}
-        {[...processedImages, ...processedImages].map((image, idx) => (
+        {marqueeImages.map((image, idx) => {
+          const isInitialSet = idx < processedImages.length;
+          const shouldPrioritize = isInitialSet && idx < 2;
+
+          return (
           <div 
             key={`${image.id}-${idx}`}
             // Responsive Height
-            className="relative h-[250px] md:h-[400px] flex-shrink-0 rounded-xl overflow-hidden border border-white/20 bg-[#0a0a0a] select-none"
+            className="relative h-[250px] flex-shrink-0 rounded-xl overflow-hidden border border-white/20 bg-[#0a0a0a] select-none md:h-[400px]"
           >
             <img
               src={image.src}
               alt={image.alt}
               className="h-full w-auto object-contain pointer-events-none" // pointer-events-none prevents dragging the image file itself
               draggable={false}
+              decoding="async"
+              loading={shouldPrioritize ? "eager" : "lazy"}
+              fetchPriority={shouldPrioritize ? "high" : "low"}
             />
           </div>
-        ))}
+          );
+        })}
 
       </div>
     </div>

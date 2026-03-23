@@ -2,8 +2,73 @@ import dbConnect from "@/lib/db";
 import Event from "@/models/Event";
 import EventCard from "@/components/ui/EventCard";
 import type { Metadata } from "next";
+import { unstable_cache } from "next/cache";
 
-export const dynamic = "force-dynamic";
+interface EventListItem {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  time: string;
+  location: string;
+  category: string;
+  isPast: boolean;
+}
+
+const getCachedPublicEvents = unstable_cache(
+  async (): Promise<{
+    upcomingEvents: EventListItem[];
+    pastEvents: EventListItem[];
+  }> => {
+    await dbConnect();
+
+    const eventSelection = "title description date time location isTeamEvent";
+
+    const [upcomingEvents, pastEvents] = await Promise.all([
+      Event.find({ isLive: true })
+        .select(eventSelection)
+        .sort({ date: 1, time: 1 })
+        .lean()
+        .maxTimeMS(2500),
+      Event.find({ isLive: false })
+        .select(eventSelection)
+        .sort({ date: -1, time: -1 })
+        .lean()
+        .limit(24)
+        .maxTimeMS(2500),
+    ]);
+
+    const serializeEvents = (
+      events: Array<{
+        _id: { toString(): string };
+        title: string;
+        description: string;
+        date: string;
+        time: string;
+        location: string;
+        isTeamEvent: boolean;
+      }>,
+      isPast: boolean,
+    ): EventListItem[] =>
+      events.map((event) => ({
+        id: event._id.toString(),
+        title: event.title,
+        description: event.description,
+        date: event.date,
+        time: event.time,
+        location: event.location,
+        category: event.isTeamEvent ? "Team Event" : "Solo Event",
+        isPast,
+      }));
+
+    return {
+      upcomingEvents: serializeEvents(upcomingEvents, false),
+      pastEvents: serializeEvents(pastEvents, true),
+    };
+  },
+  ["public-events-page"],
+  { revalidate: 300, tags: ["events"] },
+);
 
 export const metadata: Metadata = {
   title: "Upcoming Events",
@@ -16,17 +81,7 @@ export const metadata: Metadata = {
 };
 
 export default async function EventsPage() {
-  await dbConnect();
-
-  // 1. Fetch ALL events (Removed 'isLive: true' filter)
-  // Sorted by creation date as requested (Newest created first)
-  const events = await Event.find({}).sort({ createdAt: -1 }).lean();
-
-  // 2. Logic Mapping based on your request:
-  // "Live/Active"  -> Upcoming
-  // "Hidden/Dead"  -> Past
-  const upcomingEvents = events.filter((e: any) => e.isLive === true);
-  const pastEvents = events.filter((e: any) => e.isLive === false);
+  const { upcomingEvents, pastEvents } = await getCachedPublicEvents();
 
   return (
     <main className="min-h-screen pt-32 px-6 pb-20">
@@ -41,11 +96,8 @@ export default async function EventsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
           {upcomingEvents.length > 0 ? (
-            upcomingEvents.map((event: any) => (
-              <EventCard
-                key={event._id.toString()}
-                event={{ ...event, id: event._id.toString(), isPast: false }}
-              />
+            upcomingEvents.map((event) => (
+              <EventCard key={event.id} event={event} />
             ))
           ) : (
             <div className="col-span-full py-20 text-center border border-white/10 rounded-3xl bg-black">
@@ -67,14 +119,12 @@ export default async function EventsPage() {
             Past Recaps
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-            {pastEvents.map((event: any) => (
+            {pastEvents.map((event) => (
               <div
-                key={event._id.toString()}
+                key={event.id}
                 className="opacity-60 hover:opacity-100 transition-opacity duration-300"
               >
-                <EventCard
-                  event={{ ...event, id: event._id.toString(), isPast: true }}
-                />
+                <EventCard event={event} />
               </div>
             ))}
           </div>

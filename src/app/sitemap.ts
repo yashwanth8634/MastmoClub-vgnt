@@ -1,18 +1,23 @@
 import { MetadataRoute } from 'next';
 import dbConnect from '@/lib/db';
 import Event from '@/models/Event';
+import type { IEvent } from '@/models/Event';
+import type { Types } from 'mongoose';
+import { logger } from '@/lib/logger';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Use your actual domain
   const baseUrl = 'https://www.mastmovgnt.in';
 
   // Fetch all events for dynamic routes
-  let events: any[] = [];
+  let events: Array<Pick<IEvent, "updatedAt"> & { _id: Types.ObjectId }> = [];
   try {
     await dbConnect();
-    events = await Event.find({ isLive: true }).select('_id updatedAt').lean();
-  } catch (error) {
-    console.error('Error fetching events for sitemap:', error);
+    events = (await Event.find({ isLive: true }).select('_id updatedAt').lean()) as Array<
+      Pick<IEvent, "updatedAt"> & { _id: Types.ObjectId }
+    >;
+  } catch (error: unknown) {
+    logger.error('Error fetching events for sitemap', error);
   }
 
   // Static routes

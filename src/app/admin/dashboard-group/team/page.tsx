@@ -1,7 +1,7 @@
 import Link from "next/link";
 import dbConnect from "@/lib/db";
 import TeamMember from "@/models/TeamMember";
-import { Plus, Trash2, User, Pencil } from "lucide-react"; // Combined imports
+import { Plus, User, Pencil } from "lucide-react"; // Combined imports
 import DeleteMemberButton from "@/components/admin/DeleteMemberButton";
 import { Metadata } from "next";
 
@@ -113,7 +113,7 @@ export default async function TeamManager() {
         {members.length === 0 && (
           <div className="text-center text-gray-500 py-10 border border-dashed border-white/10 rounded-2xl">
             <p>No team members found.</p>
-            <p className="text-sm mt-2">Click "Add Member" to get started.</p>
+            <p className="text-sm mt-2">Click &quot;Add Member&quot; to get started.</p>
           </div>
         )}
       </div>

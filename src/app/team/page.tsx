@@ -2,7 +2,9 @@ import TeamCard from "@/components/ui/TeamCard";
 import PatronSection from "@/components/team/PatronSection";
 import dbConnect from "@/lib/db";
 import TeamMember from "@/models/TeamMember";
+import type { ITeamMember } from "@/models/TeamMember";
 import type { Metadata } from "next";
+import type { Types } from "mongoose";
 
 export const dynamic = "force-dynamic";
 
@@ -20,13 +22,20 @@ export default async function TeamPage() {
   await dbConnect();
 
   // 1. FETCH MEMBERS
-  const allMembers = await TeamMember.find({}).sort({ order: 1 }).lean();
+  type LeanTeamMember = ITeamMember & { _id: Types.ObjectId };
 
-  const serialize = (members: any[]) => members.map(m => ({
-    ...m,
-    _id: m._id.toString(),
-    socials: m.socials || {} 
-  }));
+  const allMembers = (await TeamMember.find({})
+    .select("name role category image details order socials")
+    .sort({ order: 1 })
+    .lean()) as LeanTeamMember[];
+
+  const serialize = (members: LeanTeamMember[]) =>
+    members.map((member) => ({
+      ...member,
+      _id: member._id.toString(),
+      socials: member.socials || {},
+      image: member.image || "",
+    }));
 
   const serializedMembers = serialize(allMembers);
 

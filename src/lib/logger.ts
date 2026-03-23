@@ -1,7 +1,17 @@
 export type LogLevel = "info" | "warn" | "error" | "debug";
 
-interface LogContext {
-  [key: string]: any;
+type LogContext = Record<string, unknown>;
+
+function serializeError(error: unknown): LogContext {
+  if (error instanceof Error) {
+    return {
+      errorName: error.name,
+      errorMessage: error.message,
+      stack: error.stack,
+    };
+  }
+
+  return { error };
 }
 
 class Logger {
@@ -26,15 +36,11 @@ class Logger {
     this.log("warn", message, context);
   }
 
-  error(message: string, error?: any, context?: LogContext) {
-    const errorContext = error instanceof Error ? {
-      errorName: error.name,
-      errorMessage: error.message,
-      stack: error.stack,
-      ...context
-    } : { error, ...context };
-
-    this.log("error", message, errorContext);
+  error(message: string, error?: unknown, context?: LogContext) {
+    this.log("error", message, {
+      ...(error !== undefined ? serializeError(error) : {}),
+      ...context,
+    });
   }
 
   debug(message: string, context?: LogContext) {

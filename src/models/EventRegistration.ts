@@ -1,4 +1,4 @@
-import mongoose, { Schema, models, model, Document } from "mongoose";
+import mongoose, { Schema, models, model, Document, type HydratedDocument } from "mongoose";
 
 // Interface for the team member sub-document
 export interface ITeamMember {
@@ -70,25 +70,36 @@ EventRegistrationSchema.index({ 'teamMembers.rollNo': 1 }); // For finding team 
 
 
 // Pre-save hook to ensure a student is not on multiple teams for the same event
-EventRegistrationSchema.pre("save", async function (this: any) {
+EventRegistrationSchema.pre(
+  "save",
+  async function (this: HydratedDocument<IEventRegistration>) {
     // Only run this logic for new documents
     if (!this.isNew) {
-        return;
+      return;
     }
 
     // Consolidate all roll numbers: the main registrant plus all team members.
     const allRollNos = [this.rollNo];
     if (this.teamMembers && this.teamMembers.length > 0) {
-        allRollNos.push(...this.teamMembers.map((m: any) => m.rollNo));
+      allRollNos.push(...this.teamMembers.map((member) => member.rollNo));
     }
 
     // 1. Check for duplicate roll numbers within the submission itself.
     // This catches both duplicate team members and the main registrant being listed as a team member.
     const uniqueRollNos = new Set(allRollNos);
     if (uniqueRollNos.size !== allRollNos.length) {
-        const seen = new Set();
-        const duplicate = allRollNos.find((roll: any) => seen.size === seen.add(roll).size);
-        throw new Error(`Duplicate roll number found in submission: ${duplicate}. Each person can only be listed once.`);
+      const seen = new Set<string>();
+      const duplicate = allRollNos.find((roll) => {
+        if (seen.has(roll)) {
+          return true;
+        }
+
+        seen.add(roll);
+        return false;
+      });
+      throw new Error(
+        `Duplicate roll number found in submission: ${duplicate}. Each person can only be listed once.`,
+      );
     }
 
     // For non-team registrations, the unique index on (eventId, rollNo) is sufficient.
@@ -105,15 +116,21 @@ EventRegistrationSchema.pre("save", async function (this: any) {
     }).lean(); // Use .lean() for a performance boost on read-only queries
 
     if (existingRegistration) {
-        // Find which roll number caused the conflict to provide a specific error message.
-        const conflictingRollNo: string | undefined = allRollNos.find((rollNo: string): boolean => 
-            rollNo === existingRegistration.rollNo || 
-            existingRegistration.teamMembers?.some((member: ITeamMember): boolean => member.rollNo === rollNo)
-        );
-        
-        throw new Error(`A student with roll number '${conflictingRollNo || 'a team member'}' is already registered for this event.`);
+      // Find which roll number caused the conflict to provide a specific error message.
+      const conflictingRollNo: string | undefined = allRollNos.find(
+        (rollNo: string): boolean =>
+          rollNo === existingRegistration.rollNo ||
+          existingRegistration.teamMembers?.some(
+            (member: ITeamMember): boolean => member.rollNo === rollNo,
+          ) === true,
+      );
+
+      throw new Error(
+        `A student with roll number '${conflictingRollNo || "a team member"}' is already registered for this event.`,
+      );
     }
-});
+  },
+);
 
 
 const EventRegistration = models.EventRegistration || model("EventRegistration", EventRegistrationSchema);

@@ -6,7 +6,7 @@ import { ArrowLeft, Save, Image as ImageIcon, X } from "lucide-react";
 import MathLoader from "@/components/ui/MathLoader";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { UploadDropzone } from "@/utils/uploadthing"; 
+import { UploadDropzone, getCompressedUploadFiles } from "@/utils/uploadthing"; 
 import Image from "next/image";
 
 export default function NewTeamMemberForm() {
@@ -89,6 +89,7 @@ export default function NewTeamMemberForm() {
                 <div className="bg-white/5 border border-dashed border-white/20 rounded-xl overflow-hidden hover:border-[#00f0ff]/50 transition-colors">
                     <UploadDropzone
                         endpoint="teamImage" 
+                        onBeforeUploadBegin={getCompressedUploadFiles("teamImage")}
                         onClientUploadComplete={(res) => {
                             if (res && res[0]) {
                                 setImageUrl(res[0].url);

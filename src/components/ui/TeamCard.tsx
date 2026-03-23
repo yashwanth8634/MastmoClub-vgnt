@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Github, Linkedin, Mail, Instagram, User } from "lucide-react";
+import { Github, Linkedin, Mail, Instagram } from "lucide-react";
 
 interface TeamMemberProps {
   name: string;
@@ -28,11 +28,11 @@ export default function TeamCard({ member }: { member: TeamMemberProps }) {
           <Image 
             src={member.image} 
             alt={member.name}
-            quality={65}
+            quality={60}
             decoding="async"
             fill
             className="object-cover"
-            sizes="(max-width: 768px) 100vw, 33vw"
+            sizes="96px"
           />
         ) : (
           <div className="text-gray-500 font-bold text-2xl group-hover:text-white">

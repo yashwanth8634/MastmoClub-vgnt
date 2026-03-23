@@ -2,20 +2,26 @@
 
 import { useEffect, useState } from "react";
 import { getPopup, updatePopup } from "@/actions/popupActions";
-import { UploadDropzone } from "@/utils/uploadthing";
-import { Save, Trash2, Plus } from "lucide-react";
+import { UploadDropzone, getCompressedUploadFiles } from "@/utils/uploadthing";
+import { Save, Trash2 } from "lucide-react";
 import Image from "next/image";
 import MathLoader from "@/components/ui/MathLoader";
 
 export default function PopupManager() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<Awaited<ReturnType<typeof getPopup>>>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [images, setImages] = useState<string[]>([]); // Array of URLs
+  const popupData = data ?? {
+    isActive: false,
+    title: "",
+    description: "",
+    images: [],
+  };
 
   useEffect(() => {
     getPopup().then((res) => {
         setData(res);
-        setImages(res.images || []);
+        setImages(res?.images || []);
     });
   }, []);
 
@@ -23,7 +29,7 @@ export default function PopupManager() {
     setIsSubmitting(true);
     
     // Convert array to JSON string to pass via FormData
-    formData.set("images", JSON.stringify(images));
+    formData.set("imagesJSON", JSON.stringify(images));
     formData.set("isActive", String(formData.get("isActive") === "on"));
     
     await updatePopup(formData);
@@ -34,8 +40,6 @@ export default function PopupManager() {
   const removeImage = (index: number) => {
     setImages(prev => prev.filter((_, i) => i !== index));
   };
-
-  if (!data) return <div className="p-10 text-[#00f0ff]">Loading...</div>;
 
   return (
     <div className="max-w-2xl mx-auto p-10 text-white pb-32">
@@ -50,7 +54,7 @@ export default function PopupManager() {
                 <p className="text-gray-400 text-sm">Turn ON to show on homepage.</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" name="isActive" defaultChecked={data.isActive} className="sr-only peer" />
+                <input type="checkbox" name="isActive" defaultChecked={popupData.isActive} className="sr-only peer" />
                 <div className="w-14 h-7 bg-gray-700 rounded-full peer peer-checked:bg-[#00f0ff] peer-checked:after:translate-x-full after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all"></div>
             </label>
         </div>
@@ -58,11 +62,11 @@ export default function PopupManager() {
         {/* Text Fields */}
         <div className="space-y-2">
             <label className="text-xs font-bold uppercase text-gray-400">Title</label>
-            <input name="title" defaultValue={data.title} className="w-full bg-black border border-white/10 rounded-xl p-4 focus:border-[#00f0ff] outline-none" />
+            <input name="title" defaultValue={popupData.title} className="w-full bg-black border border-white/10 rounded-xl p-4 focus:border-[#00f0ff] outline-none" />
         </div>
         <div className="space-y-2">
             <label className="text-xs font-bold uppercase text-gray-400">Description</label>
-            <textarea name="description" rows={4} defaultValue={data.description} className="w-full bg-black border border-white/10 rounded-xl p-4 focus:border-[#00f0ff] outline-none" />
+            <textarea name="description" rows={4} defaultValue={popupData.description} className="w-full bg-black border border-white/10 rounded-xl p-4 focus:border-[#00f0ff] outline-none" />
         </div>
 
         {/* MULTI-IMAGE UPLOADER */}
@@ -93,6 +97,7 @@ export default function PopupManager() {
                 <div className="bg-white/5 border border-dashed border-white/20 rounded-xl overflow-hidden">
                      <UploadDropzone
                         endpoint="teamImage" // Reusing endpoint
+                        onBeforeUploadBegin={getCompressedUploadFiles("teamImage")}
                         onClientUploadComplete={(res) => { 
                             if (res) {
                                 const newUrls = res.map(f => f.url);

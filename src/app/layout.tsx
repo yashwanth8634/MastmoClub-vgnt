@@ -1,18 +1,14 @@
 import type { Metadata } from "next";
 import { MedievalSharp } from "next/font/google";
 import "./globals.css";
-import StarField from "@/components/3d/StarField";
 import { GoogleAnalytics } from "@next/third-parties/google";
-import Navbar from "@/components/ui/Navbar";
 import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
 import { extractRouterConfig } from "uploadthing/server";
 import { ourFileRouter } from "@/app/api/uploadthing/core";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
-import ChatBot from "@/components/ui/ChatBot";
-import GlobalPopup from "@/components/ui/GlobalPopup"; // ✅ 1. Import Popup
+import SiteChrome from "@/components/layout/SiteChrome";
 import { getPopup } from "@/actions/popupActions";
-import ContentProtection from "@/components/layout/ContentProtection";
 
 const spaceGrotesk = MedievalSharp({
   subsets: ["latin"],
@@ -151,12 +147,8 @@ export default async function RootLayout({
            */
           routerConfig={extractRouterConfig(ourFileRouter)}
         />
-        <ContentProtection />
-        <StarField />
-        <Navbar />
+        <SiteChrome popupData={popupData} />
         {children}
-        <GlobalPopup popupData={popupData} />
-        <ChatBot />
         <Analytics />
         <SpeedInsights />
       </body>

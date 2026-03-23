@@ -2,20 +2,30 @@
 
 import dbConnect from "@/lib/db";
 import Event from "@/models/Event"; // Import the model we just created
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { verifyAdmin } from "@/lib/auth"; // Assuming you have this
 import { deleteFilesFromUT } from "@/lib/utapi-server"; 
-
-
+import { failureResult, getErrorMessage, successResult } from "@/lib/actionState";
+import { logger } from "@/lib/logger";
 import { z } from "zod";
+
+const todayIsoDate = new Date().toISOString().split("T")[0];
+const currentYear = new Date().getUTCFullYear();
+const minAllowedDate = `${currentYear - 1}-01-01`;
+const maxAllowedDate = `${currentYear + 5}-12-31`;
 
 // Zod Schema for Event
 const EventSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters."),
   description: z.string().min(1, "Description is required."),
-  date: z.string().min(1, "Date is required."),
-  time: z.string().min(1, "Time is required."),
-  location: z.string().min(1, "Location is required."),
+  date: z.string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Choose a valid event date.")
+    .refine((value) => value >= minAllowedDate && value <= maxAllowedDate, {
+      message: `Event date must be between ${minAllowedDate} and ${maxAllowedDate}.`,
+    }),
+  time: z.string().regex(/^(0?[1-9]|1[0-2]):[0-5]\d\s?(AM|PM)$/i, "Choose a valid event time."),
+  location: z.string().trim().min(3, "Location must be at least 3 characters."),
+  registrationRequired: z.boolean(),
   registrationOpen: z.boolean(),
   isLive: z.boolean(),
   maxRegistrations: z.number().min(0).default(0),
@@ -24,7 +34,73 @@ const EventSchema = z.object({
   maxTeamSize: z.number().min(1).default(1),
   rules: z.array(z.string()),
   gallery: z.array(z.string()),
+}).superRefine((data, ctx) => {
+  if (data.isTeamEvent && data.minTeamSize > data.maxTeamSize) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["minTeamSize"],
+      message: "Minimum team size cannot be greater than maximum team size.",
+    });
+  }
+
+  if (data.isLive && data.date < todayIsoDate) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["date"],
+      message: "A live event cannot use a past date. Hide the event instead.",
+    });
+  }
+
+  if (data.registrationOpen && !data.registrationRequired) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["registrationOpen"],
+      message: "Registration cannot be open when registration is not required.",
+    });
+  }
+
+  if (data.registrationOpen && !data.isLive) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["registrationOpen"],
+      message: "Hidden events must keep registration closed.",
+    });
+  }
+
+  if (data.registrationRequired && data.maxRegistrations < 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["maxRegistrations"],
+      message: "Maximum registrations cannot be negative.",
+    });
+  }
 });
+
+function applyEventBusinessRules<T extends {
+  registrationRequired: boolean;
+  registrationOpen: boolean;
+  isLive: boolean;
+  maxRegistrations: number;
+  isTeamEvent: boolean;
+  minTeamSize: number;
+  maxTeamSize: number;
+}>(data: T) {
+  if (!data.registrationRequired) {
+    data.registrationOpen = false;
+    data.maxRegistrations = 0;
+  }
+
+  if (!data.isLive) {
+    data.registrationOpen = false;
+  }
+
+  if (!data.isTeamEvent) {
+    data.minTeamSize = 1;
+    data.maxTeamSize = 1;
+  }
+
+  return data;
+}
 
 // 🛠️ HELPER: Extract Key from UploadThing URL
 const getFileKey = (url: string) => {
@@ -48,6 +124,7 @@ export async function createEvent(formData: FormData) {
       date: formData.get("date"),
       time: formData.get("time"),
       location: formData.get("location"),
+      registrationRequired: formData.get("registrationRequired") !== "false",
       registrationOpen: formData.get("registrationOpen") === "true",
       isLive: formData.get("isLive") === "false" ? false : true,
       maxRegistrations: Number(formData.get("maxRegistrations")) || 0,
@@ -59,22 +136,20 @@ export async function createEvent(formData: FormData) {
     };
 
     // 3. Zod Validation
-    const validatedData = EventSchema.parse(rawData);
+    const validatedData = applyEventBusinessRules(EventSchema.parse(rawData));
 
-    const newEvent = await Event.create(validatedData);
+    await Event.create(validatedData);
 
     // 4. Revalidate Frontend
     revalidatePath("/admin/dashboard-group/events");
     revalidatePath("/events");
+    revalidateTag("events", "max");
     
-    return { success: true, message: "Event Created Successfully!" };
+    return successResult("Event Created Successfully!");
 
-  } catch (error: any) {
-    console.error("Create Event Error:", error);
-    if (error instanceof z.ZodError) {
-        return { success: false, message: error.issues[0]?.message || "Validation Error" };
-    }
-    return { success: false, message: error.message || "Failed to create event" };
+  } catch (error: unknown) {
+    logger.error("Create event action failed", error);
+    return failureResult(getErrorMessage(error, "Failed to create event"));
   }
 }
 
@@ -110,6 +185,7 @@ export async function updateEvent(id: string, formData: FormData) {
       date: formData.get("date"),
       time: formData.get("time"),
       location: formData.get("location"),
+      registrationRequired: formData.get("registrationRequired") !== "false",
       registrationOpen: formData.get("registrationOpen") === "true",
       isLive: formData.get("isLive") === "true",
       maxRegistrations: Number(formData.get("maxRegistrations")) || 0,
@@ -121,22 +197,20 @@ export async function updateEvent(id: string, formData: FormData) {
     };
 
     // Zod Validation
-    const validatedData = EventSchema.parse(rawUpdateData);
+    const validatedData = applyEventBusinessRules(EventSchema.parse(rawUpdateData));
 
     await Event.findByIdAndUpdate(id, validatedData, { new: true });
 
     revalidatePath("/admin/dashboard-group/events");
     revalidatePath(`/events/${id}`);
     revalidatePath("/events");
+    revalidateTag("events", "max");
 
-    return { success: true, message: "Event Updated Successfully!" };
+    return successResult("Event Updated Successfully!");
 
-  } catch (error: any) {
-    console.error("Update Event Error:", error);
-    if (error instanceof z.ZodError) {
-        return { success: false, message: error.issues[0]?.message || "Validation Error" };
-    }
-    return { success: false, message: error.message || "Failed to update event" };
+  } catch (error: unknown) {
+    logger.error("Update event action failed", error, { id });
+    return failureResult(getErrorMessage(error, "Failed to update event"));
   }
 }
 
@@ -147,22 +221,29 @@ export async function toggleEventRegistration(id: string) {
   try {
     await verifyAdmin();
     await dbConnect();
-    
+
     const event = await Event.findById(id);
-    if (!event) return { success: false, message: "Event not found" };
+    if (!event) return failureResult("Event not found");
+    if (!event.registrationRequired) {
+      return failureResult("This event does not require registration");
+    }
+    if (!event.isLive) {
+      return failureResult("Hidden events must keep registration closed");
+    }
 
     event.registrationOpen = !event.registrationOpen;
     await event.save();
 
     revalidatePath("/admin/dashboard-group/events");
     revalidatePath(`/events/${id}`);
+    revalidateTag("events", "max");
     
-    return { 
-      success: true, 
-      message: `Registration is now ${event.registrationOpen ? "OPEN" : "CLOSED"}` 
-    };
-  } catch (error: any) {
-    return { success: false, message: "Failed to toggle registration" };
+    return successResult(
+      `Registration is now ${event.registrationOpen ? "OPEN" : "CLOSED"}`,
+    );
+  } catch (error: unknown) {
+    logger.error("Toggle event registration failed", error, { id });
+    return failureResult("Failed to toggle registration");
   }
 }
 
@@ -175,23 +256,26 @@ export async function toggleEventStatus(id: string) {
     await dbConnect();
     
     const event = await Event.findById(id);
-    if (!event) return { success: false, message: "Event not found" };
+    if (!event) return failureResult("Event not found");
 
     // Toggle the 'Alive' boolean
     event.isLive = !event.isLive;
+    if (!event.isLive) {
+      event.registrationOpen = false;
+    }
     await event.save();
 
     revalidatePath("/admin/dashboard-group/events");
     revalidatePath(`/events/${id}`);
     revalidatePath("/events");
+    revalidateTag("events", "max");
     
-    return { 
-      success: true, 
-      message: `Event is now ${event.isLive ? "ALIVE (Active)" : "DEAD (Past/Hidden)"}` 
-    };
-  } catch (error: any) {
-    console.error("Status Toggle Error:", error);
-    return { success: false, message: "Failed to toggle event status" };
+    return successResult(
+      `Event is now ${event.isLive ? "ALIVE (Active)" : "DEAD (Past/Hidden)"}`,
+    );
+  } catch (error: unknown) {
+    logger.error("Toggle event status failed", error, { id });
+    return failureResult("Failed to toggle event status");
   }
 }
 
@@ -204,7 +288,7 @@ export async function deleteEvent(id: string) {
     await dbConnect();
 
     const event = await Event.findById(id);
-    if (!event) return { success: false, message: "Event not found" };
+    if (!event) return failureResult("Event not found");
 
     // Cleanup Gallery Images
     const keysToDelete: string[] = [];
@@ -221,11 +305,13 @@ export async function deleteEvent(id: string) {
 
     revalidatePath("/admin/dashboard-group/events");
     revalidatePath("/events");
+    revalidateTag("events", "max");
     
-    return { success: true, message: "Event deleted successfully" };
+    return successResult("Event deleted successfully");
 
-  } catch (error: any) {
-    return { success: false, message: "Failed to delete event" };
+  } catch (error: unknown) {
+    logger.error("Delete event action failed", error, { id });
+    return failureResult("Failed to delete event");
   }
 }
 
@@ -254,6 +340,7 @@ export async function getEventById(id: string) {
       
       // Booleans
       isLive: event.isLive,
+      registrationRequired: event.registrationRequired ?? true,
       registrationOpen: event.registrationOpen,
       
       // Numbers
@@ -269,8 +356,8 @@ export async function getEventById(id: string) {
       rules: event.rules || [],
     };
 
-  } catch (error) {
-    console.error("Error fetching event:", error);
+  } catch (error: unknown) {
+    logger.error("Fetch event by id failed", error, { id });
     return null;
   }
 }

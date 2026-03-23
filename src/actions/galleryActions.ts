@@ -4,13 +4,15 @@ import dbConnect from "@/lib/db";
 import Gallery from "@/models/Gallery";
 import { revalidatePath } from "next/cache";
 import { verifyAdmin } from "@/lib/auth";
+import { failureResult, getErrorMessage, successResult } from "@/lib/actionState";
+import { logger } from "@/lib/logger";
 
 // 1. SAVE IMAGE (Stores the URL from UploadThing)
 export async function saveGalleryItem(title: string, category: string, imageUrl: string) {
   try {
     await verifyAdmin(); 
-  } catch (e) {
-    return { success: false, message: "Unauthorized" };
+  } catch {
+    return failureResult("Unauthorized");
   }
 
   await dbConnect();
@@ -18,7 +20,7 @@ export async function saveGalleryItem(title: string, category: string, imageUrl:
   try {
     // ✅ Validation: Ensure all fields are present
     if (!imageUrl || !title || !category) {
-      return { success: false, message: "Missing required fields (Title, Category, or Image)" };
+      return failureResult("Missing required fields (Title, Category, or Image)");
     }
 
     await Gallery.create({
@@ -30,11 +32,11 @@ export async function saveGalleryItem(title: string, category: string, imageUrl:
     revalidatePath("/gallery");
     revalidatePath("/admin/dashboard-group/gallery");
 
-    return { success: true, message: "Gallery item saved!" };
+    return successResult("Gallery item saved!");
 
-  } catch (error: any) {
-    console.error("Gallery Save Error:", error);
-    return { success: false, message: "Failed to save: " + error.message };
+  } catch (error: unknown) {
+    logger.error("Gallery save action failed", error, { title, category });
+    return failureResult(`Failed to save: ${getErrorMessage(error, "Unknown error")}`);
   }
 }
 
@@ -42,8 +44,8 @@ export async function saveGalleryItem(title: string, category: string, imageUrl:
 export async function deleteGalleryItem(id: string) {
   try {
     await verifyAdmin();
-  } catch (e) {
-    return { success: false, message: "Unauthorized" };
+  } catch {
+    return failureResult("Unauthorized");
   }
 
   await dbConnect();
@@ -52,15 +54,15 @@ export async function deleteGalleryItem(id: string) {
     const result = await Gallery.findByIdAndDelete(id);
     
     if (!result) {
-      return { success: false, message: "Image not found" };
+      return failureResult("Image not found");
     }
 
     revalidatePath("/gallery");
     revalidatePath("/admin/dashboard-group/gallery");
     
-    return { success: true, message: "Image deleted" };
-  } catch (error: any) {
-    console.error("Gallery Delete Error:", error); // ✅ Added logging
-    return { success: false, message: "Failed to delete" };
+    return successResult("Image deleted");
+  } catch (error: unknown) {
+    logger.error("Gallery delete action failed", error, { id });
+    return failureResult("Failed to delete");
   }
 }

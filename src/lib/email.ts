@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { logger } from "@/lib/logger";
 
 // Initialize Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -6,7 +7,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function sendEmail(to: string, subject: string, html: string, bcc?: string[]) {
   // Check Config
   if (!process.env.RESEND_API_KEY) {
-    console.error("❌ RESEND_API_KEY is missing.");
+    logger.error("RESEND_API_KEY is missing.");
     return { success: false, error: "Configuration missing" };
   }
 
@@ -20,9 +21,10 @@ export async function sendEmail(to: string, subject: string, html: string, bcc?:
         html: html,
       });
       return { success: true, id: data.data?.id };
-    } catch (error: any) {
-      console.error("❌ Email Failed:", error.message);
-      return { success: false, error: error.message };
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown email error";
+      logger.error("Email delivery failed", error, { to, subject });
+      return { success: false, error: errorMessage };
     }
   }
 
@@ -30,7 +32,7 @@ export async function sendEmail(to: string, subject: string, html: string, bcc?:
   // Resend allows max 50 recipients per call. We use 45 to be safe.
   const BATCH_SIZE = 45;
   
-  console.log(`🚀 Starting Batch Email to ${bcc.length} recipients...`);
+  logger.info("Starting batch email send", { recipientCount: bcc.length, subject });
 
   for (let i = 0; i < bcc.length; i += BATCH_SIZE) {
     const batch = bcc.slice(i, i + BATCH_SIZE);
@@ -44,13 +46,19 @@ export async function sendEmail(to: string, subject: string, html: string, bcc?:
         html: html,
       });
       
-      console.log(`✅ Batch ${i / BATCH_SIZE + 1} sent to ${batch.length} members.`);
+      logger.info("Batch email sent", {
+        batchNumber: i / BATCH_SIZE + 1,
+        recipientCount: batch.length,
+      });
       
       // Tiny delay to prevent rate limiting
       await new Promise(resolve => setTimeout(resolve, 500)); 
       
-    } catch (error: any) {
-      console.error(`❌ Batch ${i / BATCH_SIZE + 1} Failed:`, error.message);
+    } catch (error: unknown) {
+      logger.error("Batch email failed", error, {
+        batchNumber: i / BATCH_SIZE + 1,
+        recipientCount: batch.length,
+      });
     }
   }
 

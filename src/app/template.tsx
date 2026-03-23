@@ -1,7 +1,13 @@
 "use client";
 
 import React from "react";
-import { motion, Variants, useReducedMotion } from "framer-motion";
+import {
+  motion,
+  type TargetAndTransition,
+  type Transition,
+  type Variants,
+  useReducedMotion,
+} from "framer-motion";
 
 type TemplateProps = {
   children: React.ReactNode;
@@ -39,6 +45,10 @@ const defaultVariants: Variants = {
   },
 };
 
+type VariantState = TargetAndTransition & {
+  transition?: Transition;
+};
+
 const Template = React.memo(
   React.forwardRef<HTMLDivElement, TemplateProps>(function Template(
     {
@@ -53,27 +63,28 @@ const Template = React.memo(
   ) {
     const prefersReduced = useReducedMotion();
     const reduceMotion = prefersReduced || disableAnimation;
+    const defaultVisible = defaultVariants.visible as VariantState;
 
     const mergedVariants: Variants = variants
-  ? {
-      hidden: {
-        ...defaultVariants.hidden,
-        ...(variants.hidden as any),
-      },
-      visible: {
-        ...defaultVariants.visible,
-        ...(variants.visible as any),
-        transition: {
-          ...(defaultVariants.visible as any).transition,
-          ...(variants.visible ? (variants.visible as any).transition : {}),
-        },
-      },
-      exit: {
-        ...defaultVariants.exit,
-        ...(variants.exit as any),
-      },
-    }
-  : defaultVariants;
+      ? {
+          hidden: {
+            ...defaultVariants.hidden,
+            ...(variants.hidden as VariantState | undefined),
+          },
+          visible: {
+            ...defaultVisible,
+            ...(variants.visible as VariantState | undefined),
+            transition: {
+              ...defaultVisible.transition,
+              ...((variants.visible as VariantState | undefined)?.transition ?? {}),
+            },
+          },
+          exit: {
+            ...defaultVariants.exit,
+            ...(variants.exit as VariantState | undefined),
+          },
+        }
+      : defaultVariants;
 
     if (reduceMotion) {
       return (

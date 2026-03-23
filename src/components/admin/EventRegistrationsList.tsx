@@ -1,10 +1,42 @@
 "use client";
 
 import { useState, Fragment } from "react"; 
-import { ChevronDown, ChevronRight, User } from "lucide-react";
-import MemberExportButton from "@/components/admin/MemberExportButton";
+import { ChevronDown, ChevronRight, Info } from "lucide-react";
+import MemberExportButton, {
+  type ExportMember,
+} from "@/components/admin/MemberExportButton";
 
-export default function EventRegistrationsList({ events }: { events: any[] }) {
+interface TeamMemberSummary {
+  name: string;
+  rollNo: string;
+}
+
+interface RegistrationSummary {
+  _id: string;
+  teamName?: string;
+  fullName: string;
+  rollNo: string;
+  section?: string;
+  teamMembers?: TeamMemberSummary[];
+}
+
+interface EventRegistrationSummary {
+  id: string;
+  title: string;
+  isOpen: boolean;
+  registrationRequired: boolean;
+  teamCount: number;
+  studentCount: number;
+  registrations: RegistrationSummary[];
+  classReportData: ExportMember[];
+  teamReportData: ExportMember[];
+}
+
+export default function EventRegistrationsList({
+  events,
+}: {
+  events: EventRegistrationSummary[];
+}) {
   const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
   const [expandedTeams, setExpandedTeams] = useState<Set<string>>(new Set());
 
@@ -59,43 +91,59 @@ export default function EventRegistrationsList({ events }: { events: any[] }) {
             {/* EXPANDED CONTENT */}
             {isEventOpen && (
               <div className="p-6 pt-0 border-t border-white/10 animate-in slide-in-from-top-2">
-                
                 {/* 🖨️ EXPORT BUTTONS */}
-                <div className="flex flex-wrap gap-4 py-6 justify-end">
-                    <div className="flex items-center gap-4 bg-black/40 p-3 rounded-xl border border-white/10">
-                        
-                        {/* 1. TEAM REPORT BUTTON */}
-                        <div className="flex items-center gap-2">
-                            <MemberExportButton 
-                              members={event.teamReportData} // Pass the "Hacked" Data
-                              title={`TEAM LIST: ${event.title}`}
-                              fileName={`Teams_${event.title}`}
-                            />
-                            <div className="flex flex-col">
-                                <span className="text-xs font-bold text-white uppercase">Team List</span>
-                                <span className="text-[10px] text-gray-500">Grouped by Teams</span>
-                            </div>
-                        </div>
-                        
-                        <div className="w-px h-8 bg-white/20"></div>
+                {event.registrations.length > 0 && (
+                  <div className="flex flex-wrap gap-4 py-6 justify-end">
+                      <div className="flex items-center gap-4 bg-black/40 p-3 rounded-xl border border-white/10">
+                          
+                          {/* 1. TEAM REPORT BUTTON */}
+                          <div className="flex items-center gap-2">
+                              <MemberExportButton 
+                                members={event.teamReportData}
+                                title={`TEAM LIST: ${event.title}`}
+                                fileName={`Teams_${event.title}`}
+                              />
+                              <div className="flex flex-col">
+                                  <span className="text-xs font-bold text-white uppercase">Team List</span>
+                                  <span className="text-[10px] text-gray-500">Grouped by Teams</span>
+                              </div>
+                          </div>
+                          
+                          <div className="w-px h-8 bg-white/20"></div>
 
-                        {/* 2. CLASS REPORT BUTTON */}
-                        <div className="flex items-center gap-2">
-                            <MemberExportButton 
-                              members={event.classReportData} // Pass the Real Data
-                              title={`CLASS REPORT: ${event.title}`}
-                              fileName={`ClassWise_${event.title}`}
-                            />
-                            <div className="flex flex-col">
-                                <span className="text-xs font-bold text-[#00f0ff] uppercase">Class List</span>
-                                <span className="text-[10px] text-gray-500">Grouped by Year</span>
-                            </div>
-                        </div>
+                          {/* 2. CLASS REPORT BUTTON */}
+                          <div className="flex items-center gap-2">
+                              <MemberExportButton 
+                                members={event.classReportData}
+                                title={`CLASS REPORT: ${event.title}`}
+                                fileName={`ClassWise_${event.title}`}
+                              />
+                              <div className="flex flex-col">
+                                  <span className="text-xs font-bold text-[#00f0ff] uppercase">Class List</span>
+                                  <span className="text-[10px] text-gray-500">Grouped by Year</span>
+                              </div>
+                          </div>
 
-                    </div>
-                </div>
+                      </div>
+                  </div>
+                )}
 
                 {/* TABLE (Standard View) */}
+                {event.registrations.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-white/15 bg-black/30 px-6 py-10 text-center">
+                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/5 text-amber-300">
+                      <Info size={20} />
+                    </div>
+                    <h3 className="text-lg font-semibold text-white">
+                      {event.registrationRequired ? "No registrations received yet" : "No registrations have been taken"}
+                    </h3>
+                    <p className="mx-auto mt-2 max-w-2xl text-sm text-gray-400">
+                      {event.registrationRequired
+                        ? "This event supports registration, but no teams or participants have submitted entries so far."
+                        : "This event was created without a required registration flow, so the dropdown stays empty by design."}
+                    </p>
+                  </div>
+                ) : (
                 <div className="overflow-x-auto bg-black/40 rounded-xl border border-white/5 max-h-[600px] overflow-y-auto">
                   <table className="w-full text-left text-sm">
                     <thead className="bg-white/5 text-gray-400 uppercase text-xs sticky top-0 bg-black z-10">
@@ -108,7 +156,7 @@ export default function EventRegistrationsList({ events }: { events: any[] }) {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
-                      {event.registrations.map((reg: any) => {
+                      {event.registrations.map((reg) => {
                         const uniqueTeamId = `${event.id}-${reg._id}`;
                         const isTeamExpanded = expandedTeams.has(uniqueTeamId);
                         const hasMembers = reg.teamMembers && reg.teamMembers.length > 0;
@@ -148,10 +196,10 @@ export default function EventRegistrationsList({ events }: { events: any[] }) {
                                   <div className="pl-12 pr-4 py-3 border-l-2 border-[#00f0ff] ml-8 my-2">
                                     <p className="text-xs font-bold text-gray-500 uppercase mb-2">Members</p>
                                     <div className="grid gap-2">
-                                      {reg.teamMembers.map((m: any, idx: number) => (
+                                      {(reg.teamMembers || []).map((member, idx: number) => (
                                         <div key={idx} className="flex items-center justify-between bg-black/40 p-2 rounded text-sm">
-                                          <span className="text-gray-200">{m.name}</span>
-                                          <span className="text-gray-400 font-mono text-xs">{m.rollNo}</span>
+                                          <span className="text-gray-200">{member.name}</span>
+                                          <span className="text-gray-400 font-mono text-xs">{member.rollNo}</span>
                                         </div>
                                       ))}
                                     </div>
@@ -165,6 +213,7 @@ export default function EventRegistrationsList({ events }: { events: any[] }) {
                     </tbody>
                   </table>
                 </div>
+                )}
               </div>
             )}
           </div>

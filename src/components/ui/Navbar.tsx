@@ -26,7 +26,7 @@ export default function Navbar() {
             src="/mastmo-logo.png"
             alt="Mastmo Logo"
             fill
-            sizes="(max-width: 768px) 100vw, 33vw"
+            sizes="(max-width: 768px) 64px, 80px"
             className="object-contain drop-shadow-[0_0_15px_rgba(0,240,255,0.4)]"
             priority
           />

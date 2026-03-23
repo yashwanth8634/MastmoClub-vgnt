@@ -5,6 +5,7 @@ import dbConnect from "@/lib/db";
 import Popup from "@/models/Popup";
 import * as cheerio from "cheerio";
 import { headers } from "next/headers";
+import { logger } from "@/lib/logger";
 
 // ============================================================================
 // CONFIGURATION & TYPES
@@ -34,33 +35,18 @@ interface PageConfig {
 
 class SmartCache {
   private cache = new Map<string, CacheEntry>();
-  private cleanupInterval: NodeJS.Timeout | null = null;
-
-  constructor() {
-    // Auto-cleanup every 5 minutes
-    this.startCleanup();
-  }
-
-  private startCleanup() {
-    if (this.cleanupInterval) return;
-    this.cleanupInterval = setInterval(() => {
-      this.cleanExpired();
-    }, CACHE_TTL);
-  }
 
   private cleanExpired() {
     const now = Date.now();
-    let removed = 0;
     for (const [key, value] of this.cache.entries()) {
       if (now - value.timestamp > CACHE_TTL) {
         this.cache.delete(key);
-        removed++;
       }
     }
-    if (removed > 0) console.log(`🧹 Cache cleanup: Removed ${removed} expired entries`);
   }
 
   get(key: string): string | null {
+    this.cleanExpired();
     const entry = this.cache.get(key);
     if (!entry) return null;
     
@@ -73,6 +59,7 @@ class SmartCache {
   }
 
   set(key: string, data: string): void {
+    this.cleanExpired();
     this.cache.set(key, {
       data,
       timestamp: Date.now()
@@ -213,7 +200,7 @@ async function fetchPageWithRetry(url: string, retries = 2): Promise<string> {
   for (let i = 0; i <= retries; i++) {
     try {
       const response = await fetch(url, {
-        cache: "no-store",
+        next: { revalidate: 300 },
         headers: { "User-Agent": "MASTMO-Bot/1.0" },
         signal: AbortSignal.timeout(SCRAPE_TIMEOUT)
       });
@@ -251,7 +238,7 @@ async function scrapeWebsiteContent(query: string): Promise<string> {
     const cacheKey = Array.from(relevantPages).sort().join(",");
     const cached = contentCache.get(cacheKey);
     if (cached) {
-      console.log("✅ Cache hit for:", cacheKey);
+      logger.debug("Chatbot content cache hit", { cacheKey });
       return cached;
     }
 
@@ -266,8 +253,8 @@ async function scrapeWebsiteContent(query: string): Promise<string> {
           return `[${page.toUpperCase()}] ${content}`;
         }
         return "";
-      } catch (error) {
-        console.warn(`⚠️ Failed to scrape ${page}`);
+      } catch {
+        logger.warn("Failed to scrape page for chatbot", { page });
         return "";
       }
     });
@@ -281,8 +268,8 @@ async function scrapeWebsiteContent(query: string): Promise<string> {
     }
 
     return combined;
-  } catch (error) {
-    console.error("🔥 Scraping error:", error);
+  } catch (error: unknown) {
+    logger.error("Website scraping failed", error);
     return "";
   }
 }
@@ -315,7 +302,10 @@ async function getActivePopup(): Promise<string> {
     }
 
     await dbConnect();
-    const activePopup = await Popup.findOne({ isActive: true }).lean().maxTimeMS(3000);
+    const activePopup = await Popup.findOne({ isActive: true })
+      .select("title description")
+      .lean()
+      .maxTimeMS(3000);
     
     const result = activePopup
       ? `🔥 LIVE: ${activePopup.title} - ${activePopup.description}`
@@ -323,8 +313,10 @@ async function getActivePopup(): Promise<string> {
 
     popupCache = { data: result, timestamp: Date.now() };
     return result;
-  } catch (error) {
-    console.warn("⚠️ Popup fetch failed:", error);
+  } catch (error: unknown) {
+    logger.warn("Popup fetch failed for chatbot", {
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
     return "";
   }
 }
@@ -343,7 +335,7 @@ export async function getChatResponse(
   try {
     // Validation
     if (!API_KEY) {
-      console.error("❌ GROQ_API_KEY missing");
+      logger.error("GROQ_API_KEY missing");
       return { success: false, message: "System error. Contact admin." };
     }
 
@@ -410,25 +402,26 @@ RULES:
       "Sorry, I couldn't process that. Try again! 🤖";
 
     const duration = Date.now() - startTime;
-    console.log(`✅ Response generated in ${duration}ms`);
+    logger.info("Chat response generated", { durationMs: duration });
 
     return { success: true, message: aiMessage };
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     const duration = Date.now() - startTime;
-    console.error(`🔥 Error after ${duration}ms:`, error.message);
+    const message = error instanceof Error ? error.message : "Unknown error";
+    logger.error("Chat response failed", error, { durationMs: duration });
 
     // Specific error handling
-    if (error.message?.includes("401")) {
+    if (message.includes("401")) {
       return { success: false, message: "API authentication failed. Contact admin." };
     }
-    if (error.message?.includes("429")) {
+    if (message.includes("429")) {
       return { success: false, message: "System overloaded. Please wait 30s and retry." };
     }
-    if (error.message?.includes("timeout")) {
+    if (message.includes("timeout")) {
       return { success: false, message: "Request timeout. Try again!" };
     }
-    if (error.message?.includes("network")) {
+    if (message.includes("network")) {
       return { success: false, message: "Network error. Check your connection." };
     }
 
@@ -437,15 +430,4 @@ RULES:
       message: "Something went wrong. Contact @mastmo_vgnt on Instagram! 📱"
     };
   }
-}
-
-// ============================================================================
-// CLEANUP ON SERVER RESTART (Optional)
-// ============================================================================
-
-if (typeof process !== "undefined") {
-  process.on("SIGTERM", () => {
-    contentCache.clear();
-    console.log("🧹 Cache cleared on shutdown");
-  });
 }
