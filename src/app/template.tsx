@@ -20,28 +20,20 @@ type TemplateProps = {
 
 const defaultVariants: Variants = {
   hidden: {
-    opacity: 0,
-    y: 20,
-    scale: 0.995,
-    filter: "blur(6px)",
+    opacity: 0.01,
+    y: 6,
   },
   visible: {
     opacity: 1,
     y: 0,
-    scale: 1,
-    filter: "blur(0px)",
     transition: {
-      opacity: { duration: 0.45, ease: [0.22, 0.1, 0.36, 1] },
-      y: { duration: 0.6, ease: [0.22, 0.1, 0.36, 1] },
-      filter: { duration: 0.6, ease: [0.22, 0.1, 0.36, 1] },
-      scale: { duration: 0.6, ease: [0.22, 0.1, 0.36, 1] },
+      opacity: { duration: 0.18, ease: [0.22, 0.1, 0.36, 1] },
+      y: { duration: 0.22, ease: [0.22, 0.1, 0.36, 1] },
     },
   },
   exit: {
     opacity: 0,
-    y: 8,
-    filter: "blur(4px)",
-    transition: { duration: 0.35, ease: [0.22, 0.1, 0.36, 1] },
+    transition: { duration: 0.12, ease: [0.22, 0.1, 0.36, 1] },
   },
 };
 
@@ -93,8 +85,7 @@ const Template = React.memo(
           className={className}
           style={{
             opacity: 1,
-            transform: "translateY(0px) scale(1)",
-            filter: "blur(0px)",
+            transform: "translateY(0px)",
             willChange: "auto",
           }}
         >
@@ -117,7 +108,7 @@ const Template = React.memo(
           ease: [0.22, 0.1, 0.36, 1],
         }}
         style={{
-          willChange: "opacity, transform, filter",
+          willChange: "opacity, transform",
           backfaceVisibility: "hidden",
           WebkitFontSmoothing: "antialiased",
         }}
