@@ -2,11 +2,9 @@
 const nextConfig = {
   compress: true,
   poweredByHeader: false,
-
   experimental: {
     optimizePackageImports: ['lucide-react', 'framer-motion'],
   },
-
   images: {
     remotePatterns: [
       {
@@ -19,52 +17,38 @@ const nextConfig = {
         hostname: "img.clerk.com", // (Optional) If you use Clerk for Auth
       },
     ],
-    // Cache optimized remote images longer to avoid repeated reprocessing.
     minimumCacheTTL: 604800,
     formats: ['image/avif', 'image/webp'], 
     deviceSizes: [640, 750, 828, 1080, 1200],
     imageSizes: [48, 64, 96, 128, 256, 384, 520],
   },
-
   async redirects() {
     return [
       {
         source: '/instagram',
-        destination: 'https://www.instagram.com/mastmo_vgnt', // Your actual Insta URL
+        destination: 'https://www.instagram.com/mastmo_vgnt',
         permanent: true,
+      },
+      {
+        source: '/events/6a58f82c7eb576c4cecaa18e/register',
+        destination: 'https://forms.gle/Bnj3itY9LgEVtJbH6',
+        permanent: false,
       },
     ];
   },
-
   async headers() {
     return [
       {
         source: '/(.*)',
         headers: [
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
-          },
-          {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
-          },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-XSS-Protection', value: '1; mode=block' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
         ],
       },
     ];
   },
 };
-
 export default nextConfig;
