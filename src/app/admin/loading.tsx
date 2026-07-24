@@ -2,7 +2,7 @@ import MathLoader from "@/components/ui/MathLoader";
 
 export default function Loading() {
   return (
-    <div className="h-screen w-full flex items-center justify-center bg-black text-[#00f0ff]">
+    <div className="flex min-h-[60vh] w-full items-center justify-center text-[#00f0ff]">
       <MathLoader size="lg" />
     </div>
   );
