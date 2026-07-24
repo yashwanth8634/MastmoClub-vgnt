@@ -29,11 +29,6 @@ const nextConfig = {
         destination: 'https://www.instagram.com/mastmo_vgnt',
         permanent: true,
       },
-      {
-        source: '/events/6a58f82c7eb576c4cecaa18e/register',
-        destination: 'https://forms.gle/Bnj3itY9LgEVtJbH6',
-        permanent: false,
-      },
     ];
   },
   async headers() {
