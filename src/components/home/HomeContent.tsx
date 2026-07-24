@@ -256,6 +256,14 @@ const FooterSection = () => {
               </li>
               <li>
                 <Link 
+                  href="/contact" 
+                  className="text-gray-300 hover:text-[#00f0ff] transition-colors"
+                >
+                  Contact Us
+                </Link>
+              </li>
+              <li>
+                <Link 
                   href="/resources" 
                   className="text-gray-300 hover:text-[#00f0ff] transition-colors"
                 >
@@ -326,6 +334,9 @@ const FooterSection = () => {
             </Link>
             <Link href="/terms" className="hover:text-[#00f0ff] transition-colors">
               Terms of Service
+            </Link>
+            <Link href="/contact" className="hover:text-[#00f0ff] transition-colors">
+              Contact Us
             </Link>
           </div>
         </div>

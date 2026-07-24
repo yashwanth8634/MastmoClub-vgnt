@@ -65,6 +65,12 @@ export default function Navbar() {
             Gallery
           </Link>
           <Link
+            href="/contact"
+            className="text-sm font-bold tracking-widest text-gray-300 hover:text-math-cyan uppercase transition-colors"
+          >
+            Contact
+          </Link>
+          <Link
             href="/join"
             className="text-sm font-bold tracking-widest text-math-cyan hover:text-white uppercase transition-colors"
           >
@@ -123,6 +129,13 @@ export default function Navbar() {
           className="text-2xl font-bold text-white uppercase hover:text-math-cyan transition-colors"
         >
           Gallery
+        </Link>
+        <Link
+          href="/contact"
+          onClick={() => setIsOpen(false)}
+          className="text-2xl font-bold text-white uppercase hover:text-math-cyan transition-colors"
+        >
+          Contact
         </Link>
         <Link
           href="/join"

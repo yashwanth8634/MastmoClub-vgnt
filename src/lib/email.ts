@@ -15,7 +15,7 @@ export async function sendEmail(to: string, subject: string, html: string, bcc?:
   if (!bcc || bcc.length === 0) {
     try {
       const data = await resend.emails.send({
-        from: 'MASTMO Support <support@mastmovgnt.in>',
+        from: 'MASTMO Club <noreply@mastmovgnt.in>',
         to: to,
         subject: subject,
         html: html,
@@ -39,7 +39,7 @@ export async function sendEmail(to: string, subject: string, html: string, bcc?:
     
     try {
       await resend.emails.send({
-        from: 'MASTMO Support <support@mastmovgnt.in>',
+        from: 'MASTMO Club <noreply@mastmovgnt.in>',
         to: 'mastmovgnt@gmail.com', // Main 'To' is the club (recipients see this)
         bcc: batch,               // Hidden recipients
         subject: subject,
