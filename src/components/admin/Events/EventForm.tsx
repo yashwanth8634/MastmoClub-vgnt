@@ -8,7 +8,6 @@ import {
   Plus, ArrowLeft, CalendarClock, Users, MapPin, Eye, 
   Image as ImageIcon, Trash2, Save
 } from "lucide-react";
-import MathLoader from "@/components/ui/MathLoader";
 import Link from "next/link";
 import Image from "next/image";
 import { formatEventTime } from "@/lib/utils";
@@ -489,7 +488,7 @@ export default function EventForm({ initialData }: EventFormProps) {
         >
           {isSubmitting ? (
             <>
-              <MathLoader size="sm" /> 
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" /> 
               {isEditMode ? "Updating Event..." : "Creating Event..."}
             </>
           ) : (

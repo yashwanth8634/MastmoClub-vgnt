@@ -5,7 +5,6 @@ import { getPopup, updatePopup } from "@/actions/popupActions";
 import { UploadDropzone, getCompressedUploadFiles } from "@/utils/uploadthing";
 import { Save, Trash2 } from "lucide-react";
 import Image from "next/image";
-import MathLoader from "@/components/ui/MathLoader";
 
 export default function PopupManager() {
   const [data, setData] = useState<Awaited<ReturnType<typeof getPopup>>>(null);
@@ -112,7 +111,7 @@ export default function PopupManager() {
         </div>
 
         <button disabled={isSubmitting} className="w-full bg-[#00f0ff] text-black font-bold py-4 rounded-xl hover:bg-white transition-colors flex justify-center items-center gap-2 cursor-pointer">
-          {isSubmitting ? <><MathLoader size="sm" /> Saving...</> : <><Save size={20} /> Update Popup</>}
+          {isSubmitting ? <><div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" /> Saving...</> : <><Save size={20} /> Update Popup</>}
         </button>
 
       </form>

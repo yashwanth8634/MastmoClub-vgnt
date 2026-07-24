@@ -3,7 +3,6 @@
 import { createTeamMember } from "@/actions/teamActions";
 import Link from "next/link";
 import { ArrowLeft, Save, Image as ImageIcon, X } from "lucide-react";
-import MathLoader from "@/components/ui/MathLoader";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { UploadDropzone, getCompressedUploadFiles } from "@/utils/uploadthing"; 
@@ -136,7 +135,7 @@ export default function NewTeamMemberForm() {
           className="w-full bg-[#00f0ff] text-black font-bold py-4 rounded-xl hover:bg-white transition-colors flex justify-center gap-2 items-center cursor-pointer"
         >
           {isSubmitting ? (
-             <><MathLoader size="sm" /> Saving...</>
+             <><div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" /> Saving...</>
           ) : (
              <><Save size={20} /> Save Member</>
           )}

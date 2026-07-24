@@ -4,7 +4,6 @@ import { toggleEventStatus, toggleEventRegistration } from "@/actions/eventActio
 import { Eye, EyeOff, Lock, Unlock } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import MathLoader from "@/components/ui/MathLoader";
 
 // --- 1. LIVE / DEAD TOGGLE ---
 export function ToggleStatusButton({ id, isLive }: { id: string, isLive: boolean }) {
@@ -29,7 +28,7 @@ export function ToggleStatusButton({ id, isLive }: { id: string, isLive: boolean
           : "bg-gray-800 text-gray-400 border-gray-700 hover:border-gray-500"}
       `}
     >
-      {loading ? <MathLoader size="sm" /> : (isLive ? <Eye size={12} /> : <EyeOff size={12} />)}
+      {loading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" /> : (isLive ? <Eye size={12} /> : <EyeOff size={12} />)}
       {isLive ? "LIVE (Active)" : "HIDDEN (Dead)"}
     </button>
   );
@@ -73,7 +72,7 @@ export function ToggleRegButton({
   if (!isOpen) {
     return (
       <button onClick={handleToggle} disabled={loading} className="text-[10px] flex items-center gap-1 text-red-400 hover:text-red-300 uppercase font-bold tracking-wide cursor-pointer">
-        {loading ? <MathLoader size="sm" /> : <Lock size={10} />}
+        {loading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" /> : <Lock size={10} />}
         Reg Closed
       </button>
     );
@@ -89,7 +88,7 @@ export function ToggleRegButton({
 
   return (
     <button onClick={handleToggle} disabled={loading} className="text-[10px] flex items-center gap-1 text-[#00f0ff] hover:text-white uppercase font-bold tracking-wide cursor-pointer">
-      {loading ? <MathLoader size="sm" /> : <Unlock size={10} />}
+      {loading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" /> : <Unlock size={10} />}
       Reg Open
     </button>
   );
