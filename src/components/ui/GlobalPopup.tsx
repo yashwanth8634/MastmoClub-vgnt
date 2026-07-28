@@ -117,7 +117,7 @@ export default function GlobalPopup({ popupData }: { popupData: PopupData | null
                 <div className="relative h-full w-full bg-[#111] rounded-[22px] overflow-hidden flex flex-col">
                     <button 
                         onClick={() => setIsOpen(false)} 
-                        className="absolute top-3 right-3 z-50 p-2 bg-black/60 text-white/80 rounded-full hover:bg-red-500 hover:text-white transition-all backdrop-blur-md border border-white/10"
+                        className="absolute top-3 right-3 z-50 p-2 bg-black/60 text-white/80 rounded-full hover:bg-red-500 hover:text-white transition-all backdrop-blur-md border border-white/10 cursor-pointer"
                     >
                         <X size={20} />
                     </button>
@@ -162,7 +162,7 @@ export default function GlobalPopup({ popupData }: { popupData: PopupData | null
                         <h2 className="text-xl font-bold text-white mb-2">{popupData.title}</h2>
                         <p className="text-gray-400 text-sm mb-5 leading-relaxed line-clamp-3">{popupData.description}</p>
                         <div className="flex flex-col sm:flex-row gap-3">
-                            <button onClick={() => setIsOpen(false)} className="flex-1 py-3 bg-[#00f0ff] text-black font-bold text-sm uppercase tracking-wide rounded-lg hover:bg-white hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(0,240,255,0.15)]">Enter Site</button>
+                            <button onClick={() => setIsOpen(false)} className="flex-1 py-3 bg-[#00f0ff] text-black font-bold text-sm uppercase tracking-wide rounded-lg hover:bg-white hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(0,240,255,0.15)] cursor-pointer">Enter Site</button>
                             {popupData.enableRegistration && popupData.registrationEventId && (
                                 <Link 
                                     href={`/events/${popupData.registrationEventId}`}
