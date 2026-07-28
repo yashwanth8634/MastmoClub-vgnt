@@ -6,6 +6,8 @@ const PopupSchema = new Schema({
   // ⚠️ CHANGED: Now storing a list of image URLs
   images: { type: [String], default: [] }, 
   isActive: { type: Boolean, default: false },
+  enableRegistration: { type: Boolean, default: false },
+  registrationEventId: { type: String, default: "" },
 }, { timestamps: true });
 
 const Popup = models.Popup || model("Popup", PopupSchema);

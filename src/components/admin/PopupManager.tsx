@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { getPopup, updatePopup } from "@/actions/popupActions";
+import { getActiveEventsLight } from "@/actions/eventActions";
 import { UploadDropzone, getCompressedUploadFiles } from "@/utils/uploadthing";
-import { Save, Trash2 } from "lucide-react";
+import { Save, Trash2, Calendar } from "lucide-react";
 import Image from "next/image";
 
 export default function PopupManager() {
   const [data, setData] = useState<Awaited<ReturnType<typeof getPopup>>>(null);
+  const [activeEvents, setActiveEvents] = useState<{id: string, title: string}[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [images, setImages] = useState<string[]>([]); // Array of URLs
   const popupData = data ?? {
@@ -15,12 +17,17 @@ export default function PopupManager() {
     title: "",
     description: "",
     images: [],
+    enableRegistration: false,
+    registrationEventId: "",
   };
+  const [enableRegistration, setEnableRegistration] = useState(false);
 
   useEffect(() => {
-    getPopup().then((res) => {
-        setData(res);
-        setImages(res?.images || []);
+    Promise.all([getPopup(), getActiveEventsLight()]).then(([popupRes, eventsRes]) => {
+      setData(popupRes);
+      setImages(popupRes?.images || []);
+      setEnableRegistration(popupRes?.enableRegistration || false);
+      setActiveEvents(eventsRes || []);
     });
   }, []);
 
@@ -30,6 +37,7 @@ export default function PopupManager() {
     // Convert array to JSON string to pass via FormData
     formData.set("imagesJSON", JSON.stringify(images));
     formData.set("isActive", String(formData.get("isActive") === "on"));
+    formData.set("enableRegistration", String(enableRegistration));
     
     await updatePopup(formData);
     alert("Popup Updated!");
@@ -66,6 +74,50 @@ export default function PopupManager() {
         <div className="space-y-2">
             <label className="text-xs font-bold uppercase text-gray-400">Description</label>
             <textarea name="description" rows={4} defaultValue={popupData.description} className="w-full bg-black border border-white/10 rounded-xl p-4 focus:border-[#00f0ff] outline-none" />
+        </div>
+
+        {/* Registration Button Settings */}
+        <div className="space-y-4 bg-black/40 p-6 rounded-xl border border-white/10">
+          <div className="flex items-center justify-between">
+            <div>
+                <h3 className="font-bold text-lg">Registration Button</h3>
+                <p className="text-gray-400 text-sm">Add a button to register for an active event.</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={enableRegistration} 
+                  onChange={(e) => setEnableRegistration(e.target.checked)} 
+                  className="sr-only peer" 
+                />
+                <div className="w-14 h-7 bg-gray-700 rounded-full peer peer-checked:bg-[#00f0ff] peer-checked:after:translate-x-full after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all"></div>
+            </label>
+          </div>
+          
+          {enableRegistration && (
+            <div className="space-y-2 mt-4 pt-4 border-t border-white/10">
+              <label className="text-xs font-bold uppercase text-gray-400 flex items-center gap-2">
+                <Calendar size={14} /> Select Event Destination
+              </label>
+              {activeEvents.length > 0 ? (
+                <select 
+                  name="registrationEventId" 
+                  defaultValue={popupData.registrationEventId} 
+                  className="w-full bg-black border border-white/10 rounded-xl p-4 focus:border-[#00f0ff] outline-none text-white cursor-pointer"
+                  required
+                >
+                  <option value="" disabled>-- Select an Active Event --</option>
+                  {activeEvents.map(event => (
+                    <option key={event.id} value={event.id}>{event.title}</option>
+                  ))}
+                </select>
+              ) : (
+                <p className="text-sm text-yellow-500 bg-yellow-500/10 p-3 rounded-lg border border-yellow-500/20">
+                  No active events found. Please create or activate an event first.
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* MULTI-IMAGE UPLOADER */}

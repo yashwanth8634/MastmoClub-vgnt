@@ -361,3 +361,21 @@ export async function getEventById(id: string) {
     return null;
   }
 }
+
+// ==========================================
+// 6. GET ACTIVE EVENTS FOR DROPDOWN
+// ==========================================
+export async function getActiveEventsLight() {
+  try {
+    await dbConnect();
+    const events = await Event.find({ isLive: true }).select("_id title").lean();
+    return events.map(e => ({
+      id: e._id.toString(),
+      title: e.title,
+    }));
+  } catch (error) {
+    logger.error("Failed to fetch active events", error);
+    return [];
+  }
+}
+

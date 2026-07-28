@@ -12,6 +12,8 @@ interface PopupData {
   title: string;
   description: string;
   images: string[];
+  enableRegistration?: boolean;
+  registrationEventId?: string;
 }
 
 const getCachedPopup = unstable_cache(
@@ -19,7 +21,7 @@ const getCachedPopup = unstable_cache(
     await dbConnect();
 
     const popup = await Popup.findOne({})
-      .select("isActive title description images")
+      .select("isActive title description images enableRegistration registrationEventId")
       .lean()
       .maxTimeMS(2000);
 
@@ -36,6 +38,8 @@ const getCachedPopup = unstable_cache(
             (image: unknown): image is string => typeof image === "string",
           )
         : [],
+      enableRegistration: Boolean(popup.enableRegistration),
+      registrationEventId: String(popup.registrationEventId || ""),
     };
   },
   ["global-popup"],
@@ -96,7 +100,9 @@ export async function updatePopup(formData: FormData) {
       title: formData.get("title"),
       description: formData.get("description"),
       images: images,
-      isActive: true, 
+      isActive: true,
+      enableRegistration: formData.get("enableRegistration") === "true",
+      registrationEventId: formData.get("registrationEventId"),
     };
 
     if (existingPopup) {

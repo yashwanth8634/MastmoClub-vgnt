@@ -8,6 +8,8 @@ interface PopupData {
   title: string;
   description: string;
   images: string[];
+  enableRegistration?: boolean;
+  registrationEventId?: string;
 }
 
 const ContentProtection = dynamic(
