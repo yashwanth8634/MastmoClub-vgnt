@@ -47,6 +47,7 @@ export default async function ContactPage() {
   // 5. Secretary
   // 6. General Secretary
   // 7. Technical Head
+  // 8. Outreach Lead
   const getOrderIndex = (name: string, role: string) => {
     if (name.toLowerCase().includes("sagar")) return 0;
     const roleLower = role.toLowerCase().trim();
@@ -56,6 +57,7 @@ export default async function ContactPage() {
     if (roleLower === "secretary") return 4;
     if (roleLower === "general secretary") return 5;
     if (roleLower === "technical head" || roleLower === "technicalhead") return 6;
+    if (roleLower === "outreachlead" || roleLower === "outreach lead") return 7;
     return -1; // Exclude others
   };
 
@@ -76,6 +78,7 @@ export default async function ContactPage() {
       "treasurer",
       "generalsecretary",
       "technicalhead",
+      "outreachlead"
     ];
     
     if (validRoles.includes(roleLower)) {

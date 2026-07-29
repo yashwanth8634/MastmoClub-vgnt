@@ -5,7 +5,16 @@ import { verifyAuthToken } from "@/lib/auth";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. Protect /admin routes
+  // 1. Markdown content negotiation — RFC 7231 Accept header handling.
+  //    Rewrite homepage requests with Accept: text/markdown to the markdown API.
+  if (pathname === "/") {
+    const accept = request.headers.get("accept") ?? "";
+    if (accept.includes("text/markdown")) {
+      return NextResponse.rewrite(new URL("/api/markdown", request.url));
+    }
+  }
+
+  // 2. Protect /admin routes
   if (pathname.startsWith("/admin")) {
     const token = request.cookies.get("auth_token")?.value;
     
@@ -47,7 +56,10 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Match all paths starting with /admin
+    // Homepage — for markdown content negotiation
+    "/",
+    // All /admin paths — for auth protection
     "/admin/:path*",
   ],
 };
+

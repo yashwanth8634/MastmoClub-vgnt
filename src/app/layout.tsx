@@ -8,6 +8,7 @@ import { ourFileRouter } from "@/app/api/uploadthing/core";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
 import SiteChrome from "@/components/layout/SiteChrome";
+import WebMCPTools from "@/components/WebMCPTools";
 import { getPopup } from "@/actions/popupActions";
 
 const spaceGrotesk = MedievalSharp({
@@ -147,6 +148,7 @@ export default async function RootLayout({
            */
           routerConfig={extractRouterConfig(ourFileRouter)}
         />
+        <WebMCPTools />
         <SiteChrome popupData={popupData} />
         {children}
         <Analytics />

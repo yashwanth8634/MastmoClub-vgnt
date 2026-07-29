@@ -34,6 +34,7 @@ const nextConfig = {
   async headers() {
     return [
       {
+        // Security headers applied to every route
         source: '/(.*)',
         headers: [
           { key: 'X-Frame-Options', value: 'DENY' },
@@ -41,6 +42,20 @@ const nextConfig = {
           { key: 'X-XSS-Protection', value: '1; mode=block' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+        ],
+      },
+      {
+        // RFC 8288 Link headers for AI agent discovery — homepage only
+        source: '/',
+        headers: [
+          {
+            key: 'Link',
+            value: [
+              '</.well-known/api-catalog>; rel="api-catalog"',
+              '</api/health>; rel="status"',
+              '</.well-known/agent-skills/index.json>; rel="service-desc"',
+            ].join(', '),
+          },
         ],
       },
     ];
