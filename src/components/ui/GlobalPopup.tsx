@@ -165,7 +165,7 @@ export default function GlobalPopup({ popupData }: { popupData: PopupData | null
                             <button onClick={() => setIsOpen(false)} className="flex-1 py-3 bg-[#00f0ff] text-black font-bold text-sm uppercase tracking-wide rounded-lg hover:bg-white hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(0,240,255,0.15)] cursor-pointer">Enter Site</button>
                             {popupData.enableRegistration && popupData.registrationEventId && (
                                 <Link 
-                                    href={`/events/${popupData.registrationEventId}`}
+                                    href={`/events/${popupData.registrationEventId}/register`}
                                     onClick={() => setIsOpen(false)} 
                                     className="flex-1 text-center py-3 bg-[#FFD700] text-black font-bold text-sm uppercase tracking-wide rounded-lg hover:bg-white hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(255,215,0,0.15)]"
                                 >
