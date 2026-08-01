@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import dbConnect from "@/lib/db";
 import Event from "@/models/Event";
+import EventRegistration from "@/models/EventRegistration";
 import { notFound } from "next/navigation";
 import { formatEventTime } from "@/lib/utils";
 import { cache } from "react";
@@ -27,7 +28,7 @@ const getCachedEventById = cache(async (id: string) => {
 
   return Event.findById(id)
     .select(
-      "title description date time location rules isTeamEvent minTeamSize maxTeamSize currentRegistrations maxRegistrations registrationRequired registrationOpen isLive",
+      "title description date time location rules isTeamEvent minTeamSize maxTeamSize maxRegistrations registrationRequired registrationOpen isLive",
     )
     .lean()
     .maxTimeMS(2500);
@@ -63,8 +64,8 @@ export default async function EventDetailsPage({ params }: { params: Promise<{ i
 
   // --- 🧠 LOGIC ENGINE (UPDATED) ---
   
-  // 1. Capacity Check
-  const currentRegs = event.currentRegistrations || 0;
+  // 1. Capacity Check — count actual registrations from EventRegistration collection
+  const currentRegs = await EventRegistration.countDocuments({ eventId: event._id });
   const isFull = event.maxRegistrations > 0 && currentRegs >= event.maxRegistrations;
   const noRegistrationRequired =
     event.registrationRequired === false ||

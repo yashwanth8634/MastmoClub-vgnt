@@ -162,8 +162,11 @@ export async function registerForEvent(
     if (!event) return failureResult("Event not found");
     if (!event.registrationRequired) return failureResult("This event does not require registration.");
     if (!event.registrationOpen) return failureResult("Registration is closed.");
-    if (event.maxRegistrations > 0 && event.currentRegistrations >= event.maxRegistrations) {
-      return failureResult("Event is full.");
+    if (event.maxRegistrations > 0) {
+      const actualCount = await EventRegistration.countDocuments({ eventId });
+      if (actualCount >= event.maxRegistrations) {
+        return failureResult("Event is full.");
+      }
     }
 
     // 5. 🛡️ RACE CONDITION & DUPLICATE CHECK 🛡️

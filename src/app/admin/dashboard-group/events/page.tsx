@@ -1,5 +1,6 @@
 import dbConnect from "@/lib/db";
 import Event from "@/models/Event";
+import EventRegistration from "@/models/EventRegistration";
 import type { IEvent } from "@/models/Event";
 import Link from "next/link";
 import { Plus, Pencil, Users } from "lucide-react";
@@ -24,12 +25,25 @@ export default async function AdminEventsPage() {
   // 1. Fetch Raw Data
   const rawEvents = (await Event.find({})
     .select(
-      "title date time location currentRegistrations maxRegistrations registrationOpen isLive isTeamEvent minTeamSize maxTeamSize createdAt",
+      "title date time location maxRegistrations registrationOpen registrationRequired isLive isTeamEvent minTeamSize maxTeamSize createdAt",
     )
     .sort({ createdAt: -1 })
     .lean()) as LeanAdminEvent[];
 
-  // 2. STRICT SERIALIZATION (The Fix)
+  // 2. Get actual registration counts from EventRegistration collection
+  const eventIds = rawEvents.map((e) => e._id);
+  const registrationCounts = await EventRegistration.aggregate([
+    { $match: { eventId: { $in: eventIds } } },
+    { $group: { _id: "$eventId", count: { $sum: 1 } } },
+  ]);
+  const countMap = new Map<string, number>(
+    registrationCounts.map((r: { _id: unknown; count: number }) => [
+      String(r._id),
+      r.count,
+    ]),
+  );
+
+  // 3. STRICT SERIALIZATION
   // This converts all Date objects (createdAt, updatedAt) and ObjectIds to simple strings.
   // This prevents the "Objects are not valid as React child" crash permanently.
   const events = JSON.parse(JSON.stringify(rawEvents));
@@ -71,9 +85,10 @@ export default async function AdminEventsPage() {
             <tbody className="divide-y divide-white/5">
               {events.map((event: LeanAdminEvent) => {
                 const eventId = event._id.toString();
+                const actualCount = countMap.get(eventId) ?? 0;
                 
-                // Check capacity safely
-                const isFull = event.maxRegistrations > 0 && event.currentRegistrations >= event.maxRegistrations;
+                // Check capacity against actual registration count
+                const isFull = event.maxRegistrations > 0 && actualCount >= event.maxRegistrations;
                 
                 return (
                   <tr key={eventId} className="hover:bg-white/5 transition-colors group">
@@ -105,7 +120,7 @@ export default async function AdminEventsPage() {
                       <div className="flex items-center gap-2 mb-1">
                         <Users size={16} className="text-[#00f0ff]" />
                         <span className={`font-mono text-lg ${isFull ? "text-red-400" : "text-white"}`}>
-                          {event.currentRegistrations}
+                          {actualCount}
                         </span>
                         <span className="text-gray-600">/</span>
                         <span className="text-gray-500">{event.maxRegistrations > 0 ? event.maxRegistrations : "∞"}</span>

@@ -1,6 +1,7 @@
 import EventRegisterForm from "@/components/features/events/EventRegisterForm"; // 👈 Ensure this path is correct
 import dbConnect from "@/lib/db";
 import Event from "@/models/Event";
+import EventRegistration from "@/models/EventRegistration";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Metadata } from "next";
@@ -13,7 +14,7 @@ const getCachedRegistrationEvent = cache(async (id: string) => {
 
   return Event.findById(id)
     .select(
-      "title isTeamEvent minTeamSize maxTeamSize currentRegistrations maxRegistrations registrationRequired registrationOpen isLive",
+      "title isTeamEvent minTeamSize maxTeamSize maxRegistrations registrationRequired registrationOpen isLive",
     )
     .lean()
     .maxTimeMS(2500);
@@ -45,8 +46,8 @@ export default async function EventRegistrationPage({ params }: { params: Promis
     return notFound();
   }
 
-  // 2. Logic: Status Check
-  const currentRegs = event.currentRegistrations || 0;
+  // 2. Logic: Status Check — count actual registrations from EventRegistration collection
+  const currentRegs = await EventRegistration.countDocuments({ eventId: event._id });
   const isCapacityFull = event.maxRegistrations > 0 && currentRegs >= event.maxRegistrations;
   const noRegistrationRequired =
     event.registrationRequired === false ||
