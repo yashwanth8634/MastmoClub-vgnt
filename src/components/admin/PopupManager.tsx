@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { getPopup, updatePopup } from "@/actions/popupActions";
 import { getActiveEventsLight } from "@/actions/eventActions";
 import { UploadDropzone, getCompressedUploadFiles } from "@/utils/uploadthing";
-import { Save, Trash2, Calendar } from "lucide-react";
+import { Save, Trash2, Calendar, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
 
 export default function PopupManager() {
@@ -12,6 +12,8 @@ export default function PopupManager() {
   const [activeEvents, setActiveEvents] = useState<{id: string, title: string}[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [images, setImages] = useState<string[]>([]); // Array of URLs
+  const [toast, setToast] = useState<{ show: boolean; isActive: boolean }>({ show: false, isActive: false });
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const popupData = data ?? {
     isActive: false,
     title: "",
@@ -31,16 +33,23 @@ export default function PopupManager() {
     });
   }, []);
 
+  const showToast = (isActive: boolean) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast({ show: true, isActive });
+    toastTimer.current = setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3500);
+  };
+
   async function handleSubmit(formData: FormData) {
     setIsSubmitting(true);
     
     // Convert array to JSON string to pass via FormData
     formData.set("imagesJSON", JSON.stringify(images));
-    formData.set("isActive", String(formData.get("isActive") === "on"));
+    const isActive = formData.get("isActive") === "on";
+    formData.set("isActive", String(isActive));
     formData.set("enableRegistration", String(enableRegistration));
     
     await updatePopup(formData);
-    alert("Popup Updated!");
+    showToast(isActive);
     setIsSubmitting(false);
   }
 
@@ -167,6 +176,27 @@ export default function PopupManager() {
         </button>
 
       </form>
+
+      {/* Toast Notification */}
+      <div
+        className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ${
+          toast.show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+        }`}
+      >
+        <div className={`flex items-center gap-3 px-6 py-4 rounded-2xl border shadow-2xl backdrop-blur-md ${
+          toast.isActive
+            ? "bg-green-950/80 border-green-500/30 shadow-green-500/20"
+            : "bg-red-950/80 border-red-500/30 shadow-red-500/20"
+        }`}>
+          <CheckCircle2 size={20} className={toast.isActive ? "text-green-400" : "text-red-400"} />
+          <div>
+            <p className="font-bold text-white text-sm">Popup Updated!</p>
+            <p className={`text-xs ${toast.isActive ? "text-green-400" : "text-red-400"}`}>
+              Popup is now <span className="font-bold uppercase">{toast.isActive ? "ON" : "OFF"}</span>
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

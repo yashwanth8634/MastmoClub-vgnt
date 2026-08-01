@@ -100,7 +100,7 @@ export async function updatePopup(formData: FormData) {
       title: formData.get("title"),
       description: formData.get("description"),
       images: images,
-      isActive: true,
+      isActive: formData.get("isActive") === "true",
       enableRegistration: formData.get("enableRegistration") === "true",
       registrationEventId: formData.get("registrationEventId"),
     };
