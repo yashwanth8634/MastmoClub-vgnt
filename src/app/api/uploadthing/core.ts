@@ -18,7 +18,7 @@ const handleAuth = async () => {
 
 export const ourFileRouter = {
   // Gallery Route - SECURED
-  galleryImage: f({ image: { maxFileSize: "4MB", maxFileCount: 10 } })
+  galleryImage: f({ image: { maxFileSize: "4MB", maxFileCount: 20 } })
     .middleware(handleAuth) // Use the secure auth handler
     .onUploadComplete(async ({ metadata, file }) => {
       // metadata.userId is now the authenticated admin's ID
