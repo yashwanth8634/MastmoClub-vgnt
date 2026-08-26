@@ -167,7 +167,7 @@ export default function EventRegisterForm({ event }: { event: EventType }) {
                 <input
                   name="fullName"
                   required
-                  placeholder="Full Name"
+                  placeholder="Enter You Name"
                   className="w-full bg-black border border-white/10 rounded-lg p-3 text-sm text-white focus:border-[#00f0ff] outline-none transition-colors"
                 />
               </div>
@@ -178,7 +178,7 @@ export default function EventRegisterForm({ event }: { event: EventType }) {
                 <input
                   name="rollNo"
                   required
-                  placeholder="24891A05.."
+                  placeholder="Enter Your Roll No"
                   className="w-full bg-black border border-white/10 rounded-lg p-3 text-sm text-white focus:border-[#00f0ff] outline-none transition-colors"
                 />
               </div>
@@ -254,7 +254,7 @@ export default function EventRegisterForm({ event }: { event: EventType }) {
                     <input
                       name={`member_name_${index}`}
                       required
-                      placeholder="Member Name"
+                      placeholder="Enter Team Member Name"
                       className="w-full bg-black border border-white/10 rounded-lg p-3 text-sm text-white focus:border-[#00f0ff] outline-none"
                     />
                   </div>
@@ -265,7 +265,7 @@ export default function EventRegisterForm({ event }: { event: EventType }) {
                     <input
                       name={`member_roll_${index}`}
                       required
-                      placeholder="Member Roll No"
+                      placeholder="Enter Team Member Roll No"
                       className="w-full bg-black border border-white/10 rounded-lg p-3 text-sm text-white focus:border-[#00f0ff] outline-none"
                     />
                   </div>

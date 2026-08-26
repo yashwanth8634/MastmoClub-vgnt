@@ -94,17 +94,17 @@ export default function JoinClubForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase text-gray-500 ml-1">Full Name</label>
-                <input name="fullName" required placeholder="Yashwanth Reddy" className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-[#00f0ff] outline-none" />
+                <input name="fullName" required placeholder="Enter Your Name" className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-[#00f0ff] outline-none" />
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase text-gray-500 ml-1">Email Address</label>
-                <input name="email" type="email" required placeholder="yash@vgnt.in" className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-[#00f0ff] outline-none" />
+                <input name="email" type="email" required placeholder="Enter Your Email Address" className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-[#00f0ff] outline-none" />
               </div>
             </div>
 
             <div className="space-y-2">
                <label className="text-xs font-bold uppercase text-gray-500 ml-1">Phone Number</label>
-               <input name="phone" type="tel" required placeholder="9876543210" className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-[#00f0ff] outline-none" />
+               <input name="phone" type="tel" required placeholder="Enter Your Phone Number" className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-[#00f0ff] outline-none" />
             </div>
 
             {/* --- STUDENT SPECIFIC FIELDS --- */}
@@ -112,7 +112,7 @@ export default function JoinClubForm() {
               <>
                 <div className="space-y-2">
                    <label className="text-xs font-bold uppercase text-gray-500 ml-1">Roll Number</label>
-                   <input name="rollNo" required placeholder="24891A0593" className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-[#00f0ff] outline-none font-mono" />
+                   <input name="rollNo" required placeholder="Enter Your Roll Number" className="w-full bg-black border border-white/10 rounded-xl p-4 text-white focus:border-[#00f0ff] outline-none font-mono" />
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
