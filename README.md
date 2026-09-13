@@ -1,67 +1,78 @@
 # Mastmo Club WebApp
 
-## Overview
-The Mastmo Club WebApp is a Next.js application designed to manage club events, registrations, and team memberships. It features a secure admin dashboard, event management, and automated email notifications.
+A modern club management platform built with cutting-edge web technologies. Manage events, registrations, and teams with a secure admin dashboard.
 
-## Tech Stack
-- **Framework:** Next.js 16 (App Router)
-- **Database:** MongoDB (Mongoose)
-- **Authentication:** JWT (Jose) + HttpOnly Cookies
-- **Styling:** Tailwind CSS
-- **Validation:** Zod
-- **File Uploads:** UploadThing
-- **Email:** Resend
+## 🛠️ Tech Stack
 
-## Key Features
-- **Admin Dashboard:** Secure area for managing events and members.
-- **Event Registration:** Robust registration system with team support and duplicate checks.
-- **Rate Limiting:** MongoDB-based distributed rate limiting for serverless environments.
-- **Security:**
-    - Global Middleware for route protection.
-    - Constant-time secret comparison for internal APIs.
-    - Secure, HttpOnly cookies.
-- **Observability:** Structured JSON logging.
+![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-99.5%25-blue?style=flat-square&logo=typescript)
+![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-green?style=flat-square&logo=mongodb)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-06B6D4?style=flat-square&logo=tailwind-css)
+![JWT](https://img.shields.io/badge/JWT-Security-red?style=flat-square&logo=json-web-tokens)
 
-## Getting Started
+## ✨ Features
+
+- **🔐 Admin Dashboard** — Secure event & member management
+- **📝 Event Registration** — Robust system with team support & duplicate prevention
+- **⚡ Rate Limiting** — MongoDB-based distributed rate limiting
+- **🛡️ Security** — JWT auth, HttpOnly cookies, middleware protection
+- **✉️ Email Notifications** — Automated emails via Resend
+- **📤 File Uploads** — UploadThing integration
+- **📊 Observability** — Structured JSON logging
+
+## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js 18+
 - MongoDB Instance
 
-### Environment Variables
-Create a `.env.local` file with the following:
+### Setup
+
+```bash
+# Clone & install
+git clone <repo>
+cd MastmoClub-vgnt
+npm install
+
+# Configure environment
+cp .env.example .env.local
+# Fill in your credentials
+
+# Run
+npm run dev
+```
+
+## 📁 Project Structure
+
+```
+src/
+├── actions/      — Server Actions (data mutations)
+├── middleware.ts — Authentication & route protection
+├── lib/
+│   ├── rateLimit.ts  — Distributed rate limiting
+│   └── logger.ts     — Structured logging
+└── components/   — React components
+```
+
+## 🔑 Key Environment Variables
+
 ```env
 MONGODB_URI=your_mongodb_uri
 JWT_SECRET=your_jwt_secret
-INTERNAL_N8N_SECRET=your_internal_secret
 UPLOADTHING_SECRET=your_uploadthing_secret
-UPLOADTHING_APP_ID=your_uploadthing_app_id
 RESEND_API_KEY=your_resend_api_key
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-### Installation
-```bash
-npm install
-```
+## 🔒 Security Features
 
-### Development
-```bash
-npm run dev
-```
+✅ JWT token-based authentication  
+✅ HttpOnly cookies for token storage  
+✅ Global middleware for route protection  
+✅ Zod schema validation on all inputs  
+✅ Race condition prevention in event registration  
+✅ Constant-time secret comparison  
 
-### Build
-```bash
-npm run build
-```
+---
 
-## Architecture Highlights
-- **Server Actions:** Used for all data mutations (`src/actions`).
-- **Middleware:** `src/middleware.ts` handles authentication globally.
-- **Rate Limiting:** `src/lib/rateLimit.ts` uses MongoDB to track request counts.
-- **Logging:** `src/lib/logger.ts` provides structured logs.
-
-## Security
-- **Authentication:** Admin routes are protected by `middleware.ts` which verifies JWT tokens.
-- **Input Validation:** All server actions use `Zod` schemas to validate input.
-- **Race Conditions:** Event registration uses a "Check-Then-Act" strategy with comprehensive queries to prevent duplicates.
+Built with TypeScript • Powered by Next.js • Secured by design
