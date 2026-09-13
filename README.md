@@ -20,3 +20,7 @@ The official web platform for **MASTMO**, the Mathematical and Statistcal Modeli
 * **Deployment:** Vercel
 * **Infrastructure & DNS:** Cloudflare (DNSSEC, DMARC, SPF, Email Routing)
 
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
