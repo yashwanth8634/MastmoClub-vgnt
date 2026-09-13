@@ -1,78 +1,43 @@
-# Mastmo Club WebApp
+# MASTMO Club Portal 🧮
 
-A modern club management platform built with cutting-edge web technologies. Manage events, registrations, and teams with a secure admin dashboard.
+The official web platform for **MASTMO**, the mathematical and technical club of Vignan Institute of Technology and Science (VGNT). This platform manages club memberships, event registrations, and administrative reporting, bridging the gap between mathematical theory and modern engineering applications.
+
+## 🚀 Core Features
+
+* **Strict Event Registration:** Automated validation system that verifies a student's roll number, branch (e.g., CSE, EIE, CSM), and section against the active club database. Only 'approved' club members can register for events.
+* **Team-Based Logic:** Seamless registration for group events, including automatic consistency checks to ensure all team members belong to the appropriate branch/section and are valid club members.
+* **Admin Dashboard:** Secure backend interface for generating real-time Class Reports and Team Reports based on current event registrations.
+* **Automated Email Notifications:** Instantly sends confirmation emails to students upon successful registration.
+* **Cloudflare Protected Infrastructure:** Secured via Cloudflare Bot Fight Mode, Smart Shield caching, and strict SSL/TLS encryption.
 
 ## 🛠️ Tech Stack
 
-![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)
-![TypeScript](https://img.shields.io/badge/TypeScript-99.5%25-blue?style=flat-square&logo=typescript)
-![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-green?style=flat-square&logo=mongodb)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-06B6D4?style=flat-square&logo=tailwind-css)
-![JWT](https://img.shields.io/badge/JWT-Security-red?style=flat-square&logo=json-web-tokens)
+* **Framework:** Next.js 16 (App Router)
+* **Language:** TypeScript
+* **Database:** MongoDB Atlas (Mongoose ORM)
+* **Styling:** Tailwind CSS
+* **Validation:** Zod
+* **Deployment:** Vercel
+* **Infrastructure & DNS:** Cloudflare (DNSSEC, DMARC, SPF, Email Routing)
 
-## ✨ Features
+## 📋 Prerequisites
 
-- **🔐 Admin Dashboard** — Secure event & member management
-- **📝 Event Registration** — Robust system with team support & duplicate prevention
-- **⚡ Rate Limiting** — MongoDB-based distributed rate limiting
-- **🛡️ Security** — JWT auth, HttpOnly cookies, middleware protection
-- **✉️ Email Notifications** — Automated emails via Resend
-- **📤 File Uploads** — UploadThing integration
-- **📊 Observability** — Structured JSON logging
+Before running this project locally, ensure you have the following installed:
+* Node.js (v18.x or higher)
+* npm or yarn
+* A MongoDB Atlas Cluster
 
-## 🚀 Quick Start
+## ⚙️ Environment Variables
 
-### Prerequisites
-- Node.js 18+
-- MongoDB Instance
-
-### Setup
-
-```bash
-# Clone & install
-git clone <repo>
-cd MastmoClub-vgnt
-npm install
-
-# Configure environment
-cp .env.example .env.local
-# Fill in your credentials
-
-# Run
-npm run dev
-```
-
-## 📁 Project Structure
-
-```
-src/
-├── actions/      — Server Actions (data mutations)
-├── middleware.ts — Authentication & route protection
-├── lib/
-│   ├── rateLimit.ts  — Distributed rate limiting
-│   └── logger.ts     — Structured logging
-└── components/   — React components
-```
-
-## 🔑 Key Environment Variables
+Create a `.env.local` file in the root directory and add the following variables:
 
 ```env
-MONGODB_URI=your_mongodb_uri
-JWT_SECRET=your_jwt_secret
-UPLOADTHING_SECRET=your_uploadthing_secret
-RESEND_API_KEY=your_resend_api_key
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-```
+# Database
+MONGODB_URI=your_mongodb_connection_string
 
-## 🔒 Security Features
+# Application URL
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
 
-✅ JWT token-based authentication  
-✅ HttpOnly cookies for token storage  
-✅ Global middleware for route protection  
-✅ Zod schema validation on all inputs  
-✅ Race condition prevention in event registration  
-✅ Constant-time secret comparison  
-
----
-
-Built with TypeScript • Powered by Next.js • Secured by design
+# Email Configuration (SMTP / NodeMailer / Resend)
+EMAIL_USER=mastmo.vgnt@gmail.com
+EMAIL_PASS=your_app_password
